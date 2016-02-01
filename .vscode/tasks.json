@@ -1,0 +1,80 @@
+{
+    "version": "0.1.0",
+    "command": "C:\\Program Files\\Rust stable GNU 1.6\\bin\\cargo",
+    "isShellCommand": true,
+    "tasks": [
+        {
+            "taskName": "build",
+            "isBuildCommand": true,
+            "showOutput": "always",
+            "problemMatcher": {
+                "owner": "rust",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceRoot}"
+                ],
+                "pattern": {
+                    "regexp": "/^(.*):(\\d+):(\\d+):\\s+(\\d+):(\\d+)\\s+(warning|error):\\s+(.*)$/",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "endLine": 4,
+                    "endColumn": 5,
+                    "severity": 6,
+                    "message": 7
+                }
+            }
+        },
+        {
+            "taskName": "clean",
+            "showOutput": "always"
+        },
+        {
+            "taskName": "run",
+            "showOutput": "always",
+            "args": ["example-classes\\HelloWorld"]
+        },
+        {
+            "taskName": "test",
+            "showOutput": "always",
+            "args": [
+                "--",
+                "--nocapture"
+            ],
+            "isTestCommand": true,
+            "problemMatcher": [
+                {
+                    "owner": "rust",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceRoot}"
+                    ],
+                    "pattern": {
+                        "regexp": "^(.*):(\\d+):(\\d+):\\s+(\\d+):(\\d+)\\s+(warning|error):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "endLine": 4,
+                        "endColumn": 5,
+                        "severity": 6,
+                        "message": 7
+                    }
+                },
+                {
+                    "owner": "rust",
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceRoot}"
+                    ],
+                    "severity": "error",
+                    "pattern": {
+                        "regexp": "^.*panicked\\s+at\\s+'(.*)',\\s+(.*):(\\d+)$",
+                        "message": 1,
+                        "file": 2,
+                        "line": 3
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,7 @@
+[package]
+name = "javaclassfile-parser"
+version = "0.1.0"
+authors = ["Nick Palmer <nick@palmr.co.uk>"]
+
+[dependencies]
+nom = "~1.1.0"

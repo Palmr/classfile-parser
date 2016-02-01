@@ -1,0 +1,14 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+	"editor.tabSize": 4,
+	"editor.insertSpaces": true,
+    
+    "files.trimTrailingWhitespace": true,
+    
+    "rust.racerPath": null, // Specifies path to Racer binary if it's not in PATH
+    "rust.rustLangSrcPath": "E:\\dev\\rust-1.6.0\\src", // Specifies path to /src directory of local copy of Rust sources
+    "rust.rustfmtPath": null, // Specifies path to Rustfmt binary if it's not in PATH
+    "rust.cargoPath": null, // Specifies path to Cargo binary if it's not in PATH
+    "rust.formatOnSave": false, // Turn on/off autoformatting file on save (EXPERIMENTAL)
+    "rust.checkOnSave": false // Turn on/off cargo check project on save (EXPERIMENTAL)
+}
