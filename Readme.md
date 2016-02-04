@@ -11,8 +11,8 @@ A parser for [Java Classfile][https://docs.oracle.com/javase/specs/jvms/se7/html
   - [x] Constant pool size
   - [ ] Constant types
     - [x] Utf8
-    - [ ] Integer
-    - [ ] Float
+    - [x] Integer
+    - [x] Float
     - [ ] Long
     - [ ] Double
     - [x] Class
@@ -25,11 +25,13 @@ A parser for [Java Classfile][https://docs.oracle.com/javase/specs/jvms/se7/html
     - [ ] MethodType
     - [ ] InvokeDynamic
 - [ ] Access flags
-- [ ] This class
-- [ ] Super class
-- [ ] Interfaces
-  - [ ] TODO
-- [ ] Methods
-  - [ ] TODO
-- [ ] Attributes
-  - [ ] TODO
+    - [x] Stubbed as commented enums
+    - [ ] Implement code to test the enum against values
+- [x] This class
+- [x] Super class
+- [x] Interfaces
+- [x] Fields
+- [x] Methods
+- [x] Attributes
+  - [ ] Basic attribute info block parsing
+  - [ ] Known typed attributes parsing
