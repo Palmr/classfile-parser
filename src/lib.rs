@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate nom;
 
-// pub mod class_file;
 pub mod constant_info;
 pub mod attribute_info;
 pub mod method_info;
