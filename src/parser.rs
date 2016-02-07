@@ -1,69 +1,52 @@
-use nom::IResult;
+use nom::{
+  be_u16,
+  IResult,
+};
 
-use class_file::{class_parser, ClassFile};
+use types::ClassFile;
+use constant_info::constant_parser;
+use field_info::field_parser;
+use method_info::method_parser;
+use attribute_info::attribute_parser;
 
-#[test]
-fn test_valid_class() {
-    let valid_class = include_bytes!("../assets/BasicClass.class");
-    let res = class_parser(valid_class);
-    match res {
-        IResult::Done(_, c) => {
-            println!("Valid class file, version {},{} const_pool({}), this=const[{}], super=const[{}], interfaces({}), fields({}), methods({}), attributes({})", c.major_version, c.minor_version, c.const_pool_size, c.this_class, c.super_class, c.interfaces_count, c.fields_count, c.methods_count, c.attributes_count);
-            println!("Constant pool:");
-            let mut const_index = 1;
-            for f in &c.const_pool {
-                println!("\t[{}] = {}", const_index, f.to_string());
-                const_index += 1;
-            }
-            println!("Interfaces:");
-            let mut interface_index = 0;
-            for i in &c.interfaces {
-                println!("\t[{}] = const[{}] = {}", interface_index, i, c.const_pool[(i-1) as usize].to_string());
-                interface_index += 1;
-            }
-            println!("Fields:");
-            let mut field_index = 0;
-            for f in &c.fields {
-                println!("\t[{}] Name(const[{}] = {})", field_index, f.name_index, c.const_pool[(f.name_index - 1) as usize].to_string());
-                field_index += 1;
-            }
-            println!("Methods:");
-            let mut method_index = 0;
-            for m in &c.methods {
-                println!("\t[{}] Name(const[{}] = {})", method_index, m.name_index, c.const_pool[(m.name_index - 1) as usize].to_string());
-                method_index += 1;
-            }
-        },
-        _ => panic!("Not a class file"),
-    };
+named!(magic_parser, tag!(&[0xCA, 0xFE, 0xBA, 0xBE]));
+
+pub fn class_parser(input: &[u8]) -> IResult<&[u8], ClassFile> {
+  chain!(input,
+    magic_parser ~
+    minor_version: be_u16 ~
+    major_version: be_u16 ~
+    const_pool_size: be_u16 ~
+    const_pool: count!(constant_parser, (const_pool_size - 1) as usize) ~
+    access_flags: be_u16 ~
+    this_class: be_u16 ~
+    super_class: be_u16 ~
+    interfaces_count: be_u16 ~
+    interfaces: count!(be_u16, interfaces_count as usize) ~
+    fields_count: be_u16 ~
+    fields: count!(field_parser, fields_count as usize) ~
+    methods_count: be_u16 ~
+    methods: count!(method_parser, methods_count as usize) ~
+    attributes_count: be_u16 ~
+    attributes: count!(attribute_parser, attributes_count as usize),
+    || {
+        ClassFile {
+            minor_version: minor_version,
+            major_version: major_version,
+            const_pool_size: const_pool_size,
+            const_pool: const_pool,
+            access_flags: access_flags,
+            this_class: this_class,
+            super_class: super_class,
+            interfaces_count: interfaces_count,
+            interfaces: interfaces,
+            fields_count: fields_count,
+            fields: fields,
+            methods_count: methods_count,
+            methods: methods,
+            attributes_count: attributes_count,
+            attributes: attributes,
+        }
+    }
+  )
 }
-
-#[test]
-fn test_malformed_class() {
-    let malformed_class = include_bytes!("../assets/malformed.class");
-    let res = class_parser(malformed_class);
-    match res {
-        IResult::Done(_, _) => panic!("The file is not valid and shouldn't be parsed"),
-        _ => res,
-    };
-}
-
-// #[test]
-// fn test_constant_utf8() {
-//     let hello_world_data = &[
-//         // 0x01, // tag = 1
-//         0x00, 0x0C, // length = 12
-//         0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x57, 0x6F, 0x72, 0x6C, 0x64, 0x21 // 'Hello world!' in UTF8
-//     ];
-//     let res = const_utf8(hello_world_data);
-
-//     match res {
-//         IResult::Done(_, c) =>
-//         match c {
-//             Constant::Utf8(ref s) =>
-//                  println!("Valid UTF8 const: {}", s.utf8_string),
-//             _ => panic!("It's a const, but of what type?")
-//         },
-//         _ => panic!("Not a UTF type const?"),
-//     };
-// }
