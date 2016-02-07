@@ -1,5 +1,5 @@
 [package]
-name = "javaclassfile-parser"
+name = "classfile-parser"
 version = "0.1.0"
 authors = ["Nick Palmer <nick@palmr.co.uk>"]
 

@@ -1,12 +1,12 @@
 extern crate nom;
-extern crate javaclassfile_parser;
+extern crate classfile_parser;
 
 // use std::fs::File;
 // use std::io::Read;
 
 use nom::IResult;
 
-use javaclassfile_parser::{class_parser};
+use classfile_parser::{class_parser};
 
 
 #[test]
