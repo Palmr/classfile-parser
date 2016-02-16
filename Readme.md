@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/Palmr/classfile-parser.svg?branch=master)](https://travis-ci.org/Palmr/classfile-parser)
 
-A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html), written in Rust using [nom](https://github.com/Geal/nom).
+A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html), written in Rust using [nom](https://github.com/Geal/nom).
 
 ## Implementation Status
 
