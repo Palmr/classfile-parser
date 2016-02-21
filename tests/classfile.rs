@@ -18,8 +18,8 @@ fn test_valid_class() {
             println!("Valid class file, version {},{} const_pool({}), this=const[{}], super=const[{}], interfaces({}), fields({}), methods({}), attributes({})", c.major_version, c.minor_version, c.const_pool_size, c.this_class, c.super_class, c.interfaces_count, c.fields_count, c.methods_count, c.attributes_count);
             println!("Constant pool:");
             let mut const_index = 1;
-            for f in &c.const_pool {
-                println!("\t[{}] = {}", const_index, f.to_string());
+            for cp in &c.const_pool {
+                println!("\t[{}] = {}", const_index, cp.to_string());
                 const_index += 1;
             }
             println!("Interfaces:");
@@ -38,6 +38,7 @@ fn test_valid_class() {
             let mut method_index = 0;
             for m in &c.methods {
                 println!("\t[{}] Name(const[{}] = {})", method_index, m.name_index, c.const_pool[(m.name_index - 1) as usize].to_string());
+                m.get_code(&c);
                 method_index += 1;
             }
         },
