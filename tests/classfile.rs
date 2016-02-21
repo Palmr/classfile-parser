@@ -38,7 +38,6 @@ fn test_valid_class() {
             let mut method_index = 0;
             for m in &c.methods {
                 println!("\t[{}] Name(const[{}] = {})", method_index, m.name_index, c.const_pool[(m.name_index - 1) as usize].to_string());
-                m.get_code(&c);
                 method_index += 1;
             }
         },
