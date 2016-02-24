@@ -41,7 +41,7 @@ A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/htm
       - [ ] ConstantValue
       - [x] Code
       - [ ] StackMapTable
-      - [ ] Exceptions
+      - [x] Exceptions
       - [ ] BootstrapMethods
     - [ ] Critical for Java SE
       - [ ] InnerClasses

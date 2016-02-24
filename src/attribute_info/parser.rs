@@ -3,7 +3,7 @@ use nom::{
   IResult,
 };
 
-use attribute_info::{AttributeInfo, CodeAttribute, ExceptionEntry};
+use attribute_info::{AttributeInfo, CodeAttribute, ExceptionEntry, ExceptionsAttribute};
 
 pub fn attribute_parser(input: &[u8]) -> IResult<&[u8], AttributeInfo> {
     chain!(input,
@@ -15,6 +15,23 @@ pub fn attribute_parser(input: &[u8]) -> IResult<&[u8], AttributeInfo> {
                 attribute_name_index: attribute_name_index,
                 attribute_length: attribute_length,
                 info: info.to_owned(),
+            }
+        }
+    )
+}
+
+pub fn exception_entry_parser(input: &[u8]) -> IResult<&[u8], ExceptionEntry> {
+    chain!(input,
+        start_pc: be_u16 ~
+        end_pc: be_u16 ~
+        handler_pc: be_u16 ~
+        catch_type: be_u16,
+        || {
+            ExceptionEntry {
+                start_pc: start_pc,
+                end_pc: end_pc,
+                handler_pc: handler_pc,
+                catch_type: catch_type,
             }
         }
     )
@@ -39,24 +56,20 @@ pub fn code_attribute_parser(input: &[u8]) -> IResult<&[u8], CodeAttribute> {
                 exception_table_length: exception_table_length,
                 exception_table: exception_table,
                 attributes_count: attributes_count,
-                attributes: attributes
+                attributes: attributes,
             }
         }
     )
 }
 
-pub fn exception_entry_parser(input: &[u8]) -> IResult<&[u8], ExceptionEntry> {
+pub fn exceptions_attribute_parser(input: &[u8]) -> IResult<&[u8], ExceptionsAttribute> {
     chain!(input,
-        start_pc: be_u16 ~
-        end_pc: be_u16 ~
-        handler_pc: be_u16 ~
-        catch_type: be_u16,
+        exception_table_length: be_u16 ~
+        exception_table: count!(exception_entry_parser, exception_table_length as usize),
         || {
-            ExceptionEntry {
-                start_pc: start_pc,
-                end_pc: end_pc,
-                handler_pc: handler_pc,
-                catch_type: catch_type
+            ExceptionsAttribute {
+                exception_table_length: exception_table_length,
+                exception_table: exception_table,
             }
         }
     )
