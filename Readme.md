@@ -37,3 +37,29 @@ A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/htm
 - [x] Attributes
   - [ ] Basic attribute info block parsing
   - [ ] Known typed attributes parsing
+    - [ ] Critical for JVM
+      - [ ] ConstantValue
+      - [x] Code
+      - [ ] StackMapTable
+      - [ ] Exceptions
+      - [ ] BootstrapMethods
+    - [ ] Critical for Java SE
+      - [ ] InnerClasses
+      - [ ] EnclosingMethod
+      - [ ] Synthetic
+      - [ ] Signature
+      - [ ] RuntimeVisibleAnnotations
+      - [ ] RuntimeInvisibleAnnotations
+      - [ ] RuntimeVisibleParameterAnnotations
+      - [ ] RuntimeInvisibleParameterAnnotations
+      - [ ] RuntimeVisibleTypeAnnotations
+      - [ ] RuntimeInvisibleTypeAnnotations
+      - [ ] AnnotationDefault
+      - [ ] MethodParameters
+    - [ ] Useful but not critical
+      - [ ] SourceFile
+      - [ ] SourceDebugExtension
+      - [ ] LineNumberTable
+      - [ ] LocalVariableTable
+      - [ ] LocalVariableTypeTable
+      - [ ] Deprecated
