@@ -38,7 +38,7 @@ A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/htm
   - [ ] Basic attribute info block parsing
   - [ ] Known typed attributes parsing
     - [ ] Critical for JVM
-      - [ ] ConstantValue
+      - [x] ConstantValue
       - [x] Code
       - [ ] StackMapTable
       - [x] Exceptions

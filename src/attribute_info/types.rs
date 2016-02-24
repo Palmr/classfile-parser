@@ -26,3 +26,7 @@ pub struct ExceptionsAttribute {
     pub exception_table_length: u16,
     pub exception_table: Vec<ExceptionEntry>,
 }
+
+pub struct ConstantValueAttribute {
+    pub constant_value_index: u16,
+}

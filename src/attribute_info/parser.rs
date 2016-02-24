@@ -3,7 +3,12 @@ use nom::{
   IResult,
 };
 
-use attribute_info::{AttributeInfo, CodeAttribute, ExceptionEntry, ExceptionsAttribute};
+use attribute_info::{   AttributeInfo,
+                        CodeAttribute,
+                        ExceptionEntry,
+                        ExceptionsAttribute,
+                        ConstantValueAttribute
+                        };
 
 pub fn attribute_parser(input: &[u8]) -> IResult<&[u8], AttributeInfo> {
     chain!(input,
@@ -70,6 +75,17 @@ pub fn exceptions_attribute_parser(input: &[u8]) -> IResult<&[u8], ExceptionsAtt
             ExceptionsAttribute {
                 exception_table_length: exception_table_length,
                 exception_table: exception_table,
+            }
+        }
+    )
+}
+
+pub fn constant_value_attribute_parser(input: &[u8]) -> IResult<&[u8], ConstantValueAttribute> {
+    chain!(input,
+        constant_value_index: be_u16,
+        || {
+            ConstantValueAttribute {
+                constant_value_index: constant_value_index,
             }
         }
     )
