@@ -5,3 +5,4 @@ authors = ["Nick Palmer <nick@palmr.co.uk>"]
 
 [dependencies]
 nom = "~1.2.0"
+bitflags = "~0.7"
