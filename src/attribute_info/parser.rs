@@ -70,7 +70,7 @@ pub fn code_attribute_parser(input: &[u8]) -> IResult<&[u8], CodeAttribute> {
 pub fn exceptions_attribute_parser(input: &[u8]) -> IResult<&[u8], ExceptionsAttribute> {
     chain!(input,
         exception_table_length: be_u16 ~
-        exception_table: count!(exception_entry_parser, exception_table_length as usize),
+        exception_table: count!(be_u16, exception_table_length as usize),
         || {
             ExceptionsAttribute {
                 exception_table_length: exception_table_length,

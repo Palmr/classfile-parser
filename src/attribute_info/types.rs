@@ -24,7 +24,7 @@ pub struct CodeAttribute {
 
 pub struct ExceptionsAttribute {
     pub exception_table_length: u16,
-    pub exception_table: Vec<ExceptionEntry>,
+    pub exception_table: Vec<u16>,
 }
 
 pub struct ConstantValueAttribute {
