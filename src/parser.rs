@@ -17,7 +17,7 @@ pub fn class_parser(input: &[u8]) -> IResult<&[u8], ClassFile> {
     minor_version: be_u16 ~
     major_version: be_u16 ~
     const_pool_size: be_u16 ~
-    const_pool: count!(constant_parser, (const_pool_size - 1) as usize) ~
+    const_pool: apply!(constant_parser, (const_pool_size - 1) as usize) ~
     access_flags: be_u16 ~
     this_class: be_u16 ~
     super_class: be_u16 ~

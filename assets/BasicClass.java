@@ -16,4 +16,16 @@ public class BasicClass {
   public Integer getInteger() {
     return mInteger;
   }
+
+  public static String getName() {
+    return "Hallo!";
+  }
+
+  public static long getSize() {
+    return 1234567L;
+  }
+
+  public static double getLEETness() {
+    return 1.337;
+  }
 }

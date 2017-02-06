@@ -3,8 +3,8 @@ pub enum ConstantInfo {
     Utf8(Utf8Constant),
     Integer(IntegerConstant),
     Float(FloatConstant),
-//    Long(LongConstant),
-//    Double(DoubleConstant),
+    Long(LongConstant),
+    Double(DoubleConstant),
     Class(ClassConstant),
     String(StringConstant),
     FieldRef(FieldRefConstant),
@@ -14,6 +14,7 @@ pub enum ConstantInfo {
 //    MethodHandle(MethodHandleConstant),
 //    MethodType(MethodTypeConstant),
 //    InvokeDynamic(InvokeDynamicConstant),
+    Unusable
 }
 
 impl ConstantInfo {
@@ -22,12 +23,15 @@ impl ConstantInfo {
             ConstantInfo::Utf8(ref s) => format!("Utf8Constant[utf8_string=\"{}\"]", s.utf8_string),
             ConstantInfo::Integer(ref s) => format!("IntegerConstant[value=\"{}\"]", s.value),
             ConstantInfo::Float(ref s) => format!("FloatConstant[value=\"{}\"]", s.value),
+            ConstantInfo::Long(ref s) => format!("LongConstant[value=\"{}\"]", s.value),
+            ConstantInfo::Double(ref s) => format!("DoubleConstant[value=\"{}\"]", s.value),
             ConstantInfo::Class(ref s) => format!("ClassConstant[name_index={}]", s.name_index),
             ConstantInfo::String(ref s) => format!("StringConstant[string_index={}]", s.string_index),
             ConstantInfo::FieldRef(ref s) => format!("FieldRefConstant[class_index={}, name_and_type_index={}]", s.class_index, s.name_and_type_index),
             ConstantInfo::MethodRef(ref s) => format!("MethodRefConstant[class_index={}, name_and_type_index={}]", s.class_index, s.name_and_type_index),
             ConstantInfo::InterfaceMethodRef(ref s) => format!("InterfaceMethodRefConstant[class_index={}, name_and_type_index={}]", s.class_index, s.name_and_type_index),
             ConstantInfo::NameAndType(ref s) => format!("NameAndTypeConstant[name_index={}, descriptor_index={}]", s.name_index, s.descriptor_index),
+            ConstantInfo::Unusable => format!("Unusable[]"),
         }
     }
 }
@@ -41,6 +45,13 @@ pub struct IntegerConstant {
 }
 pub struct FloatConstant {
     pub value: f32,
+}
+
+pub struct LongConstant {
+    pub value: i64,
+}
+pub struct DoubleConstant {
+    pub value: f64,
 }
 
 pub struct ClassConstant {
