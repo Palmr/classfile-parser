@@ -5,6 +5,9 @@ use std::path::Path;
 
 #[macro_use]
 extern crate nom;
+#[macro_use]
+extern crate bitflags;
+
 use nom::IResult;
 
 pub mod constant_info;
