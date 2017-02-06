@@ -1,6 +1,7 @@
 use nom::{  IResult,
             be_u8, be_u16,
             be_i32, be_f32,
+            be_i64, be_f64,
             ErrorKind, Err};
 
 use constant_info::{
@@ -8,6 +9,8 @@ use constant_info::{
     Utf8Constant,
     IntegerConstant,
     FloatConstant,
+    LongConstant,
+    DoubleConstant,
     ClassConstant,
     StringConstant,
     FieldRefConstant,
@@ -47,6 +50,30 @@ named!(const_float<&[u8], ConstantInfo>, chain!(
     || {
         ConstantInfo::Float(
             FloatConstant {
+                value: value,
+            }
+        )
+    }
+));
+
+named!(const_long<&[u8], ConstantInfo>, chain!(
+    // tag!([0x05]) ~
+    value: be_i64,
+    || {
+        ConstantInfo::Long(
+            LongConstant {
+                value: value,
+            }
+        )
+    }
+));
+
+named!(const_double<&[u8], ConstantInfo>, chain!(
+    // tag!([0x06]) ~
+    value: be_f64,
+    || {
+        ConstantInfo::Double(
+            DoubleConstant {
                 value: value,
             }
         )
@@ -138,8 +165,8 @@ fn const_block_parser(input: &[u8], const_type: u8) -> IResult<&[u8], ConstantIn
         1 => const_utf8(input),
         3 => const_integer(input),
         4 => const_float(input),
-        // // 5 => //CONSTANT_Long,
-        // // 6 => //CONSTANT_Double,
+        5 => const_long(input),
+        6 => const_double(input),
         7 => const_class(input),
         8 => const_string(input),
         9 => const_field_ref(input),
@@ -153,7 +180,7 @@ fn const_block_parser(input: &[u8], const_type: u8) -> IResult<&[u8], ConstantIn
     }
 }
 
-pub fn constant_parser(input: &[u8]) -> IResult<&[u8], ConstantInfo> {
+fn single_constant_parser(input: &[u8]) -> IResult<&[u8], ConstantInfo> {
     chain!(input,
         const_type: be_u8 ~
         const_block: apply!(const_block_parser, const_type),
@@ -161,4 +188,32 @@ pub fn constant_parser(input: &[u8]) -> IResult<&[u8], ConstantInfo> {
             const_block
         }
     )
+}
+
+pub fn constant_parser(i: &[u8], const_pool_size: usize) -> IResult<&[u8], Vec<ConstantInfo>> {
+    let mut index = 0;
+    let mut input = i;
+    let mut res = Vec::with_capacity(const_pool_size);
+    while index < const_pool_size {
+        match single_constant_parser(input) {
+            IResult::Done(i, o) => {
+                // Long and Double Entries have twice the size
+                // see https://docs.oracle.com/javase/specs/jvms/se6/html/ClassFile.doc.html#1348
+                let uses_two_entries = match o {
+                    ConstantInfo::Long(..) | ConstantInfo::Double(..) => true,
+                    _ => false
+                };
+
+                res.push(o);
+                if uses_two_entries {
+                    res.push(ConstantInfo::Unusable);
+                    index += 1;
+                }
+                input = i;
+                index += 1;
+            },
+            _ => return IResult::Error(Err::Position(ErrorKind::Alt, input)),
+        }
+    }
+    IResult::Done(input, res)
 }

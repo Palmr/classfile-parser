@@ -6,6 +6,8 @@ pub use self::types::{
     Utf8Constant,
     IntegerConstant,
     FloatConstant,
+    LongConstant,
+    DoubleConstant,
     ClassConstant,
     StringConstant,
     FieldRefConstant,
