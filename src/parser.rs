@@ -3,7 +3,7 @@ use nom::{
   IResult,
 };
 
-use types::ClassFile;
+use types::{ClassFile, ClassAccessFlags};
 use constant_info::constant_parser;
 use field_info::field_parser;
 use method_info::method_parser;
@@ -35,7 +35,7 @@ pub fn class_parser(input: &[u8]) -> IResult<&[u8], ClassFile> {
             major_version: major_version,
             const_pool_size: const_pool_size,
             const_pool: const_pool,
-            access_flags: access_flags,
+            access_flags: ClassAccessFlags::from_bits_truncate(access_flags),
             this_class: this_class,
             super_class: super_class,
             interfaces_count: interfaces_count,

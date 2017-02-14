@@ -19,7 +19,7 @@ pub mod types;
 pub mod parser;
 
 pub use parser::class_parser;
-pub use types::ClassFile;
+pub use types::*;
 
 pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
     let class_file_name = &format!("{}.class", class_name);

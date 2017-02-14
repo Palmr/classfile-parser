@@ -8,7 +8,7 @@ pub struct ClassFile {
     pub major_version: u16,
     pub const_pool_size: u16,
     pub const_pool: Vec<ConstantInfo>,
-    pub access_flags: u16,
+    pub access_flags: ClassAccessFlags,
     pub this_class: u16,
     pub super_class: u16,
     pub interfaces_count: u16,
@@ -21,13 +21,15 @@ pub struct ClassFile {
     pub attributes: Vec<AttributeInfo>,
 }
 
-// pub enum ClassAccessFlags {
-//     Public,     // 	0x0001 	Declared public; may be accessed from outside its package.
-//     Final,      // 	0x0010 	Declared final; no subclasses allowed.
-//     Super,      // 	0x0020 	Treat superclass methods specially when invoked by the invokespecial instruction.
-//     Interface,  // 	0x0200 	Is an interface, not a class.
-//     Abstract,   // 	0x0400 	Declared abstract; must not be instantiated.
-//     Synthetic,  // 	0x1000 	Declared synthetic; not present in the source code.
-//     Annotation, // 	0x2000 	Declared as an annotation type.
-//     Enum,       // 	0x4000 	Declared as an enum type.
-// }
+bitflags! {
+    pub flags ClassAccessFlags: u16 {
+        const PUBLIC = 0x0001,     //	Declared public; may be accessed from outside its package.
+        const FINAL = 0x0010,      //	Declared final; no subclasses allowed.
+        const SUPER = 0x0020,      //	Treat superclass methods specially when invoked by the invokespecial instruction.
+        const INTERFACE = 0x0200,  //	Is an interface, not a class.
+        const ABSTRACT = 0x0400,   //	Declared abstract; must not be instantiated.
+        const SYNTHETIC = 0x1000,  //	Declared synthetic; not present in the source code.
+        const ANNOTATION = 0x2000, //	Declared as an annotation type.
+        const ENUM = 0x4000,       //	Declared as an enum type.
+    }
+}
