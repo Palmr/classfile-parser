@@ -2,7 +2,7 @@ use nom::{  IResult,
             be_u8, be_u16,
             be_i32, be_f32,
             be_i64, be_f64,
-            ErrorKind, Err};
+            ErrorKind};
 
 use constant_info::{
     ConstantInfo,
@@ -19,145 +19,123 @@ use constant_info::{
     NameAndTypeConstant,
 };
 
-named!(const_utf8<&[u8], ConstantInfo>, chain!(
+named!(const_utf8<&[u8], ConstantInfo>, do_parse!(
     // tag!([0x01]) ~
-    length: be_u16 ~
-    utf8_str: take_str!(length),
-    || {
-        ConstantInfo::Utf8(
-            Utf8Constant {
-                utf8_string: utf8_str.to_owned(),
-            }
-        )
-    }
+    length: be_u16 >>
+    utf8_str: take_str!(length) >>
+    (ConstantInfo::Utf8(
+        Utf8Constant {
+            utf8_string: utf8_str.to_owned(),
+        }
+    ))
 ));
 
-named!(const_integer<&[u8], ConstantInfo>, chain!(
+named!(const_integer<&[u8], ConstantInfo>, do_parse!(
     // tag!([0x03]) ~
-    value: be_i32,
-    || {
-        ConstantInfo::Integer(
-            IntegerConstant {
-                value: value,
-            }
-        )
-    }
+    value: be_i32 >>
+    (ConstantInfo::Integer(
+        IntegerConstant {
+            value: value,
+        }
+    ))
 ));
 
-named!(const_float<&[u8], ConstantInfo>, chain!(
+named!(const_float<&[u8], ConstantInfo>, do_parse!(
     // tag!([0x04]) ~
-    value: be_f32,
-    || {
-        ConstantInfo::Float(
-            FloatConstant {
-                value: value,
-            }
-        )
-    }
+    value: be_f32 >>
+    (ConstantInfo::Float(
+        FloatConstant {
+            value: value,
+        }
+    ))
 ));
 
-named!(const_long<&[u8], ConstantInfo>, chain!(
+named!(const_long<&[u8], ConstantInfo>, do_parse!(
     // tag!([0x05]) ~
-    value: be_i64,
-    || {
-        ConstantInfo::Long(
-            LongConstant {
-                value: value,
-            }
-        )
-    }
+    value: be_i64 >>
+    (ConstantInfo::Long(
+        LongConstant {
+            value: value,
+        }
+    ))
 ));
 
-named!(const_double<&[u8], ConstantInfo>, chain!(
+named!(const_double<&[u8], ConstantInfo>, do_parse!(
     // tag!([0x06]) ~
-    value: be_f64,
-    || {
-        ConstantInfo::Double(
-            DoubleConstant {
-                value: value,
-            }
-        )
-    }
+    value: be_f64 >>
+    (ConstantInfo::Double(
+        DoubleConstant {
+            value: value,
+        }
+    ))
 ));
 
-named!(const_class<&[u8], ConstantInfo>, chain!(
+named!(const_class<&[u8], ConstantInfo>, do_parse!(
     // tag: tag!([0x07]) ~
-    name_index: be_u16,
-    || {
-        ConstantInfo::Class(
-            ClassConstant {
-                name_index: name_index,
-            }
-        )
-    }
+    name_index: be_u16 >>
+    (ConstantInfo::Class(
+        ClassConstant {
+            name_index: name_index,
+        }
+    ))
 ));
 
-named!(const_string<&[u8], ConstantInfo>, chain!(
+named!(const_string<&[u8], ConstantInfo>, do_parse!(
     // tag: tag!([0x08]) ~
-    string_index: be_u16,
-    || {
-        ConstantInfo::String(
-            StringConstant {
-                string_index: string_index,
-            }
-        )
-    }
+    string_index: be_u16 >>
+    (ConstantInfo::String(
+        StringConstant {
+            string_index: string_index,
+        }
+    ))
 ));
 
-named!(const_field_ref<&[u8], ConstantInfo>, chain!(
+named!(const_field_ref<&[u8], ConstantInfo>, do_parse!(
     // tag: tag!([0x09]) ~
-    class_index: be_u16 ~
-    name_and_type_index: be_u16,
-    || {
-        ConstantInfo::FieldRef(
-            FieldRefConstant {
-                class_index: class_index,
-                name_and_type_index: name_and_type_index,
-            }
-        )
-    }
+    class_index: be_u16 >>
+    name_and_type_index: be_u16 >>
+    (ConstantInfo::FieldRef(
+        FieldRefConstant {
+            class_index: class_index,
+            name_and_type_index: name_and_type_index,
+        }
+    ))
 ));
 
-named!(const_method_ref<&[u8], ConstantInfo>, chain!(
+named!(const_method_ref<&[u8], ConstantInfo>, do_parse!(
     // tag: tag!([0x0A]) ~
-    class_index: be_u16 ~
-    name_and_type_index: be_u16,
-    || {
-        ConstantInfo::MethodRef(
-            MethodRefConstant {
-                class_index: class_index,
-                name_and_type_index: name_and_type_index,
-            }
-        )
-    }
+    class_index: be_u16 >>
+    name_and_type_index: be_u16 >>
+    (ConstantInfo::MethodRef(
+        MethodRefConstant {
+            class_index: class_index,
+            name_and_type_index: name_and_type_index,
+        }
+    ))
 ));
 
-named!(const_interface_method_ref<&[u8], ConstantInfo>, chain!(
+named!(const_interface_method_ref<&[u8], ConstantInfo>, do_parse!(
     // tag: tag!([0x0B]) ~
-    class_index: be_u16 ~
-    name_and_type_index: be_u16,
-    || {
-        ConstantInfo::InterfaceMethodRef(
-            InterfaceMethodRefConstant {
-                class_index: class_index,
-                name_and_type_index: name_and_type_index,
-            }
-        )
-    }
+    class_index: be_u16 >>
+    name_and_type_index: be_u16 >>
+    (ConstantInfo::InterfaceMethodRef(
+        InterfaceMethodRefConstant {
+            class_index: class_index,
+            name_and_type_index: name_and_type_index,
+        }
+    ))
 ));
 
-named!(const_name_and_type<&[u8], ConstantInfo>, chain!(
+named!(const_name_and_type<&[u8], ConstantInfo>, do_parse!(
     // tag: tag!([0x0C]) ~
-    name_index: be_u16 ~
-    descriptor_index: be_u16,
-    || {
-        ConstantInfo::NameAndType(
-            NameAndTypeConstant {
-                name_index: name_index,
-                descriptor_index: descriptor_index,
-            }
-        )
-    }
+    name_index: be_u16 >>
+    descriptor_index: be_u16 >>
+    (ConstantInfo::NameAndType(
+        NameAndTypeConstant {
+            name_index: name_index,
+            descriptor_index: descriptor_index,
+        }
+    ))
 ));
 
 fn const_block_parser(input: &[u8], const_type: u8) -> IResult<&[u8], ConstantInfo> {
@@ -176,17 +154,15 @@ fn const_block_parser(input: &[u8], const_type: u8) -> IResult<&[u8], ConstantIn
         // // 15 => //CONSTANT_MethodHandle,
         // // 16 => //CONSTANT_MethodType,
         // // 18 => //CONSTANT_InvokeDynamic,
-        _ => IResult::Error(Err::Position(ErrorKind::Alt, input)),
+        _ => IResult::Error(error_position!(ErrorKind::Alt, input)),
     }
 }
 
 fn single_constant_parser(input: &[u8]) -> IResult<&[u8], ConstantInfo> {
-    chain!(input,
-        const_type: be_u8 ~
-        const_block: apply!(const_block_parser, const_type),
-        || {
-            const_block
-        }
+    do_parse!(input,
+        const_type: be_u8 >>
+        const_block: apply!(const_block_parser, const_type) >>
+        (const_block)
     )
 }
 
@@ -212,7 +188,7 @@ pub fn constant_parser(i: &[u8], const_pool_size: usize) -> IResult<&[u8], Vec<C
                 input = i;
                 index += 1;
             },
-            _ => return IResult::Error(Err::Position(ErrorKind::Alt, input)),
+            _ => return IResult::Error(error_position!(ErrorKind::Alt, input)),
         }
     }
     IResult::Done(input, res)
