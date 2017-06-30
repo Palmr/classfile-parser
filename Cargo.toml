@@ -1,7 +1,17 @@
 [package]
 name = "classfile-parser"
-version = "0.1.0"
+description = "A parser for Java Class files written in rust"
+version = "0.2.0"
 authors = ["Nick Palmer <nick@palmr.co.uk>"]
+keywords = ["java", "parsing", "class", "classfile"]
+categories = ["parser-implementations"]
+repository = "https://github.com/Palmr/classfile-parser"
+readme = "README.md"
+license = "MIT"
+license-file = "LICENSE.txt"
+
+[badges]
+travis-ci = { repository = "https://github.com/Palmr/classfile-parser", branch = "master" }
 
 [dependencies]
 nom = "^3.1"
