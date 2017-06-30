@@ -1,5 +1,6 @@
 use attribute_info::AttributeInfo;
 
+#[derive(Debug)]
 pub struct FieldInfo {
     pub access_flags: FieldAccessFlags,
     pub name_index: u16,

@@ -16,7 +16,7 @@ fn test_valid_class() {
     let res = class_parser(valid_class);
     match res {
         IResult::Done(_, c) => {
-            println!("Valid class file, version {},{} const_pool({}), this=const[{}], super=const[{}], interfaces({}), fields({}), methods({}), attributes({}), access({:#06X})", c.major_version, c.minor_version, c.const_pool_size, c.this_class, c.super_class, c.interfaces_count, c.fields_count, c.methods_count, c.attributes_count, c.access_flags.bits());
+            println!("Valid class file, version {},{} const_pool({}), this=const[{}], super=const[{}], interfaces({}), fields({}), methods({}), attributes({}), access({:?})", c.major_version, c.minor_version, c.const_pool_size, c.this_class, c.super_class, c.interfaces_count, c.fields_count, c.methods_count, c.attributes_count, c.access_flags);
 
             let mut code_const_index = 0;
 
@@ -37,20 +37,20 @@ fn test_valid_class() {
             println!("Interfaces:");
             let mut interface_index = 0;
             for i in &c.interfaces {
-                println!("\t[{}] = const[{}] = {}", interface_index, i, c.const_pool[(i-1) as usize].to_string());
+                println!("\t[{}] = const[{}] = {:?}", interface_index, i, c.const_pool[(i-1) as usize]);
 
                 interface_index += 1;
             }
             println!("Fields:");
             let mut field_index = 0;
             for f in &c.fields {
-                println!("\t[{}] Name(const[{}] = {}) - access({:#06X})", field_index, f.name_index, c.const_pool[(f.name_index - 1) as usize].to_string(), f.access_flags.bits());
+                println!("\t[{}] Name(const[{}] = {:?}) - access({:?})", field_index, f.name_index, c.const_pool[(f.name_index - 1) as usize], f.access_flags);
                 field_index += 1;
             }
             println!("Methods:");
             let mut method_index = 0;
             for m in &c.methods {
-                println!("\t[{}] Name(const[{}] = {}) - access({:#06X})", method_index, m.name_index, c.const_pool[(m.name_index - 1) as usize].to_string(), m.access_flags.bits());
+                println!("\t[{}] Name(const[{}] = {:?}) - access({:?})", method_index, m.name_index, c.const_pool[(m.name_index - 1) as usize], m.access_flags);
                 method_index += 1;
 
                 for a in &m.attributes {
@@ -65,28 +65,15 @@ fn test_valid_class() {
 
                         }
                     }
+                    else {
+                        println!("\t\tAttribute: {:?}", a);
+                    }
                 }
             }
         },
         _ => panic!("Not a class file"),
     };
 }
-
-// TODO - NP - Figure out file load path
-// #[test]
-// fn test_regular_use() {
-//     let mut f = File::open("../assets/BasicClass.class").unwrap();
-//     let mut buffer = vec![0; 10];
-//     let read = f.read_to_end(&mut buffer);
-
-//     let res = class_parser(&buffer);
-//     match res {
-//         IResult::Done(_, c) => {
-//             println!("Valid class file, version {},{} const_pool({}), this=const[{}], super=const[{}], interfaces({}), fields({}), methods({}), attributes({})", c.major_version, c.minor_version, c.const_pool_size, c.this_class, c.super_class, c.interfaces_count, c.fields_count, c.methods_count, c.attributes_count);
-//         },
-//         _ => panic!("argh!"),
-//     };
-// }
 
 #[test]
 fn test_malformed_class() {
