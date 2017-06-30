@@ -22,7 +22,7 @@ fn test_valid_class() {
 
             println!("Constant pool:");
             for (const_index, const_item) in c.const_pool.iter().enumerate() {
-                println!("\t[{}] = {}", (const_index + 1), const_item.to_string());
+                println!("\t[{}] = {:?}", (const_index + 1), const_item);
                 match *const_item {
                     ConstantInfo::Utf8(ref c) => {
                         if c.utf8_string == "Code" {

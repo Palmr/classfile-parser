@@ -1,4 +1,4 @@
-
+#[derive(Debug)]
 pub enum ConstantInfo {
     Utf8(Utf8Constant),
     Integer(IntegerConstant),
@@ -17,83 +17,77 @@ pub enum ConstantInfo {
     Unusable
 }
 
-impl ConstantInfo {
-    pub fn to_string(&self) -> String {
-        match *self {
-            ConstantInfo::Utf8(ref s) => format!("Utf8Constant[utf8_string=\"{}\"]", s.utf8_string),
-            ConstantInfo::Integer(ref s) => format!("IntegerConstant[value=\"{}\"]", s.value),
-            ConstantInfo::Float(ref s) => format!("FloatConstant[value=\"{}\"]", s.value),
-            ConstantInfo::Long(ref s) => format!("LongConstant[value=\"{}\"]", s.value),
-            ConstantInfo::Double(ref s) => format!("DoubleConstant[value=\"{}\"]", s.value),
-            ConstantInfo::Class(ref s) => format!("ClassConstant[name_index={}]", s.name_index),
-            ConstantInfo::String(ref s) => format!("StringConstant[string_index={}]", s.string_index),
-            ConstantInfo::FieldRef(ref s) => format!("FieldRefConstant[class_index={}, name_and_type_index={}]", s.class_index, s.name_and_type_index),
-            ConstantInfo::MethodRef(ref s) => format!("MethodRefConstant[class_index={}, name_and_type_index={}]", s.class_index, s.name_and_type_index),
-            ConstantInfo::InterfaceMethodRef(ref s) => format!("InterfaceMethodRefConstant[class_index={}, name_and_type_index={}]", s.class_index, s.name_and_type_index),
-            ConstantInfo::NameAndType(ref s) => format!("NameAndTypeConstant[name_index={}, descriptor_index={}]", s.name_index, s.descriptor_index),
-            ConstantInfo::MethodHandle(ref s) => format!("MethodHandleConstant[reference_kind={}, reference_index={}]", s.reference_kind, s.reference_index),
-            ConstantInfo::MethodType(ref s) => format!("MethodTypeConstant[descriptor_index={}]", s.descriptor_index),
-            ConstantInfo::InvokeDynamic(ref s) => format!("InvokeDynamicConstant[bootstrap_method_attr_index={}, name_and_type_index={}]", s.bootstrap_method_attr_index, s.name_and_type_index),
-            ConstantInfo::Unusable => format!("Unusable[]"),
-        }
-    }
-}
-
+#[derive(Debug)]
 pub struct Utf8Constant {
     pub utf8_string: String,
 }
 
+#[derive(Debug)]
 pub struct IntegerConstant {
     pub value: i32,
 }
+
+#[derive(Debug)]
 pub struct FloatConstant {
     pub value: f32,
 }
 
+#[derive(Debug)]
 pub struct LongConstant {
     pub value: i64,
 }
+
+#[derive(Debug)]
 pub struct DoubleConstant {
     pub value: f64,
 }
 
+#[derive(Debug)]
 pub struct ClassConstant {
     pub name_index: u16,
 }
 
+#[derive(Debug)]
 pub struct StringConstant {
     pub string_index: u16,
 }
 
+#[derive(Debug)]
 pub struct FieldRefConstant {
     pub class_index: u16,
     pub name_and_type_index: u16,
 }
 
+#[derive(Debug)]
 pub struct MethodRefConstant {
     pub class_index: u16,
     pub name_and_type_index: u16,
 }
 
+#[derive(Debug)]
 pub struct InterfaceMethodRefConstant {
     pub class_index: u16,
     pub name_and_type_index: u16,
 }
 
+#[derive(Debug)]
 pub struct NameAndTypeConstant {
     pub name_index: u16,
     pub descriptor_index: u16,
 }
 
+#[derive(Debug)]
 pub struct MethodHandleConstant {
     pub reference_kind: u8,
     pub reference_index: u16,
 }
 
+#[derive(Debug)]
 pub struct MethodTypeConstant {
     pub descriptor_index: u16,
 }
 
+#[derive(Debug)]
 pub struct InvokeDynamicConstant {
     pub bootstrap_method_attr_index: u16,
     pub name_and_type_index: u16,
