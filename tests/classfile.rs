@@ -16,7 +16,7 @@ fn test_valid_class() {
     let res = class_parser(valid_class);
     match res {
         IResult::Done(_, c) => {
-            println!("Valid class file, version {},{} const_pool({}), this=const[{}], super=const[{}], interfaces({}), fields({}), methods({}), attributes({})", c.major_version, c.minor_version, c.const_pool_size, c.this_class, c.super_class, c.interfaces_count, c.fields_count, c.methods_count, c.attributes_count);
+            println!("Valid class file, version {},{} const_pool({}), this=const[{}], super=const[{}], interfaces({}), fields({}), methods({}), attributes({}), access({:#06X})", c.major_version, c.minor_version, c.const_pool_size, c.this_class, c.super_class, c.interfaces_count, c.fields_count, c.methods_count, c.attributes_count, c.access_flags.bits());
 
             let mut code_const_index = 0;
 
@@ -38,18 +38,19 @@ fn test_valid_class() {
             let mut interface_index = 0;
             for i in &c.interfaces {
                 println!("\t[{}] = const[{}] = {}", interface_index, i, c.const_pool[(i-1) as usize].to_string());
+
                 interface_index += 1;
             }
             println!("Fields:");
             let mut field_index = 0;
             for f in &c.fields {
-                println!("\t[{}] Name(const[{}] = {})", field_index, f.name_index, c.const_pool[(f.name_index - 1) as usize].to_string());
+                println!("\t[{}] Name(const[{}] = {}) - access({:#06X})", field_index, f.name_index, c.const_pool[(f.name_index - 1) as usize].to_string(), f.access_flags.bits());
                 field_index += 1;
             }
             println!("Methods:");
             let mut method_index = 0;
             for m in &c.methods {
-                println!("\t[{}] Name(const[{}] = {})", method_index, m.name_index, c.const_pool[(m.name_index - 1) as usize].to_string());
+                println!("\t[{}] Name(const[{}] = {}) - access({:#06X})", method_index, m.name_index, c.const_pool[(m.name_index - 1) as usize].to_string(), m.access_flags.bits());
                 method_index += 1;
 
                 for a in &m.attributes {

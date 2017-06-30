@@ -15,8 +15,8 @@ A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/htm
     - [x] Utf8
     - [x] Integer
     - [x] Float
-    - [ ] Long
-    - [ ] Double
+    - [x] Long
+    - [x] Double
     - [x] Class
     - [x] String
     - [x] Fieldref
@@ -26,9 +26,7 @@ A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/htm
     - [ ] MethodHandle
     - [ ] MethodType
     - [ ] InvokeDynamic
-- [ ] Access flags
-    - [x] Stubbed as commented enums
-    - [ ] Implement code to test the enum against values
+- [x] Access flags
 - [x] This class
 - [x] Super class
 - [x] Interfaces
