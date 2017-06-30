@@ -9,6 +9,7 @@ repository = "https://github.com/Palmr/classfile-parser"
 readme = "README.md"
 license = "MIT"
 license-file = "LICENSE.txt"
+exclude = [".idea/**/*", "classfile-parser.iml", ".vscode/**/*"]
 
 [badges]
 travis-ci = { repository = "https://github.com/Palmr/classfile-parser", branch = "master" }
