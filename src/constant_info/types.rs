@@ -11,9 +11,9 @@ pub enum ConstantInfo {
     MethodRef(MethodRefConstant),
     InterfaceMethodRef(InterfaceMethodRefConstant),
     NameAndType(NameAndTypeConstant),
-//    MethodHandle(MethodHandleConstant),
-//    MethodType(MethodTypeConstant),
-//    InvokeDynamic(InvokeDynamicConstant),
+    MethodHandle(MethodHandleConstant),
+    MethodType(MethodTypeConstant),
+    InvokeDynamic(InvokeDynamicConstant),
     Unusable
 }
 
@@ -31,6 +31,9 @@ impl ConstantInfo {
             ConstantInfo::MethodRef(ref s) => format!("MethodRefConstant[class_index={}, name_and_type_index={}]", s.class_index, s.name_and_type_index),
             ConstantInfo::InterfaceMethodRef(ref s) => format!("InterfaceMethodRefConstant[class_index={}, name_and_type_index={}]", s.class_index, s.name_and_type_index),
             ConstantInfo::NameAndType(ref s) => format!("NameAndTypeConstant[name_index={}, descriptor_index={}]", s.name_index, s.descriptor_index),
+            ConstantInfo::MethodHandle(ref s) => format!("MethodHandleConstant[reference_kind={}, reference_index={}]", s.reference_kind, s.reference_index),
+            ConstantInfo::MethodType(ref s) => format!("MethodTypeConstant[descriptor_index={}]", s.descriptor_index),
+            ConstantInfo::InvokeDynamic(ref s) => format!("InvokeDynamicConstant[bootstrap_method_attr_index={}, name_and_type_index={}]", s.bootstrap_method_attr_index, s.name_and_type_index),
             ConstantInfo::Unusable => format!("Unusable[]"),
         }
     }
@@ -80,4 +83,18 @@ pub struct InterfaceMethodRefConstant {
 pub struct NameAndTypeConstant {
     pub name_index: u16,
     pub descriptor_index: u16,
+}
+
+pub struct MethodHandleConstant {
+    pub reference_kind: u8,
+    pub reference_index: u16,
+}
+
+pub struct MethodTypeConstant {
+    pub descriptor_index: u16,
+}
+
+pub struct InvokeDynamicConstant {
+    pub bootstrap_method_attr_index: u16,
+    pub name_and_type_index: u16,
 }

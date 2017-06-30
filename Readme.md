@@ -2,16 +2,16 @@
 
 [![Build Status](https://travis-ci.org/Palmr/classfile-parser.svg?branch=master)](https://travis-ci.org/Palmr/classfile-parser)
 
-A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html), written in Rust using [nom](https://github.com/Geal/nom).
+A parser for [Java 8 Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html), written in Rust using [nom](https://github.com/Geal/nom).
 
 ## Implementation Status
 
 - [x] Header
   - [x] Magic const
   - [x] Version info
-- [ ] Constant pool
+- [x] Constant pool
   - [x] Constant pool size
-  - [ ] Constant types
+  - [x] Constant types
     - [x] Utf8
     - [x] Integer
     - [x] Float
@@ -23,9 +23,9 @@ A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/htm
     - [x] Methodref
     - [x] InterfaceMethodref
     - [x] NameAndType
-    - [ ] MethodHandle
-    - [ ] MethodType
-    - [ ] InvokeDynamic
+    - [x] MethodHandle
+    - [x] MethodType
+    - [x] InvokeDynamic
 - [x] Access flags
 - [x] This class
 - [x] Super class

@@ -4,23 +4,9 @@ use nom::{  IResult,
             be_i64, be_f64,
             ErrorKind};
 
-use constant_info::{
-    ConstantInfo,
-    Utf8Constant,
-    IntegerConstant,
-    FloatConstant,
-    LongConstant,
-    DoubleConstant,
-    ClassConstant,
-    StringConstant,
-    FieldRefConstant,
-    MethodRefConstant,
-    InterfaceMethodRefConstant,
-    NameAndTypeConstant,
-};
+use constant_info::*;
 
 named!(const_utf8<&[u8], ConstantInfo>, do_parse!(
-    // tag!([0x01]) ~
     length: be_u16 >>
     utf8_str: take_str!(length) >>
     (ConstantInfo::Utf8(
@@ -31,7 +17,6 @@ named!(const_utf8<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_integer<&[u8], ConstantInfo>, do_parse!(
-    // tag!([0x03]) ~
     value: be_i32 >>
     (ConstantInfo::Integer(
         IntegerConstant {
@@ -41,7 +26,6 @@ named!(const_integer<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_float<&[u8], ConstantInfo>, do_parse!(
-    // tag!([0x04]) ~
     value: be_f32 >>
     (ConstantInfo::Float(
         FloatConstant {
@@ -51,7 +35,6 @@ named!(const_float<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_long<&[u8], ConstantInfo>, do_parse!(
-    // tag!([0x05]) ~
     value: be_i64 >>
     (ConstantInfo::Long(
         LongConstant {
@@ -61,7 +44,6 @@ named!(const_long<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_double<&[u8], ConstantInfo>, do_parse!(
-    // tag!([0x06]) ~
     value: be_f64 >>
     (ConstantInfo::Double(
         DoubleConstant {
@@ -71,7 +53,6 @@ named!(const_double<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_class<&[u8], ConstantInfo>, do_parse!(
-    // tag: tag!([0x07]) ~
     name_index: be_u16 >>
     (ConstantInfo::Class(
         ClassConstant {
@@ -81,7 +62,6 @@ named!(const_class<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_string<&[u8], ConstantInfo>, do_parse!(
-    // tag: tag!([0x08]) ~
     string_index: be_u16 >>
     (ConstantInfo::String(
         StringConstant {
@@ -91,7 +71,6 @@ named!(const_string<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_field_ref<&[u8], ConstantInfo>, do_parse!(
-    // tag: tag!([0x09]) ~
     class_index: be_u16 >>
     name_and_type_index: be_u16 >>
     (ConstantInfo::FieldRef(
@@ -103,7 +82,6 @@ named!(const_field_ref<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_method_ref<&[u8], ConstantInfo>, do_parse!(
-    // tag: tag!([0x0A]) ~
     class_index: be_u16 >>
     name_and_type_index: be_u16 >>
     (ConstantInfo::MethodRef(
@@ -115,7 +93,6 @@ named!(const_method_ref<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_interface_method_ref<&[u8], ConstantInfo>, do_parse!(
-    // tag: tag!([0x0B]) ~
     class_index: be_u16 >>
     name_and_type_index: be_u16 >>
     (ConstantInfo::InterfaceMethodRef(
@@ -127,13 +104,43 @@ named!(const_interface_method_ref<&[u8], ConstantInfo>, do_parse!(
 ));
 
 named!(const_name_and_type<&[u8], ConstantInfo>, do_parse!(
-    // tag: tag!([0x0C]) ~
     name_index: be_u16 >>
     descriptor_index: be_u16 >>
     (ConstantInfo::NameAndType(
         NameAndTypeConstant {
             name_index: name_index,
             descriptor_index: descriptor_index,
+        }
+    ))
+));
+
+named!(const_method_handle<&[u8], ConstantInfo>, do_parse!(
+    reference_kind: be_u8 >>
+    reference_index: be_u16 >>
+    (ConstantInfo::MethodHandle(
+        MethodHandleConstant {
+            reference_kind: reference_kind,
+            reference_index: reference_index,
+        }
+    ))
+));
+
+named!(const_method_type<&[u8], ConstantInfo>, do_parse!(
+    descriptor_index: be_u16 >>
+    (ConstantInfo::MethodType(
+        MethodTypeConstant {
+            descriptor_index: descriptor_index,
+        }
+    ))
+));
+
+named!(const_invoke_dynamic<&[u8], ConstantInfo>, do_parse!(
+    bootstrap_method_attr_index: be_u16 >>
+    name_and_type_index: be_u16 >>
+    (ConstantInfo::InvokeDynamic(
+        InvokeDynamicConstant {
+            bootstrap_method_attr_index: bootstrap_method_attr_index,
+            name_and_type_index: name_and_type_index,
         }
     ))
 ));
@@ -151,9 +158,9 @@ fn const_block_parser(input: &[u8], const_type: u8) -> IResult<&[u8], ConstantIn
         10 => const_method_ref(input),
         11 => const_interface_method_ref(input),
         12 => const_name_and_type(input),
-        // // 15 => //CONSTANT_MethodHandle,
-        // // 16 => //CONSTANT_MethodType,
-        // // 18 => //CONSTANT_InvokeDynamic,
+        15 => const_method_handle(input),
+        16 => const_method_type(input),
+        18 => const_invoke_dynamic(input),
         _ => IResult::Error(error_position!(ErrorKind::Alt, input)),
     }
 }
