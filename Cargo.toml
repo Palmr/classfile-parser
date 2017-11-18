@@ -15,5 +15,5 @@ exclude = [".idea/**/*", "classfile-parser.iml", ".vscode/**/*"]
 travis-ci = { repository = "Palmr/classfile-parser" }
 
 [dependencies]
-nom = "^3.1"
-bitflags = "^0.9"
+nom = "^3.2"
+bitflags = "1.0"

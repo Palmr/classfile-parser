@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+  </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="RustProjectSettings">
-    <option name="toolchainHomeDirectory" value="C:\Users\npalmer\.cargo\bin" />
+    <option name="toolchainHomeDirectory" value="C:\Users\Nick\.cargo\bin" />
   </component>
   <component name="masterDetails">
     <states>
