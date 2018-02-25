@@ -1,4 +1,4 @@
-package uk.co.palmr.karl.examples;
+package uk.co.palmr.classfileparser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,16 +6,17 @@ import java.util.List;
 public class AllocateClasses {
   public static void main(String[] args) {
     {
-      List<BasicClass> mInstanceList = new ArrayList<>(100);
+      List<BasicClass> instances = new ArrayList<>(100);
 
       for (int i = 0; i < 100; i++) {
         BasicClass lNewObject = new BasicClass("Instance", i);
-        mInstanceList.add(lNewObject);
+        instances.add(lNewObject);
       }
 
       System.out.println("Objects should now be allocated");
 
-      mInstanceList = null;
+      // Remove references to those instances
+      instances.clear();
     }
 
     // Attempt a GC?

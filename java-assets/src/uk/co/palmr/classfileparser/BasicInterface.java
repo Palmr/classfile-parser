@@ -1,4 +1,4 @@
-package uk.co.palmr.karl.examples;
+package uk.co.palmr.classfileparser;
 
 public interface BasicInterface {
   String getOutputMessage();

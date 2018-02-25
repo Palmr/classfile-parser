@@ -12,7 +12,7 @@ use classfile_parser::constant_info::ConstantInfo;
 
 #[test]
 fn test_valid_class() {
-    let valid_class = include_bytes!("../assets/BasicClass.class");
+    let valid_class = include_bytes!("../java-assets/compiled-classes/BasicClass.class");
     let res = class_parser(valid_class);
     match res {
         IResult::Done(_, c) => {
@@ -77,7 +77,7 @@ fn test_valid_class() {
 
 #[test]
 fn test_malformed_class() {
-    let malformed_class = include_bytes!("../assets/malformed.class");
+    let malformed_class = include_bytes!("../java-assets/compiled-classes/malformed.class");
     let res = class_parser(malformed_class);
     match res {
         IResult::Done(_, _) => panic!("The file is not valid and shouldn't be parsed"),

@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/classfile-parser.iml" filepath="$PROJECT_DIR$/classfile-parser.iml" />
+      <module fileurl="file://$PROJECT_DIR$/java-assets/java-assets.iml" filepath="$PROJECT_DIR$/java-assets/java-assets.iml" />
     </modules>
   </component>
 </project>

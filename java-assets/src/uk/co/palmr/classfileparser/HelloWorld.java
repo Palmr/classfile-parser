@@ -1,4 +1,4 @@
-package uk.co.palmr.karl.examples;
+package uk.co.palmr.classfileparser;
 
 public class HelloWorld {
   public static void main(String[] args) {
