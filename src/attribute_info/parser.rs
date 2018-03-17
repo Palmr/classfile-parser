@@ -1,14 +1,11 @@
 use nom::{
-  be_u16, be_u32,
+  be_u8, be_u16, be_u32,
   IResult,
+  ErrorKind,
 };
 
-use attribute_info::{   AttributeInfo,
-                        CodeAttribute,
-                        ExceptionEntry,
-                        ExceptionsAttribute,
-                        ConstantValueAttribute
-                        };
+use attribute_info::*;
+use attribute_info::types::StackMapFrame::*;
 
 pub fn attribute_parser(input: &[u8]) -> IResult<&[u8], AttributeInfo> {
     do_parse!(input,
@@ -57,6 +54,120 @@ pub fn code_attribute_parser(input: &[u8]) -> IResult<&[u8], CodeAttribute> {
             exception_table: exception_table,
             attributes_count: attributes_count,
             attributes: attributes,
+        })
+    )
+}
+
+fn same_frame_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFrame> {
+    value!(input, SameFrame { frame_type })
+}
+
+fn verification_type(v: &u8) -> Option<VerificationTypeInfo> {
+    use self::VerificationTypeInfo::*;
+    match *v {
+        0 => Some(Top),
+        1 => Some(Integer),
+        2 => Some(Float),
+        3 => Some(Double),
+        4 => Some(Long),
+        5 => Some(Null),
+        6 => Some(UninitializedThis),
+        7 => Some(Object),
+        8 => Some(Uninitialized),
+        _ => None,
+    }
+}
+
+fn verification_type_parser(input: &[u8]) -> IResult<&[u8], VerificationTypeInfo> {
+    do_parse!(input,
+        v: be_u8 >>
+        (verification_type(&v).unwrap()) // TODO rewrite .unwrap() call
+    )
+}
+
+fn same_locals_1_stack_item_frame_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFrame> {
+    do_parse!(input,
+        stack: verification_type_parser >>
+        (SameLocals1StackItemFrame { frame_type, stack })
+    )
+}
+
+fn same_locals_1_stack_item_frame_extended_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFrame> {
+    do_parse!(input,
+        offset_delta: be_u16 >>
+        stack: verification_type_parser >>
+        (SameLocals1StackItemFrameExtended { frame_type, offset_delta, stack })
+    )
+}
+
+fn chop_frame_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFrame> {
+    do_parse!(input,
+        offset_delta: be_u16 >>
+        (ChopFrame { frame_type, offset_delta })
+    )
+}
+
+fn same_frame_extended_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFrame> {
+    do_parse!(input,
+        offset_delta: be_u16 >>
+        (SameFrameExtended { frame_type, offset_delta })
+    )
+}
+
+fn append_frame_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFrame> {
+    do_parse!(input,
+        offset_delta: be_u16 >>
+        locals: count!(verification_type_parser, (frame_type - 251) as usize) >>
+        (AppendFrame { frame_type, offset_delta, locals })
+    )
+}
+
+fn full_frame_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFrame> {
+    do_parse!(input,
+        offset_delta: be_u16 >>
+        number_of_locals: be_u16 >>
+        locals: count!(verification_type_parser, number_of_locals as usize) >>
+        number_of_stack_items: be_u16 >>
+        stack: count!(verification_type_parser, number_of_stack_items as usize) >>
+        (FullFrame {
+            frame_type,
+            offset_delta,
+            number_of_locals,
+            locals,
+            number_of_stack_items,
+            stack,
+        })
+    )
+}
+
+fn stack_frame_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFrame> {
+    match frame_type {
+          0... 63 => same_frame_parser(input, frame_type),
+         64...127 => same_locals_1_stack_item_frame_parser(input, frame_type),
+        247       => same_locals_1_stack_item_frame_extended_parser(input, frame_type),
+        248...250 => chop_frame_parser(input, frame_type),
+        251       => same_frame_extended_parser(input, frame_type),
+        252...254 => append_frame_parser(input, frame_type),
+        255       => full_frame_parser(input, frame_type),
+        _ => IResult::Error(error_position!(ErrorKind::Alt, input)),
+    }
+}
+
+fn stack_map_frame_entry_parser(input: &[u8]) -> IResult<&[u8], StackMapFrame> {
+    do_parse!(input,
+        frame_type: be_u8 >>
+        stack_frame: apply!(stack_frame_parser, frame_type) >>
+        (stack_frame)
+    )
+}
+
+pub fn stack_map_table_attribute_parser(input: &[u8]) -> IResult<&[u8], StackMapTableAttribute> {
+    do_parse!(input,
+        number_of_entries: be_u16 >>
+        entries: count!(stack_map_frame_entry_parser, number_of_entries as usize) >>
+        (StackMapTableAttribute {
+            number_of_entries,
+            entries,
         })
     )
 }
