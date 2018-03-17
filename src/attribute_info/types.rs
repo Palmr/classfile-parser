@@ -25,6 +25,37 @@ pub struct CodeAttribute {
     pub attributes: Vec<AttributeInfo>,
 }
 
+#[derive(Copy,Clone,Debug)]
+#[repr(u8)]
+pub enum VerificationTypeInfo {
+    Top               = 0,
+    Integer           = 1,
+    Float             = 2,
+    Double            = 3,
+    Long              = 4,
+    Null              = 5,
+    UninitializedThis = 6,
+    Object            = 7,
+    Uninitialized     = 8,
+}
+
+#[derive(Debug)]
+pub enum StackMapFrame {
+    SameFrame { frame_type: u8 },
+    SameLocals1StackItemFrame { frame_type: u8, stack: VerificationTypeInfo },
+    SameLocals1StackItemFrameExtended { frame_type: u8, offset_delta: u16, stack: VerificationTypeInfo },
+    ChopFrame { frame_type: u8, offset_delta: u16 },
+    SameFrameExtended { frame_type: u8, offset_delta: u16 },
+    AppendFrame { frame_type: u8, offset_delta: u16, locals: Vec<VerificationTypeInfo> },
+    FullFrame { frame_type: u8, offset_delta: u16, number_of_locals: u16, locals: Vec<VerificationTypeInfo>, number_of_stack_items: u16, stack: Vec<VerificationTypeInfo> },
+}
+
+#[derive(Debug)]
+pub struct StackMapTableAttribute {
+    pub number_of_entries: u16,
+    pub entries: Vec<StackMapFrame>,
+}
+
 #[derive(Debug)]
 pub struct ExceptionsAttribute {
     pub exception_table_length: u16,
