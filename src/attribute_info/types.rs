@@ -41,13 +41,39 @@ pub enum VerificationTypeInfo {
 
 #[derive(Debug)]
 pub enum StackMapFrame {
-    SameFrame { frame_type: u8 },
-    SameLocals1StackItemFrame { frame_type: u8, stack: VerificationTypeInfo },
-    SameLocals1StackItemFrameExtended { frame_type: u8, offset_delta: u16, stack: VerificationTypeInfo },
-    ChopFrame { frame_type: u8, offset_delta: u16 },
-    SameFrameExtended { frame_type: u8, offset_delta: u16 },
-    AppendFrame { frame_type: u8, offset_delta: u16, locals: Vec<VerificationTypeInfo> },
-    FullFrame { frame_type: u8, offset_delta: u16, number_of_locals: u16, locals: Vec<VerificationTypeInfo>, number_of_stack_items: u16, stack: Vec<VerificationTypeInfo> },
+    SameFrame {
+        frame_type: u8,
+	},
+    SameLocals1StackItemFrame {
+		frame_type: u8,
+		stack: VerificationTypeInfo,
+	},
+    SameLocals1StackItemFrameExtended {
+		frame_type: u8,
+		offset_delta: u16,
+		stack: VerificationTypeInfo,
+	},
+    ChopFrame {
+		frame_type: u8,
+		offset_delta: u16,
+	},
+    SameFrameExtended {
+		frame_type: u8,
+		offset_delta: u16,
+	},
+    AppendFrame {
+		frame_type: u8,
+		offset_delta: u16,
+		locals: Vec<VerificationTypeInfo>,
+	},
+    FullFrame {
+		frame_type: u8,
+		offset_delta: u16,
+		number_of_locals: u16,
+		locals: Vec<VerificationTypeInfo>,
+		number_of_stack_items: u16,
+		stack: Vec<VerificationTypeInfo>,
+	},
 }
 
 #[derive(Debug)]
