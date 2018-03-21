@@ -79,10 +79,10 @@ fn verification_type(v: &u8) -> Option<VerificationTypeInfo> {
 }
 
 fn verification_type_parser(input: &[u8]) -> IResult<&[u8], VerificationTypeInfo> {
-    do_parse!(input,
-        v: be_u8 >>
-        (verification_type(&v).unwrap()) // TODO rewrite .unwrap() call
-    )
+    match verification_type(&input[0]) {
+        Some(x) => IResult::Done(&input[1..], x),
+        _ => IResult::Error(error_position!(ErrorKind::Alt, input)),
+    }
 }
 
 fn same_locals_1_stack_item_frame_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFrame> {
