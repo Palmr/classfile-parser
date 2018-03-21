@@ -81,7 +81,7 @@ fn verification_type(v: &u8) -> Option<VerificationTypeInfo> {
 fn verification_type_parser(input: &[u8]) -> IResult<&[u8], VerificationTypeInfo> {
     match verification_type(&input[0]) {
         Some(x) => IResult::Done(&input[1..], x),
-        _ => IResult::Error(error_position!(ErrorKind::Alt, input)),
+        _ => IResult::Error(error_position!(ErrorKind::Custom(1), input)),
     }
 }
 
@@ -149,7 +149,7 @@ fn stack_frame_parser(input: &[u8], frame_type: u8) -> IResult<&[u8], StackMapFr
         251       => same_frame_extended_parser(input, frame_type),
         252...254 => append_frame_parser(input, frame_type),
         255       => full_frame_parser(input, frame_type),
-        _ => IResult::Error(error_position!(ErrorKind::Alt, input)),
+        _ => IResult::Error(error_position!(ErrorKind::Custom(2), input)),
     }
 }
 
