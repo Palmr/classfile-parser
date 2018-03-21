@@ -38,7 +38,7 @@ A parser for [Java 8 Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/h
     - [ ] Critical for JVM
       - [x] ConstantValue
       - [x] Code
-      - [ ] StackMapTable
+      - [x] StackMapTable
       - [x] Exceptions
       - [ ] BootstrapMethods
     - [ ] Critical for Java SE
