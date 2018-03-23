@@ -1,6 +1,8 @@
 # Java Classfile parser
 
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://travis-ci.org/Palmr/classfile-parser.svg?branch=master)](https://travis-ci.org/Palmr/classfile-parser)
+[![Crates.io Version](https://img.shields.io/crates/v/classfile-parser.svg)](https://crates.io/crates/classfile-parser)
 
 A parser for [Java 8 Classfiles](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html), written in Rust using [nom](https://github.com/Geal/nom).
 
