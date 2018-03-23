@@ -34,7 +34,7 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
     let mut class_bytes = Vec::new();
     match file.read_to_end(&mut class_bytes) {
         Err(why) => return Err(format!("Unable to read {}: {}", display, Error::description(&why))),
-        Ok(_) => println!("{} contains {} bytes.", display, class_bytes.len()),
+        Ok(_) => {},
     };
 
     let parsed_class = class_parser(&class_bytes);
