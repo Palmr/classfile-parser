@@ -92,3 +92,16 @@ pub struct ExceptionsAttribute {
 pub struct ConstantValueAttribute {
     pub constant_value_index: u16,
 }
+
+#[derive(Debug)]
+pub struct BootstrapMethod {
+    pub bootstrap_method_ref: u16,
+    pub num_bootstrap_arguments: u16,
+    pub bootstrap_arguments: Vec<u16>,
+}
+
+#[derive(Debug)]
+pub struct BootstrapMethodsAttribute {
+    pub num_bootstrap_methods: u16,
+    pub bootstrap_methods: Vec<BootstrapMethod>,
+}

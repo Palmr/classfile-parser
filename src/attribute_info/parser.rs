@@ -191,3 +191,27 @@ pub fn constant_value_attribute_parser(input: &[u8]) -> IResult<&[u8], ConstantV
         })
     )
 }
+
+fn bootstrap_method_parser(input: &[u8]) -> IResult<&[u8], BootstrapMethod> {
+    do_parse!(input,
+        bootstrap_method_ref: be_u16 >>
+        num_bootstrap_arguments: be_u16 >>
+        bootstrap_arguments: count!(be_u16, num_bootstrap_arguments as usize) >>
+        (BootstrapMethod {
+            bootstrap_method_ref,
+            num_bootstrap_arguments,
+            bootstrap_arguments,
+        })
+    )
+}
+
+pub fn bootstrap_methods_attribute_parser(input: &[u8]) -> IResult<&[u8], BootstrapMethodsAttribute> {
+    do_parse!(input,
+        num_bootstrap_methods: be_u16 >>
+        bootstrap_methods: count!(bootstrap_method_parser, num_bootstrap_methods as usize) >>
+        (BootstrapMethodsAttribute {
+            num_bootstrap_methods,
+            bootstrap_methods,
+        })
+    )
+}
