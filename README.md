@@ -1,6 +1,6 @@
 # Java Classfile parser
 
-[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.txt)
 [![Build Status](https://travis-ci.org/Palmr/classfile-parser.svg?branch=master)](https://travis-ci.org/Palmr/classfile-parser)
 [![Crates.io Version](https://img.shields.io/crates/v/classfile-parser.svg)](https://crates.io/crates/classfile-parser)
 
@@ -35,14 +35,14 @@ A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se10/ht
 - [x] Fields
 - [x] Methods
 - [x] Attributes
-  - [ ] Basic attribute info block parsing
+  - [x] Basic attribute info block parsing
   - [ ] Known typed attributes parsing
-    - [ ] Critical for JVM
+    - [x] Critical for JVM
       - [x] ConstantValue
       - [x] Code
       - [x] StackMapTable
       - [x] Exceptions
-      - [ ] BootstrapMethods
+      - [x] BootstrapMethods
     - [ ] Critical for Java SE
       - [ ] InnerClasses
       - [ ] EnclosingMethod
