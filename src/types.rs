@@ -3,6 +3,7 @@ use field_info::FieldInfo;
 use method_info::MethodInfo;
 use attribute_info::AttributeInfo;
 
+#[derive(Clone, Debug)]
 pub struct ClassFile {
     pub minor_version: u16,
     pub major_version: u16,

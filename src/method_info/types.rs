@@ -1,5 +1,6 @@
 use attribute_info::AttributeInfo;
 
+#[derive(Clone, Debug)]
 pub struct MethodInfo {
     pub access_flags: MethodAccessFlags,
     pub name_index: u16,
