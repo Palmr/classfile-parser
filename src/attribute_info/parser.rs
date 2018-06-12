@@ -215,3 +215,12 @@ pub fn bootstrap_methods_attribute_parser(input: &[u8]) -> IResult<&[u8], Bootst
         })
     )
 }
+
+pub fn sourcefile_attribute_parser(input: &[u8]) -> IResult<&[u8], SourceFileAttribute> {
+    do_parse!(input,
+        attribute_name_index: be_u16 >>
+        attribute_length: be_u32 >>
+        sourcefile_index: be_u16 >>
+        (SourceFileAttribute {attribute_name_index, attribute_length, sourcefile_index})
+    )
+}
