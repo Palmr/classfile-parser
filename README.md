@@ -57,7 +57,7 @@ A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se10/ht
       - [ ] AnnotationDefault
       - [ ] MethodParameters
     - [ ] Useful but not critical
-      - [ ] SourceFile
+      - [x] SourceFile
       - [ ] SourceDebugExtension
       - [ ] LineNumberTable
       - [ ] LocalVariableTable
