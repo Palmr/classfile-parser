@@ -1,8 +1,6 @@
 extern crate nom;
 extern crate classfile_parser;
 
-use nom::IResult;
-
 use classfile_parser::class_parser;
 use classfile_parser::constant_info::ConstantInfo;
 use classfile_parser::attribute_info::bootstrap_methods_attribute_parser;
@@ -11,7 +9,7 @@ use classfile_parser::attribute_info::bootstrap_methods_attribute_parser;
 #[test]
 fn test_attribute_bootstrap_methods() {
     match class_parser(include_bytes!("../java-assets/compiled-classes/BootstrapMethods.class")) {
-        IResult::Done(_, c) => {
+        Result::Ok((_, c)) => {
             println!("Valid class file, version {},{} const_pool({}), this=const[{}], super=const[{}], interfaces({}), fields({}), methods({}), attributes({}), access({:?})", c.major_version, c.minor_version, c.const_pool_size, c.this_class, c.super_class, c.interfaces_count, c.fields_count, c.methods_count, c.attributes_count, c.access_flags);
 
             let mut bootstrap_method_const_index = 0;
@@ -38,7 +36,7 @@ fn test_attribute_bootstrap_methods() {
             for (_, attribute_item) in c.attributes.iter().enumerate() {
                 if attribute_item.attribute_name_index == bootstrap_method_const_index {
                     match bootstrap_methods_attribute_parser(&attribute_item.info) {
-                        IResult::Done(_, bsma) => {
+                        Result::Ok((_, bsma)) => {
                             assert_eq!(bsma.num_bootstrap_methods, 1);
                             let bsm = &bsma.bootstrap_methods[0];
                             assert_eq!(bsm.bootstrap_method_ref, 36);
@@ -70,7 +68,7 @@ fn test_attribute_bootstrap_methods() {
 #[test]
 fn should_have_no_bootstrap_method_attr_if_no_invoke_dynamic() {
     match class_parser(include_bytes!("../java-assets/compiled-classes/BasicClass.class")) {
-        IResult::Done(_, c) => {
+        Result::Ok((_, c)) => {
             for (_, const_item) in c.const_pool.iter().enumerate() {
                 match *const_item {
                     ConstantInfo::Utf8(ref c) => {
