@@ -70,6 +70,40 @@ fn test_valid_class() {
     };
 }
 
+
+#[test]
+fn test_utf_string_constants() {
+    let valid_class = include_bytes!("../java-assets/compiled-classes/UnicodeStrings.class");
+    let res = class_parser(valid_class);
+    match res {
+        Result::Ok((_, c)) => {
+            let mut found_utf_maths_string = false;
+            let mut found_utf_runes_string = false;
+            let mut found_utf_braille_string = false;
+            for (const_index, const_item) in c.const_pool.iter().enumerate() {
+                println!("\t[{}] = {:?}", (const_index + 1), const_item);
+                match *const_item {
+                    ConstantInfo::Utf8(ref c) => {
+                        if c.utf8_string == "2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm" {
+                            found_utf_maths_string = true;
+                        }
+                        if c.utf8_string == "ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ" {
+                            found_utf_runes_string = true;
+                        }
+                        if c.utf8_string == "⡌⠁⠧⠑ ⠼⠁⠒  ⡍⠜⠇⠑⠹⠰⠎ ⡣⠕⠌" {
+                            found_utf_braille_string = true;
+                        }
+                    },
+                    _ => {},
+                }
+            }
+
+            assert!(found_utf_maths_string & found_utf_runes_string & found_utf_braille_string, "Failed to find unicode strings");
+        },
+        _ => panic!("Not a class file"),
+    }
+}
+
 #[test]
 fn test_malformed_class() {
     let malformed_class = include_bytes!("../java-assets/compiled-classes/malformed.class");
