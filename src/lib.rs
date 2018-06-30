@@ -8,8 +8,6 @@ extern crate nom;
 #[macro_use]
 extern crate bitflags;
 
-use nom::IResult;
-
 pub mod constant_info;
 pub mod attribute_info;
 pub mod method_info;
@@ -39,7 +37,7 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
 
     let parsed_class = class_parser(&class_bytes);
     match parsed_class {
-        IResult::Done(_, c) => Ok(c),
+        Ok((_, c)) => Ok(c),
         _ => Err("Failed to parse class?".to_string()),
     }
 }

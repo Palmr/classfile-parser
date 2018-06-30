@@ -1,11 +1,6 @@
 extern crate nom;
 extern crate classfile_parser;
 
-// use std::fs::File;
-// use std::io::Read;
-
-use nom::IResult;
-
 use classfile_parser::class_parser;
 use classfile_parser::constant_info::ConstantInfo;
 
@@ -15,7 +10,7 @@ fn test_valid_class() {
     let valid_class = include_bytes!("../java-assets/compiled-classes/BasicClass.class");
     let res = class_parser(valid_class);
     match res {
-        IResult::Done(_, c) => {
+        Result::Ok((_, c)) => {
             println!("Valid class file, version {},{} const_pool({}), this=const[{}], super=const[{}], interfaces({}), fields({}), methods({}), attributes({}), access({:?})", c.major_version, c.minor_version, c.const_pool_size, c.this_class, c.super_class, c.interfaces_count, c.fields_count, c.methods_count, c.attributes_count, c.access_flags);
 
             let mut code_const_index = 0;
@@ -58,7 +53,7 @@ fn test_valid_class() {
                         println!("\t\tCode attr found, len = {}", a.attribute_length);
                         let code_result = classfile_parser::attribute_info::code_attribute_parser(&a.info);
                         match code_result {
-                            IResult::Done(_, code) => {
+                            Result::Ok((_, code)) => {
                                 println!("\t\t\tCode! code_length = {}", code.code_length);
                             },
                             _ => panic!("Not a valid code attr?"),
@@ -81,7 +76,7 @@ fn test_utf_string_constants() {
     let valid_class = include_bytes!("../java-assets/compiled-classes/UnicodeStrings.class");
     let res = class_parser(valid_class);
     match res {
-        IResult::Done(_, c) => {
+        Result::Ok((_, c)) => {
             let mut found_utf_maths_string = false;
             let mut found_utf_runes_string = false;
             let mut found_utf_braille_string = false;
@@ -114,8 +109,8 @@ fn test_malformed_class() {
     let malformed_class = include_bytes!("../java-assets/compiled-classes/malformed.class");
     let res = class_parser(malformed_class);
     match res {
-        IResult::Done(_, _) => panic!("The file is not valid and shouldn't be parsed"),
-        _ => res,
+        Result::Ok((_, _)) => panic!("The file is not valid and shouldn't be parsed"),
+        _ => {},
     };
 }
 
@@ -129,7 +124,7 @@ fn test_malformed_class() {
 //     let res = const_utf8(hello_world_data);
 
 //     match res {
-//         IResult::Done(_, c) =>
+//         Result::Ok((_, c)) =>
 //         match c {
 //             Constant::Utf8(ref s) =>
 //                  println!("Valid UTF8 const: {}", s.utf8_string),

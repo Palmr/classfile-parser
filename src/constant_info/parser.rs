@@ -1,8 +1,7 @@
-use nom::{  IResult,
-            be_u8, be_u16,
+use nom::{  be_u8, be_u16,
             be_i32, be_f32,
             be_i64, be_f64,
-            ErrorKind};
+            Err, ErrorKind};
 
 use constant_info::*;
 
@@ -145,7 +144,7 @@ named!(const_invoke_dynamic<&[u8], ConstantInfo>, do_parse!(
     ))
 ));
 
-fn const_block_parser(input: &[u8], const_type: u8) -> IResult<&[u8], ConstantInfo> {
+fn const_block_parser(input: &[u8], const_type: u8) -> Result<(&[u8], ConstantInfo), Err<&[u8], u32>> {
     match const_type {
         1 => const_utf8(input),
         3 => const_integer(input),
@@ -161,11 +160,11 @@ fn const_block_parser(input: &[u8], const_type: u8) -> IResult<&[u8], ConstantIn
         15 => const_method_handle(input),
         16 => const_method_type(input),
         18 => const_invoke_dynamic(input),
-        _ => IResult::Error(error_position!(ErrorKind::Alt, input)),
+        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::Alt))),
     }
 }
 
-fn single_constant_parser(input: &[u8]) -> IResult<&[u8], ConstantInfo> {
+fn single_constant_parser(input: &[u8]) -> Result<(&[u8], ConstantInfo), Err<&[u8], u32>> {
     do_parse!(input,
         const_type: be_u8 >>
         const_block: apply!(const_block_parser, const_type) >>
@@ -173,13 +172,13 @@ fn single_constant_parser(input: &[u8]) -> IResult<&[u8], ConstantInfo> {
     )
 }
 
-pub fn constant_parser(i: &[u8], const_pool_size: usize) -> IResult<&[u8], Vec<ConstantInfo>> {
+pub fn constant_parser(i: &[u8], const_pool_size: usize) -> Result<(&[u8], Vec<ConstantInfo>), Err<&[u8], u32>> {
     let mut index = 0;
     let mut input = i;
     let mut res = Vec::with_capacity(const_pool_size);
     while index < const_pool_size {
         match single_constant_parser(input) {
-            IResult::Done(i, o) => {
+            Ok((i, o)) => {
                 // Long and Double Entries have twice the size
                 // see https://docs.oracle.com/javase/specs/jvms/se6/html/ClassFile.doc.html#1348
                 let uses_two_entries = match o {
@@ -195,8 +194,8 @@ pub fn constant_parser(i: &[u8], const_pool_size: usize) -> IResult<&[u8], Vec<C
                 input = i;
                 index += 1;
             },
-            _ => return IResult::Error(error_position!(ErrorKind::Alt, input)),
+            _ => return Result::Err(Err::Error(error_position!(input, ErrorKind::Alt))),
         }
     }
-    IResult::Done(input, res)
+    Ok((input, res))
 }
