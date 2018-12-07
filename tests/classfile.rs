@@ -80,6 +80,7 @@ fn test_utf_string_constants() {
             let mut found_utf_maths_string = false;
             let mut found_utf_runes_string = false;
             let mut found_utf_braille_string = false;
+            let mut found_utf_modified_string = false;
             for (const_index, const_item) in c.const_pool.iter().enumerate() {
                 println!("\t[{}] = {:?}", (const_index + 1), const_item);
                 match *const_item {
@@ -93,13 +94,22 @@ fn test_utf_string_constants() {
                         if c.utf8_string == "⡌⠁⠧⠑ ⠼⠁⠒  ⡍⠜⠇⠑⠹⠰⠎ ⡣⠕⠌" {
                             found_utf_braille_string = true;
                         }
+                        if c.utf8_string == "\0𠜎" {
+                            found_utf_modified_string = true;
+                        }
                     },
                     _ => {},
                 }
             }
 
-            assert!(found_utf_maths_string & found_utf_runes_string & found_utf_braille_string, "Failed to find unicode strings");
-        },
+            assert!(
+                found_utf_maths_string
+                    & found_utf_runes_string
+                    & found_utf_braille_string
+                    & found_utf_modified_string,
+                "Failed to find unicode strings"
+            );
+        }
         _ => panic!("Not a class file"),
     }
 }

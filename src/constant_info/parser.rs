@@ -7,10 +7,10 @@ use constant_info::*;
 
 named!(const_utf8<&[u8], ConstantInfo>, do_parse!(
     length: be_u16 >>
-    utf8_str: take_str!(length) >>
+    utf8_str: map_res!(take!(length), cesu8::from_java_cesu8) >>
     (ConstantInfo::Utf8(
         Utf8Constant {
-            utf8_string: utf8_str.to_owned(),
+            utf8_string: utf8_str.to_string(),
         }
     ))
 ));
