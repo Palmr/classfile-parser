@@ -61,9 +61,9 @@ fn same_frame_parser(input: &[u8], frame_type: u8) -> Result<(&[u8], StackMapFra
     value!(input, SameFrame { frame_type })
 }
 
-fn verification_type(v: &u8) -> Option<VerificationTypeInfo> {
+fn verification_type(v: u8) -> Option<VerificationTypeInfo> {
     use self::VerificationTypeInfo::*;
-    match *v {
+    match v {
         0 => Some(Top),
         1 => Some(Integer),
         2 => Some(Float),
@@ -78,7 +78,7 @@ fn verification_type(v: &u8) -> Option<VerificationTypeInfo> {
 }
 
 fn verification_type_parser(input: &[u8]) -> Result<(&[u8], VerificationTypeInfo), Err<&[u8]>> {
-    match verification_type(&input[0]) {
+    match verification_type(input[0]) {
         Some(x) => Result::Ok((&input[1..], x)),
         _ => Result::Err(Err::Error(error_position!(input, ErrorKind::Custom(1)))),
     }
