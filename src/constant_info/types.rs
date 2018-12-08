@@ -14,7 +14,7 @@ pub enum ConstantInfo {
     MethodHandle(MethodHandleConstant),
     MethodType(MethodTypeConstant),
     InvokeDynamic(InvokeDynamicConstant),
-    Unusable
+    Unusable,
 }
 
 #[derive(Clone, Debug)]

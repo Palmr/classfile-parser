@@ -8,13 +8,13 @@ extern crate nom;
 #[macro_use]
 extern crate bitflags;
 
-pub mod constant_info;
 pub mod attribute_info;
-pub mod method_info;
+pub mod constant_info;
 pub mod field_info;
+pub mod method_info;
 
-pub mod types;
 pub mod parser;
+pub mod types;
 
 pub use parser::class_parser;
 pub use types::*;
@@ -25,14 +25,26 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
     let display = path.display();
 
     let mut file = match File::open(&path) {
-        Err(why) => return Err(format!("Unable to open {}: {}", display, Error::description(&why))),
+        Err(why) => {
+            return Err(format!(
+                "Unable to open {}: {}",
+                display,
+                Error::description(&why)
+            ))
+        }
         Ok(file) => file,
     };
 
     let mut class_bytes = Vec::new();
     match file.read_to_end(&mut class_bytes) {
-        Err(why) => return Err(format!("Unable to read {}: {}", display, Error::description(&why))),
-        Ok(_) => {},
+        Err(why) => {
+            return Err(format!(
+                "Unable to read {}: {}",
+                display,
+                Error::description(&why)
+            ))
+        }
+        Ok(_) => {}
     };
 
     let parsed_class = class_parser(&class_bytes);

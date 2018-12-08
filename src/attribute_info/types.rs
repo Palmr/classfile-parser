@@ -10,7 +10,7 @@ pub struct ExceptionEntry {
     pub start_pc: u16,
     pub end_pc: u16,
     pub handler_pc: u16,
-    pub catch_type: u16
+    pub catch_type: u16,
 }
 
 #[derive(Clone, Debug)]
@@ -28,52 +28,52 @@ pub struct CodeAttribute {
 #[derive(Clone, Debug)]
 #[repr(u8)]
 pub enum VerificationTypeInfo {
-    Top               = 0,
-    Integer           = 1,
-    Float             = 2,
-    Double            = 3,
-    Long              = 4,
-    Null              = 5,
+    Top = 0,
+    Integer = 1,
+    Float = 2,
+    Double = 3,
+    Long = 4,
+    Null = 5,
     UninitializedThis = 6,
-    Object            = 7,
-    Uninitialized     = 8,
+    Object = 7,
+    Uninitialized = 8,
 }
 
 #[derive(Clone, Debug)]
 pub enum StackMapFrame {
     SameFrame {
         frame_type: u8,
-	},
+    },
     SameLocals1StackItemFrame {
-		frame_type: u8,
-		stack: VerificationTypeInfo,
-	},
+        frame_type: u8,
+        stack: VerificationTypeInfo,
+    },
     SameLocals1StackItemFrameExtended {
-		frame_type: u8,
-		offset_delta: u16,
-		stack: VerificationTypeInfo,
-	},
+        frame_type: u8,
+        offset_delta: u16,
+        stack: VerificationTypeInfo,
+    },
     ChopFrame {
-		frame_type: u8,
-		offset_delta: u16,
-	},
+        frame_type: u8,
+        offset_delta: u16,
+    },
     SameFrameExtended {
-		frame_type: u8,
-		offset_delta: u16,
-	},
+        frame_type: u8,
+        offset_delta: u16,
+    },
     AppendFrame {
-		frame_type: u8,
-		offset_delta: u16,
-		locals: Vec<VerificationTypeInfo>,
-	},
+        frame_type: u8,
+        offset_delta: u16,
+        locals: Vec<VerificationTypeInfo>,
+    },
     FullFrame {
-		frame_type: u8,
-		offset_delta: u16,
-		number_of_locals: u16,
-		locals: Vec<VerificationTypeInfo>,
-		number_of_stack_items: u16,
-		stack: Vec<VerificationTypeInfo>,
-	},
+        frame_type: u8,
+        offset_delta: u16,
+        number_of_locals: u16,
+        locals: Vec<VerificationTypeInfo>,
+        number_of_stack_items: u16,
+        stack: Vec<VerificationTypeInfo>,
+    },
 }
 
 #[derive(Clone, Debug)]

@@ -1,8 +1,7 @@
-extern crate nom;
 extern crate classfile_parser;
+extern crate nom;
 
 use classfile_parser::class_parser;
-
 
 #[test]
 fn test_attribute_stack_map_table() {
@@ -34,18 +33,17 @@ fn test_attribute_stack_map_table() {
 
                     use classfile_parser::attribute_info::StackMapFrame::*;
                     match a.entries[0] {
-                        SameFrame { .. } => {},
+                        SameFrame { .. } => {}
                         _ => panic!("unexpected frame type for frame 0"),
                     };
                     match a.entries[1] {
-                        SameLocals1StackItemFrame { .. } => {},
+                        SameLocals1StackItemFrame { .. } => {}
                         _ => panic!("unexpected frame type for frame 1: {:?}", &a.entries[1]),
                     };
-                },
+                }
                 _ => panic!("failed to parse StackMapTable"),
             };
-
-        },
+        }
         _ => panic!("not a class file"),
     };
 }
