@@ -30,7 +30,7 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
                 "Unable to open {}: {}",
                 display,
                 Error::description(&why)
-            ))
+            ));
         }
         Ok(file) => file,
     };
@@ -42,7 +42,7 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
                 "Unable to read {}: {}",
                 display,
                 Error::description(&why)
-            ))
+            ));
         }
         Ok(_) => {}
     };
