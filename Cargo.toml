@@ -14,6 +14,6 @@ exclude = [".idea/**/*", "classfile-parser.iml", "java-assets/out/**/*"]
 travis-ci = { repository = "Palmr/classfile-parser" }
 
 [dependencies]
-nom = "^4.0"
-bitflags = "1.0"
-cesu8 = "1.1.0"
+nom = "^4.1"
+bitflags = "^1.0"
+cesu8 = "^1.1"
