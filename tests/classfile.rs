@@ -95,6 +95,7 @@ fn test_utf_string_constants() {
             let mut found_utf_runes_string = false;
             let mut found_utf_braille_string = false;
             let mut found_utf_modified_string = false;
+            let mut found_utf_unpaired_string = false;
             for (const_index, const_item) in c.const_pool.iter().enumerate() {
                 println!("\t[{}] = {:?}", (const_index + 1), const_item);
                 match *const_item {
@@ -113,6 +114,9 @@ fn test_utf_string_constants() {
                         if c.utf8_string == "\0𠜎" {
                             found_utf_modified_string = true;
                         }
+                        if c.utf8_string == "X���X" && c.bytes.len() == 5 {
+                            found_utf_unpaired_string = true;
+                        }
                     }
                     _ => {}
                 }
@@ -122,7 +126,8 @@ fn test_utf_string_constants() {
                 found_utf_maths_string
                     & found_utf_runes_string
                     & found_utf_braille_string
-                    & found_utf_modified_string,
+                    & found_utf_modified_string
+                    & found_utf_unpaired_string,
                 "Failed to find unicode strings"
             );
         }

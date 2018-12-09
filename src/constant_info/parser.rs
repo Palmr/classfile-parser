@@ -2,14 +2,19 @@ use nom::{be_f32, be_f64, be_i32, be_i64, be_u16, be_u8, Err, ErrorKind};
 
 use constant_info::*;
 
+fn utf8_constant(input: &[u8]) -> Utf8Constant {
+    let utf8_string =
+        cesu8::from_java_cesu8(&input).unwrap_or_else(|_| String::from_utf8_lossy(&input));
+    Utf8Constant {
+        utf8_string: utf8_string.to_string(),
+        bytes: input.to_owned(),
+    }
+}
+
 named!(const_utf8<&[u8], ConstantInfo>, do_parse!(
     length: be_u16 >>
-    utf8_str: map_res!(take!(length), cesu8::from_java_cesu8) >>
-    (ConstantInfo::Utf8(
-        Utf8Constant {
-            utf8_string: utf8_str.to_string(),
-        }
-    ))
+    constant: map!(take!(length), utf8_constant) >>
+    (ConstantInfo::Utf8(constant))
 ));
 
 named!(const_integer<&[u8], ConstantInfo>, do_parse!(
