@@ -8,6 +8,22 @@ use types::{ClassAccessFlags, ClassFile};
 
 named!(magic_parser, tag!(&[0xCA, 0xFE, 0xBA, 0xBE]));
 
+/// Parse a byte array into a ClassFile. This will probably be deprecated in 0.4.0 in as it returns
+/// a nom IResult type, which exposes the internal parsing library and not a good idea.
+///
+/// If you want to call it directly, as it is the only way to parse a byte slice directly, you must
+/// unwrap the result yourself.
+///
+/// ```rust
+/// let classfile_bytes = include_bytes!("../java-assets/compiled-classes/BasicClass.class");
+///
+/// match classfile_parser::class_parser(classfile_bytes) {
+///     Ok((_, class_file)) => {
+///         println!("version {},{}", class_file.major_version, class_file.minor_version);
+///     }
+///     Err(_) => panic!("Failed to parse"),
+/// };
+/// ```
 pub fn class_parser(input: &[u8]) -> IResult<&[u8], ClassFile> {
     do_parse!(
         input,

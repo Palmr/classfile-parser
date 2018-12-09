@@ -1,10 +1,58 @@
-# Java Classfile parser
+# Java Classfile Parser
 
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.txt)
 [![Build Status](https://travis-ci.org/Palmr/classfile-parser.svg?branch=master)](https://travis-ci.org/Palmr/classfile-parser)
 [![Crates.io Version](https://img.shields.io/crates/v/classfile-parser.svg)](https://crates.io/crates/classfile-parser)
 
 A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se10/html/jvms-4.html), written in Rust using [nom](https://github.com/Geal/nom).
+
+## Installation
+
+Classfile Parser is available from crates.io and can be included in your Cargo enabled project like this:
+
+```toml
+[dependencies]
+classfile-parser = "~0.3"
+```
+
+## Usage
+
+```rust
+extern crate classfile_parser;
+
+use classfile_parser::class_parser;
+
+fn main() {
+    let classfile_bytes = include_bytes!("../path/to/JavaClass.class");
+    
+    match class_parser(classfile_bytes) {
+        Ok((_, class_file)) => {
+            println!(
+                "version {},{} \
+                 const_pool({}), \
+                 this=const[{}], \
+                 super=const[{}], \
+                 interfaces({}), \
+                 fields({}), \
+                 methods({}), \
+                 attributes({}), \
+                 access({:?})",
+                class_file.major_version,
+                class_file.minor_version,
+                class_file.const_pool_size,
+                class_file.this_class,
+                class_file.super_class,
+                class_file.interfaces_count,
+                class_file.fields_count,
+                class_file.methods_count,
+                class_file.attributes_count,
+                class_file.access_flags
+            );
+        }
+        Err(_) => panic!("Failed to parse"),
+    };
+}
+```
 
 ## Implementation Status
 

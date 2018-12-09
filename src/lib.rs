@@ -1,3 +1,5 @@
+//! A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se10/html/jvms-4.html)
+
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
@@ -5,6 +7,7 @@ use std::path::Path;
 
 #[macro_use]
 extern crate nom;
+
 #[macro_use]
 extern crate bitflags;
 
@@ -19,6 +22,17 @@ pub mod types;
 pub use parser::class_parser;
 pub use types::*;
 
+/// Attempt to parse a class file given a class file given a path to a class file
+/// (without .class extension)
+///
+/// ```rust
+/// match classfile_parser::parse_class("./java-assets/compiled-classes/BasicClass") {
+///     Ok(class_file) => {
+///         println!("version {},{}", class_file.major_version, class_file.minor_version);
+///     }
+///     Err(ex) => panic!("Failed to parse: {}", ex),
+/// };
+/// ```
 pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
     let class_file_name = &format!("{}.class", class_name);
     let path = Path::new(class_file_name);
