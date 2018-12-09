@@ -6,9 +6,11 @@ public class UnicodeStrings {
     final String runes = "ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ";
     final String braille = "⡌⠁⠧⠑ ⠼⠁⠒  ⡍⠜⠇⠑⠹⠰⠎ ⡣⠕⠌";
     final String modified = "\0𠜎";
+    final String unpaired = "X\uD800X";
     System.out.println(maths);
     System.out.println(runes);
     System.out.println(braille);
     System.out.println(modified);
+    System.out.println(unpaired);
   }
 }

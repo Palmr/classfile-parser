@@ -20,6 +20,7 @@ pub enum ConstantInfo {
 #[derive(Clone, Debug)]
 pub struct Utf8Constant {
     pub utf8_string: String,
+    pub bytes: Vec<u8>,
 }
 
 #[derive(Clone, Debug)]
