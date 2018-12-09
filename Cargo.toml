@@ -1,7 +1,7 @@
 [package]
 name = "classfile-parser"
 description = "A parser for Java Class files written in rust"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Nick Palmer <nick@palmr.co.uk>"]
 keywords = ["java", "parsing", "class", "classfile"]
 categories = ["parser-implementations"]
