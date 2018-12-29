@@ -9,6 +9,39 @@ fn align(input: &[u8], address: usize) -> IResult<&[u8], &[u8]> {
     take!(input, (4 - address % 4) % 4)
 }
 
+fn lookupswitch_parser(input: &[u8]) -> IResult<&[u8], Instruction> {
+    do_parse!(
+        input,
+        default: be_i32
+            >> npairs: be_u32
+            >> pairs:
+                count!(
+                    do_parse!(lookup: be_i32 >> offset: be_i32 >> (lookup, offset)),
+                    npairs as usize
+                )
+            >> (Instruction::Lookupswitch {
+                default: default,
+                pairs: pairs
+            })
+    )
+}
+
+fn tableswitch_parser(input: &[u8]) -> IResult<&[u8], Instruction> {
+    do_parse!(
+        input,
+        default: be_i32
+            >> low: be_i32
+            >> high: be_i32
+            >> offsets: count!(be_i32, (high - low + 1) as usize)
+            >> (Instruction::Tableswitch {
+                default: default,
+                low: low,
+                high: high,
+                offsets: offsets
+            })
+    )
+}
+
 pub fn code_parser(input: &[u8]) -> IResult<&[u8], Vec<(usize, Instruction)>> {
     many0!(
         input,
@@ -192,7 +225,7 @@ pub fn instruction_parser(input: &[u8], address: usize) -> IResult<&[u8], Instru
         0x21 => value!(Instruction::Lload3) |
         0x69 => value!(Instruction::Lmul) |
         0x75 => value!(Instruction::Lneg) |
-        0xab => do_parse!(apply!(align, address + 1) >> default: be_i32 >> npairs: be_u32 >> pairs: count!(do_parse!(lookup: be_i32 >> offset: be_i32 >> (lookup, offset)), npairs as usize) >> (Instruction::Lookupswitch{default:default, pairs: pairs})) |
+        0xab => preceded!(apply!(align, address + 1), lookupswitch_parser) |
         0x81 => value!(Instruction::Lor) |
         0x71 => value!(Instruction::Lrem) |
         0xad => value!(Instruction::Lreturn) |
@@ -222,7 +255,7 @@ pub fn instruction_parser(input: &[u8], address: usize) -> IResult<&[u8], Instru
         0x56 => value!(Instruction::Sastore) |
         0x11 => map!(be_i16, Instruction::Sipush) |
         0x5f => value!(Instruction::Swap) |
-        0xaa => do_parse!(apply!(align, address + 1) >> default: be_i32 >> low: be_i32 >> high: be_i32 >> offsets: count!(be_i32, (high-low+1) as usize) >> (Instruction::Tableswitch{default:default, low:low, high:high, offsets:offsets})) |
+        0xaa => preceded!(apply!(align, address + 1), tableswitch_parser) |
         0xc4 => switch!(be_u8,
             0x19 => map!(be_u16, Instruction::AloadWide) |
             0x3a => map!(be_u16, Instruction::AstoreWide) |
