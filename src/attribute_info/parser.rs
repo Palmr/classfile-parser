@@ -169,12 +169,12 @@ fn full_frame_parser(input: &[u8], frame_type: u8) -> Result<(&[u8], StackMapFra
 
 fn stack_frame_parser(input: &[u8], frame_type: u8) -> Result<(&[u8], StackMapFrame), Err<&[u8]>> {
     match frame_type {
-        0...63 => same_frame_parser(input, frame_type),
-        64...127 => same_locals_1_stack_item_frame_parser(input, frame_type),
+        0..=63 => same_frame_parser(input, frame_type),
+        64..=127 => same_locals_1_stack_item_frame_parser(input, frame_type),
         247 => same_locals_1_stack_item_frame_extended_parser(input, frame_type),
-        248...250 => chop_frame_parser(input, frame_type),
+        248..=250 => chop_frame_parser(input, frame_type),
         251 => same_frame_extended_parser(input, frame_type),
-        252...254 => append_frame_parser(input, frame_type),
+        252..=254 => append_frame_parser(input, frame_type),
         255 => full_frame_parser(input, frame_type),
         _ => Result::Err(Err::Error(error_position!(input, ErrorKind::Custom(2)))),
     }
