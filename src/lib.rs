@@ -1,6 +1,5 @@
 //! A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se10/html/jvms-4.html)
 
-use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -45,7 +44,7 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
             return Err(format!(
                 "Unable to open {}: {}",
                 display,
-                Error::description(&why)
+                &why.to_string()
             ));
         }
         Ok(file) => file,
@@ -56,7 +55,7 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
         return Err(format!(
             "Unable to read {}: {}",
             display,
-            Error::description(&why)
+            &why.to_string()
         ));
     }
 

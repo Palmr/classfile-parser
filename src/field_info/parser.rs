@@ -14,10 +14,10 @@ pub fn field_parser(input: &[u8]) -> IResult<&[u8], FieldInfo> {
             >> attributes: count!(attribute_parser, attributes_count as usize)
             >> (FieldInfo {
                 access_flags: FieldAccessFlags::from_bits_truncate(access_flags),
-                name_index: name_index,
-                descriptor_index: descriptor_index,
-                attributes_count: attributes_count,
-                attributes: attributes,
+                name_index,
+                descriptor_index,
+                attributes_count,
+                attributes,
             })
     )
 }

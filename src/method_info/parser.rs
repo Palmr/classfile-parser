@@ -14,10 +14,10 @@ pub fn method_parser(input: &[u8]) -> IResult<&[u8], MethodInfo> {
             >> attributes: count!(attribute_parser, attributes_count as usize)
             >> (MethodInfo {
                 access_flags: MethodAccessFlags::from_bits_truncate(access_flags),
-                name_index: name_index,
-                descriptor_index: descriptor_index,
-                attributes_count: attributes_count,
-                attributes: attributes,
+                name_index,
+                descriptor_index,
+                attributes_count,
+                attributes,
             })
     )
 }

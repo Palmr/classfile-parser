@@ -10,8 +10,8 @@ pub fn attribute_parser(input: &[u8]) -> Result<(&[u8], AttributeInfo), Err<&[u8
             >> attribute_length: be_u32
             >> info: take!(attribute_length)
             >> (AttributeInfo {
-                attribute_name_index: attribute_name_index,
-                attribute_length: attribute_length,
+                attribute_name_index,
+                attribute_length,
                 info: info.to_owned(),
             })
     )
@@ -25,10 +25,10 @@ pub fn exception_entry_parser(input: &[u8]) -> Result<(&[u8], ExceptionEntry), E
             >> handler_pc: be_u16
             >> catch_type: be_u16
             >> (ExceptionEntry {
-                start_pc: start_pc,
-                end_pc: end_pc,
-                handler_pc: handler_pc,
-                catch_type: catch_type,
+                start_pc,
+                end_pc,
+                handler_pc,
+                catch_type,
             })
     )
 }
@@ -45,14 +45,14 @@ pub fn code_attribute_parser(input: &[u8]) -> Result<(&[u8], CodeAttribute), Err
             >> attributes_count: be_u16
             >> attributes: count!(attribute_parser, attributes_count as usize)
             >> (CodeAttribute {
-                max_stack: max_stack,
-                max_locals: max_locals,
-                code_length: code_length,
+                max_stack,
+                max_locals,
+                code_length,
                 code: code.to_owned(),
-                exception_table_length: exception_table_length,
-                exception_table: exception_table,
-                attributes_count: attributes_count,
-                attributes: attributes,
+                exception_table_length,
+                exception_table,
+                attributes_count,
+                attributes,
             })
     )
 }
@@ -209,8 +209,8 @@ pub fn exceptions_attribute_parser(
         exception_table_length: be_u16
             >> exception_table: count!(be_u16, exception_table_length as usize)
             >> (ExceptionsAttribute {
-                exception_table_length: exception_table_length,
-                exception_table: exception_table,
+                exception_table_length,
+                exception_table,
             })
     )
 }
@@ -222,7 +222,7 @@ pub fn constant_value_attribute_parser(
         input,
         constant_value_index: be_u16
             >> (ConstantValueAttribute {
-                constant_value_index: constant_value_index,
+                constant_value_index,
             })
     )
 }

@@ -20,8 +20,8 @@ fn lookupswitch_parser(input: &[u8]) -> IResult<&[u8], Instruction> {
                     npairs as usize
                 )
             >> (Instruction::Lookupswitch {
-                default: default,
-                pairs: pairs
+                default,
+                pairs,
             })
     )
 }
@@ -34,10 +34,10 @@ fn tableswitch_parser(input: &[u8]) -> IResult<&[u8], Instruction> {
             >> high: be_i32
             >> offsets: count!(be_i32, (high - low + 1) as usize)
             >> (Instruction::Tableswitch {
-                default: default,
-                low: low,
-                high: high,
-                offsets: offsets
+                default,
+                low,
+                high,
+                offsets,
             })
     )
 }
@@ -175,7 +175,7 @@ pub fn instruction_parser(input: &[u8], address: usize) -> IResult<&[u8], Instru
         0x9e => map!(be_i16, Instruction::Ifle) |
         0xc7 => map!(be_i16, Instruction::Ifnonnull) |
         0xc6 => map!(be_i16, Instruction::Ifnull) |
-        0x84 => do_parse!(index: be_u8 >> value: be_i8 >> (Instruction::Iinc{index: index, value: value})) |
+        0x84 => do_parse!(index: be_u8 >> value: be_i8 >> (Instruction::Iinc{index, value})) |
         0x15 => map!(be_u8, Instruction::Iload) |
         0x1a => value!(Instruction::Iload0) |
         0x1b => value!(Instruction::Iload1) |
@@ -185,7 +185,7 @@ pub fn instruction_parser(input: &[u8], address: usize) -> IResult<&[u8], Instru
         0x74 => value!(Instruction::Ineg) |
         0xc1 => map!(be_u16, Instruction::Instanceof) |
         0xba => do_parse!(index: be_u16 >> tag!(&[0, 0]) >> (Instruction::Invokedynamic(index))) |
-        0xb9 => do_parse!(index: be_u16 >> count: be_u8 >> tag!(&[0]) >> (Instruction::Invokeinterface{index: index, count: count})) |
+        0xb9 => do_parse!(index: be_u16 >> count: be_u8 >> tag!(&[0]) >> (Instruction::Invokeinterface{index, count})) |
         0xb7 => map!(be_u16, Instruction::Invokespecial) |
         0xb8 => map!(be_u16, Instruction::Invokestatic) |
         0xb6 => map!(be_u16, Instruction::Invokevirtual) |
@@ -241,7 +241,7 @@ pub fn instruction_parser(input: &[u8], address: usize) -> IResult<&[u8], Instru
         0x83 => value!(Instruction::Lxor) |
         0xc2 => value!(Instruction::Monitorenter) |
         0xc3 => value!(Instruction::Monitorexit) |
-        0xc5 => do_parse!(index: be_u16 >> dimensions: be_u8 >> (Instruction::Multianewarray{index: index, dimensions: dimensions})) |
+        0xc5 => do_parse!(index: be_u16 >> dimensions: be_u8 >> (Instruction::Multianewarray{index, dimensions})) |
         0xbb => map!(be_u16, Instruction::New) |
         0xbc => map!(be_u8, Instruction::Newarray) |
         0x00 => value!(Instruction::Nop) |
@@ -268,7 +268,7 @@ pub fn instruction_parser(input: &[u8], address: usize) -> IResult<&[u8], Instru
             0x16 => map!(be_u16, Instruction::LloadWide) |
             0x37 => map!(be_u16, Instruction::LstoreWide) |
             0xa9 => map!(be_u16, Instruction::RetWide) |
-            0x84 => do_parse!(index: be_u16 >> value: be_i16 >> (Instruction::IincWide{index: index, value: value}))
+            0x84 => do_parse!(index: be_u16 >> value: be_i16 >> (Instruction::IincWide{index, value}))
         )
     )
 }

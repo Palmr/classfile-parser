@@ -21,7 +21,7 @@ named!(const_integer<&[u8], ConstantInfo>, do_parse!(
     value: be_i32 >>
     (ConstantInfo::Integer(
         IntegerConstant {
-            value: value,
+            value,
         }
     ))
 ));
@@ -30,7 +30,7 @@ named!(const_float<&[u8], ConstantInfo>, do_parse!(
     value: be_f32 >>
     (ConstantInfo::Float(
         FloatConstant {
-            value: value,
+            value,
         }
     ))
 ));
@@ -39,7 +39,7 @@ named!(const_long<&[u8], ConstantInfo>, do_parse!(
     value: be_i64 >>
     (ConstantInfo::Long(
         LongConstant {
-            value: value,
+            value,
         }
     ))
 ));
@@ -48,7 +48,7 @@ named!(const_double<&[u8], ConstantInfo>, do_parse!(
     value: be_f64 >>
     (ConstantInfo::Double(
         DoubleConstant {
-            value: value,
+            value,
         }
     ))
 ));
@@ -57,7 +57,7 @@ named!(const_class<&[u8], ConstantInfo>, do_parse!(
     name_index: be_u16 >>
     (ConstantInfo::Class(
         ClassConstant {
-            name_index: name_index,
+            name_index,
         }
     ))
 ));
@@ -66,7 +66,7 @@ named!(const_string<&[u8], ConstantInfo>, do_parse!(
     string_index: be_u16 >>
     (ConstantInfo::String(
         StringConstant {
-            string_index: string_index,
+            string_index,
         }
     ))
 ));
@@ -76,8 +76,8 @@ named!(const_field_ref<&[u8], ConstantInfo>, do_parse!(
     name_and_type_index: be_u16 >>
     (ConstantInfo::FieldRef(
         FieldRefConstant {
-            class_index: class_index,
-            name_and_type_index: name_and_type_index,
+            class_index,
+            name_and_type_index,
         }
     ))
 ));
@@ -87,8 +87,8 @@ named!(const_method_ref<&[u8], ConstantInfo>, do_parse!(
     name_and_type_index: be_u16 >>
     (ConstantInfo::MethodRef(
         MethodRefConstant {
-            class_index: class_index,
-            name_and_type_index: name_and_type_index,
+            class_index,
+            name_and_type_index,
         }
     ))
 ));
@@ -98,8 +98,8 @@ named!(const_interface_method_ref<&[u8], ConstantInfo>, do_parse!(
     name_and_type_index: be_u16 >>
     (ConstantInfo::InterfaceMethodRef(
         InterfaceMethodRefConstant {
-            class_index: class_index,
-            name_and_type_index: name_and_type_index,
+            class_index,
+            name_and_type_index,
         }
     ))
 ));
@@ -109,8 +109,8 @@ named!(const_name_and_type<&[u8], ConstantInfo>, do_parse!(
     descriptor_index: be_u16 >>
     (ConstantInfo::NameAndType(
         NameAndTypeConstant {
-            name_index: name_index,
-            descriptor_index: descriptor_index,
+            name_index,
+            descriptor_index,
         }
     ))
 ));
@@ -120,8 +120,8 @@ named!(const_method_handle<&[u8], ConstantInfo>, do_parse!(
     reference_index: be_u16 >>
     (ConstantInfo::MethodHandle(
         MethodHandleConstant {
-            reference_kind: reference_kind,
-            reference_index: reference_index,
+            reference_kind,
+            reference_index,
         }
     ))
 ));
@@ -130,7 +130,7 @@ named!(const_method_type<&[u8], ConstantInfo>, do_parse!(
     descriptor_index: be_u16 >>
     (ConstantInfo::MethodType(
         MethodTypeConstant {
-            descriptor_index: descriptor_index,
+            descriptor_index,
         }
     ))
 ));
@@ -140,16 +140,19 @@ named!(const_invoke_dynamic<&[u8], ConstantInfo>, do_parse!(
     name_and_type_index: be_u16 >>
     (ConstantInfo::InvokeDynamic(
         InvokeDynamicConstant {
-            bootstrap_method_attr_index: bootstrap_method_attr_index,
-            name_and_type_index: name_and_type_index,
+            bootstrap_method_attr_index,
+            name_and_type_index,
         }
     ))
 ));
 
+type ConstantInfoResult<'a> = Result<(&'a[u8], ConstantInfo), Err<&'a[u8], u32>>;
+type ConstantInfoVecResult<'a> = Result<(&'a[u8], Vec<ConstantInfo>), Err<&'a[u8], u32>>;
+
 fn const_block_parser(
     input: &[u8],
     const_type: u8,
-) -> Result<(&[u8], ConstantInfo), Err<&[u8], u32>> {
+) -> ConstantInfoResult {
     match const_type {
         1 => const_utf8(input),
         3 => const_integer(input),
@@ -169,7 +172,7 @@ fn const_block_parser(
     }
 }
 
-fn single_constant_parser(input: &[u8]) -> Result<(&[u8], ConstantInfo), Err<&[u8], u32>> {
+fn single_constant_parser(input: &[u8]) -> ConstantInfoResult {
     do_parse!(
         input,
         const_type: be_u8 >> const_block: apply!(const_block_parser, const_type) >> (const_block)
@@ -179,7 +182,7 @@ fn single_constant_parser(input: &[u8]) -> Result<(&[u8], ConstantInfo), Err<&[u
 pub fn constant_parser(
     i: &[u8],
     const_pool_size: usize,
-) -> Result<(&[u8], Vec<ConstantInfo>), Err<&[u8], u32>> {
+) -> ConstantInfoVecResult {
     let mut index = 0;
     let mut input = i;
     let mut res = Vec::with_capacity(const_pool_size);
@@ -188,10 +191,7 @@ pub fn constant_parser(
             Ok((i, o)) => {
                 // Long and Double Entries have twice the size
                 // see https://docs.oracle.com/javase/specs/jvms/se6/html/ClassFile.doc.html#1348
-                let uses_two_entries = match o {
-                    ConstantInfo::Long(..) | ConstantInfo::Double(..) => true,
-                    _ => false,
-                };
+                let uses_two_entries = matches!(o, ConstantInfo::Long(..) | ConstantInfo::Double(..));
 
                 res.push(o);
                 if uses_two_entries {
