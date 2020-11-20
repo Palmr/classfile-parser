@@ -41,22 +41,14 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
 
     let mut file = match File::open(&path) {
         Err(why) => {
-            return Err(format!(
-                "Unable to open {}: {}",
-                display,
-                &why.to_string()
-            ));
+            return Err(format!("Unable to open {}: {}", display, &why.to_string()));
         }
         Ok(file) => file,
     };
 
     let mut class_bytes = Vec::new();
     if let Err(why) = file.read_to_end(&mut class_bytes) {
-        return Err(format!(
-            "Unable to read {}: {}",
-            display,
-            &why.to_string()
-        ));
+        return Err(format!("Unable to read {}: {}", display, &why.to_string()));
     }
 
     let parsed_class = class_parser(&class_bytes);

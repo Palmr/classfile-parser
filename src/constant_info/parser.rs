@@ -146,13 +146,10 @@ named!(const_invoke_dynamic<&[u8], ConstantInfo>, do_parse!(
     ))
 ));
 
-type ConstantInfoResult<'a> = Result<(&'a[u8], ConstantInfo), Err<&'a[u8], u32>>;
-type ConstantInfoVecResult<'a> = Result<(&'a[u8], Vec<ConstantInfo>), Err<&'a[u8], u32>>;
+type ConstantInfoResult<'a> = Result<(&'a [u8], ConstantInfo), Err<&'a [u8], u32>>;
+type ConstantInfoVecResult<'a> = Result<(&'a [u8], Vec<ConstantInfo>), Err<&'a [u8], u32>>;
 
-fn const_block_parser(
-    input: &[u8],
-    const_type: u8,
-) -> ConstantInfoResult {
+fn const_block_parser(input: &[u8], const_type: u8) -> ConstantInfoResult {
     match const_type {
         1 => const_utf8(input),
         3 => const_integer(input),
@@ -179,10 +176,7 @@ fn single_constant_parser(input: &[u8]) -> ConstantInfoResult {
     )
 }
 
-pub fn constant_parser(
-    i: &[u8],
-    const_pool_size: usize,
-) -> ConstantInfoVecResult {
+pub fn constant_parser(i: &[u8], const_pool_size: usize) -> ConstantInfoVecResult {
     let mut index = 0;
     let mut input = i;
     let mut res = Vec::with_capacity(const_pool_size);
@@ -191,7 +185,8 @@ pub fn constant_parser(
             Ok((i, o)) => {
                 // Long and Double Entries have twice the size
                 // see https://docs.oracle.com/javase/specs/jvms/se6/html/ClassFile.doc.html#1348
-                let uses_two_entries = matches!(o, ConstantInfo::Long(..) | ConstantInfo::Double(..));
+                let uses_two_entries =
+                    matches!(o, ConstantInfo::Long(..) | ConstantInfo::Double(..));
 
                 res.push(o);
                 if uses_two_entries {
