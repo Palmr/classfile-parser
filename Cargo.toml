@@ -8,6 +8,7 @@ categories = ["parser-implementations"]
 repository = "https://github.com/Palmr/classfile-parser"
 readme = "README.md"
 license-file = "LICENSE.txt"
+license = "MIT"
 exclude = [".idea/**/*", "classfile-parser.iml", "java-assets/out/**/*"]
 
 [badges]
