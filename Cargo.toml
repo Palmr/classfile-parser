@@ -12,5 +12,5 @@ exclude = [".idea/**/*", "classfile-parser.iml", "java-assets/out/**/*"]
 
 [dependencies]
 nom = "^4.1"
-bitflags = "^1.0"
+bitflags = "^1.2"
 cesu8 = "^1.1"
