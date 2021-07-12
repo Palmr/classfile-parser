@@ -11,9 +11,6 @@ license-file = "LICENSE.txt"
 license = "MIT"
 exclude = [".idea/**/*", "classfile-parser.iml", "java-assets/out/**/*"]
 
-[badges]
-travis-ci = { repository = "Palmr/classfile-parser" }
-
 [dependencies]
 nom = "^4.1"
 bitflags = "^1.0"
