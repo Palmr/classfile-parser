@@ -26,17 +26,23 @@ pub struct CodeAttribute {
 }
 
 #[derive(Clone, Debug)]
-#[repr(u8)]
 pub enum VerificationTypeInfo {
-    Top = 0,
-    Integer = 1,
-    Float = 2,
-    Double = 3,
-    Long = 4,
-    Null = 5,
-    UninitializedThis = 6,
-    Object = 7,
-    Uninitialized = 8,
+    Top,
+    Integer,
+    Float,
+    Double,
+    Long,
+    Null,
+    UninitializedThis,
+    Object {
+        /// An index into the constant pool for the class of the object
+        class: u16,
+    },
+    Uninitialized {
+        /// Offset into associated code array of a new instruction
+        /// that created the object being stored here.
+        offset: u16,
+    },
 }
 
 #[derive(Clone, Debug)]

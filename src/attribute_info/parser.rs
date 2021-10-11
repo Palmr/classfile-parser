@@ -61,25 +61,20 @@ fn same_frame_parser(input: &[u8], frame_type: u8) -> Result<(&[u8], StackMapFra
     value!(input, SameFrame { frame_type })
 }
 
-fn verification_type(v: u8) -> Option<VerificationTypeInfo> {
-    use self::VerificationTypeInfo::*;
-    match v {
-        0 => Some(Top),
-        1 => Some(Integer),
-        2 => Some(Float),
-        3 => Some(Double),
-        4 => Some(Long),
-        5 => Some(Null),
-        6 => Some(UninitializedThis),
-        7 => Some(Object),
-        8 => Some(Uninitialized),
-        _ => None,
-    }
-}
-
 fn verification_type_parser(input: &[u8]) -> Result<(&[u8], VerificationTypeInfo), Err<&[u8]>> {
-    match verification_type(input[0]) {
-        Some(x) => Result::Ok((&input[1..], x)),
+    use self::VerificationTypeInfo::*;
+    let v = input[0];
+    let new_input = &input[1..];
+    match v {
+        0 => Ok((new_input, Top)),
+        1 => Ok((new_input, Integer)),
+        2 => Ok((new_input, Float)),
+        3 => Ok((new_input, Double)),
+        4 => Ok((new_input, Long)),
+        5 => Ok((new_input, Null)),
+        6 => Ok((new_input, UninitializedThis)),
+        7 => do_parse!(new_input, class: be_u16 >> (Object { class })),
+        8 => do_parse!(new_input, offset: be_u16 >> (Uninitialized { offset })),
         _ => Result::Err(Err::Error(error_position!(input, ErrorKind::Custom(1)))),
     }
 }
