@@ -10,15 +10,16 @@ fn align(input: &[u8], address: usize) -> IResult<&[u8], &[u8]> {
 }
 
 fn lookupswitch_parser(input: &[u8]) -> IResult<&[u8], Instruction> {
+    // This function provides type annotations required by rustc.
+    fn each_pair(input: &[u8]) -> IResult<&[u8], (i32, i32)> {
+        do_parse!(input, lookup: be_i32 >> offset: be_i32 >> (lookup, offset))
+    }
+
     do_parse!(
         input,
         default: be_i32
             >> npairs: be_u32
-            >> pairs:
-                count!(
-                    do_parse!(lookup: be_i32 >> offset: be_i32 >> (lookup, offset)),
-                    npairs as usize
-                )
+            >> pairs: count!(call!(each_pair), npairs as usize)
             >> (Instruction::Lookupswitch { default, pairs })
     )
 }
