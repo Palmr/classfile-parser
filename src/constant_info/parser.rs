@@ -172,7 +172,7 @@ fn const_block_parser(input: &[u8], const_type: u8) -> ConstantInfoResult {
 fn single_constant_parser(input: &[u8]) -> ConstantInfoResult {
     do_parse!(
         input,
-        const_type: be_u8 >> const_block: apply!(const_block_parser, const_type) >> (const_block)
+        const_type: be_u8 >> const_block: call!(const_block_parser, const_type) >> (const_block)
     )
 }
 
