@@ -1,6 +1,7 @@
 use nom::{
+    error::ErrorKind,
     number::complete::{be_f32, be_f64, be_i32, be_i64, be_u16, be_u8},
-    Err, ErrorKind,
+    Err,
 };
 
 use constant_info::*;
