@@ -1,11 +1,14 @@
 use nom::{
     error::ErrorKind,
     number::complete::{be_u16, be_u32, be_u8},
-    Err,
+    Err as BaseErr,
 };
 
 use attribute_info::types::StackMapFrame::*;
 use attribute_info::*;
+
+// Using a type alias here evades a Clippy warning about complex types.
+type Err<E> = BaseErr<(E, ErrorKind)>;
 
 pub fn attribute_parser(input: &[u8]) -> Result<(&[u8], AttributeInfo), Err<&[u8]>> {
     do_parse!(

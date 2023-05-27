@@ -150,8 +150,8 @@ named!(const_invoke_dynamic<&[u8], ConstantInfo>, do_parse!(
     ))
 ));
 
-type ConstantInfoResult<'a> = Result<(&'a [u8], ConstantInfo), Err<&'a [u8], u32>>;
-type ConstantInfoVecResult<'a> = Result<(&'a [u8], Vec<ConstantInfo>), Err<&'a [u8], u32>>;
+type ConstantInfoResult<'a> = Result<(&'a [u8], ConstantInfo), Err<(&'a [u8], ErrorKind)>>;
+type ConstantInfoVecResult<'a> = Result<(&'a [u8], Vec<ConstantInfo>), Err<(&'a [u8], ErrorKind)>>;
 
 fn const_block_parser(input: &[u8], const_type: u8) -> ConstantInfoResult {
     match const_type {
