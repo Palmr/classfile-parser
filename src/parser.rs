@@ -25,6 +25,7 @@ named!(magic_parser, tag!(&[0xCA, 0xFE, 0xBA, 0xBE]));
 /// };
 /// ```
 pub fn class_parser(input: &[u8]) -> IResult<&[u8], ClassFile> {
+    use nom::number::complete::be_u16;
     do_parse!(
         input,
         magic_parser

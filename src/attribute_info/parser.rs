@@ -1,4 +1,7 @@
-use nom::{be_u16, be_u32, be_u8, Err, ErrorKind};
+use nom::{
+    number::complete::{be_u16, be_u32, be_u8},
+    Err, ErrorKind,
+};
 
 use attribute_info::types::StackMapFrame::*;
 use attribute_info::*;

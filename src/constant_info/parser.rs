@@ -1,4 +1,7 @@
-use nom::{be_f32, be_f64, be_i32, be_i64, be_u16, be_u8, Err, ErrorKind};
+use nom::{
+    number::complete::{be_f32, be_f64, be_i32, be_i64, be_u16, be_u8},
+    Err, ErrorKind,
+};
 
 use constant_info::*;
 
