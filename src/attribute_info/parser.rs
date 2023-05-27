@@ -75,7 +75,7 @@ fn verification_type_parser(input: &[u8]) -> Result<(&[u8], VerificationTypeInfo
         6 => Ok((new_input, UninitializedThis)),
         7 => do_parse!(new_input, class: be_u16 >> (Object { class })),
         8 => do_parse!(new_input, offset: be_u16 >> (Uninitialized { offset })),
-        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::Custom(1)))),
+        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::NoneOf))),
     }
 }
 
@@ -171,7 +171,7 @@ fn stack_frame_parser(input: &[u8], frame_type: u8) -> Result<(&[u8], StackMapFr
         251 => same_frame_extended_parser(input, frame_type),
         252..=254 => append_frame_parser(input, frame_type),
         255 => full_frame_parser(input, frame_type),
-        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::Custom(2)))),
+        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::NoneOf))),
     }
 }
 
