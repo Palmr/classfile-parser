@@ -39,7 +39,7 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
     let path = Path::new(class_file_name);
     let display = path.display();
 
-    let mut file = match File::open(&path) {
+    let mut file = match File::open(path) {
         Err(why) => {
             return Err(format!("Unable to open {}: {}", display, &why.to_string()));
         }
