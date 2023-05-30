@@ -76,6 +76,6 @@ fn test_class() {
 
     let parsed = code_parser(&code_attribute.code);
 
-    assert_eq!(true, parsed.is_ok());
+    assert!(parsed.is_ok());
     assert_eq!(64, parsed.unwrap().1.len());
 }
