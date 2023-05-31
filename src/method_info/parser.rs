@@ -1,4 +1,4 @@
-use nom::{be_u16, IResult};
+use nom::{number::complete::be_u16, IResult};
 
 use attribute_info::attribute_parser;
 

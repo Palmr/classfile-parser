@@ -1,7 +1,14 @@
-use nom::{be_u16, be_u32, be_u8, Err, ErrorKind};
+use nom::{
+    error::ErrorKind,
+    number::complete::{be_u16, be_u32, be_u8},
+    Err as BaseErr,
+};
 
 use attribute_info::types::StackMapFrame::*;
 use attribute_info::*;
+
+// Using a type alias here evades a Clippy warning about complex types.
+type Err<E> = BaseErr<(E, ErrorKind)>;
 
 pub fn attribute_parser(input: &[u8]) -> Result<(&[u8], AttributeInfo), Err<&[u8]>> {
     do_parse!(
@@ -75,7 +82,7 @@ fn verification_type_parser(input: &[u8]) -> Result<(&[u8], VerificationTypeInfo
         6 => Ok((new_input, UninitializedThis)),
         7 => do_parse!(new_input, class: be_u16 >> (Object { class })),
         8 => do_parse!(new_input, offset: be_u16 >> (Uninitialized { offset })),
-        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::Custom(1)))),
+        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::NoneOf))),
     }
 }
 
@@ -171,14 +178,14 @@ fn stack_frame_parser(input: &[u8], frame_type: u8) -> Result<(&[u8], StackMapFr
         251 => same_frame_extended_parser(input, frame_type),
         252..=254 => append_frame_parser(input, frame_type),
         255 => full_frame_parser(input, frame_type),
-        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::Custom(2)))),
+        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::NoneOf))),
     }
 }
 
 fn stack_map_frame_entry_parser(input: &[u8]) -> Result<(&[u8], StackMapFrame), Err<&[u8]>> {
     do_parse!(
         input,
-        frame_type: be_u8 >> stack_frame: apply!(stack_frame_parser, frame_type) >> (stack_frame)
+        frame_type: be_u8 >> stack_frame: call!(stack_frame_parser, frame_type) >> (stack_frame)
     )
 }
 

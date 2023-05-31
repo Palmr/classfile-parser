@@ -1,5 +1,8 @@
 use code_attribute::types::Instruction;
-use nom::{be_i16, be_i32, be_i8, be_u16, be_u32, be_u8, IResult, Offset};
+use nom::{
+    number::complete::{be_i16, be_i32, be_i8, be_u16, be_u32, be_u8},
+    IResult, Offset,
+};
 
 fn offset<'a>(remaining: &'a [u8], input: &[u8]) -> IResult<&'a [u8], usize> {
     Ok((remaining, input.offset(remaining)))
@@ -10,15 +13,16 @@ fn align(input: &[u8], address: usize) -> IResult<&[u8], &[u8]> {
 }
 
 fn lookupswitch_parser(input: &[u8]) -> IResult<&[u8], Instruction> {
+    // This function provides type annotations required by rustc.
+    fn each_pair(input: &[u8]) -> IResult<&[u8], (i32, i32)> {
+        do_parse!(input, lookup: be_i32 >> offset: be_i32 >> (lookup, offset))
+    }
+
     do_parse!(
         input,
         default: be_i32
             >> npairs: be_u32
-            >> pairs:
-                count!(
-                    do_parse!(lookup: be_i32 >> offset: be_i32 >> (lookup, offset)),
-                    npairs as usize
-                )
+            >> pairs: count!(call!(each_pair), npairs as usize)
             >> (Instruction::Lookupswitch { default, pairs })
     )
 }
@@ -43,8 +47,8 @@ pub fn code_parser(input: &[u8]) -> IResult<&[u8], Vec<(usize, Instruction)>> {
     many0!(
         input,
         complete!(do_parse!(
-            address: apply!(offset, input)
-                >> instruction: apply!(instruction_parser, address)
+            address: call!(offset, input)
+                >> instruction: call!(instruction_parser, address)
                 >> (address, instruction)
         ))
     )
@@ -222,7 +226,7 @@ pub fn instruction_parser(input: &[u8], address: usize) -> IResult<&[u8], Instru
         0x21 => value!(Instruction::Lload3) |
         0x69 => value!(Instruction::Lmul) |
         0x75 => value!(Instruction::Lneg) |
-        0xab => preceded!(apply!(align, address + 1), lookupswitch_parser) |
+        0xab => preceded!(call!(align, address + 1), lookupswitch_parser) |
         0x81 => value!(Instruction::Lor) |
         0x71 => value!(Instruction::Lrem) |
         0xad => value!(Instruction::Lreturn) |
@@ -252,7 +256,7 @@ pub fn instruction_parser(input: &[u8], address: usize) -> IResult<&[u8], Instru
         0x56 => value!(Instruction::Sastore) |
         0x11 => map!(be_i16, Instruction::Sipush) |
         0x5f => value!(Instruction::Swap) |
-        0xaa => preceded!(apply!(align, address + 1), tableswitch_parser) |
+        0xaa => preceded!(call!(align, address + 1), tableswitch_parser) |
         0xc4 => switch!(be_u8,
             0x19 => map!(be_u16, Instruction::AloadWide) |
             0x3a => map!(be_u16, Instruction::AstoreWide) |
