@@ -23,6 +23,7 @@ pub struct ClassFile {
 }
 
 bitflags! {
+    #[derive(Clone, Debug)]
     pub struct ClassAccessFlags: u16 {
         const PUBLIC = 0x0001;     //	Declared public; may be accessed from outside its package.
         const FINAL = 0x0010;      //	Declared final; no subclasses allowed.
