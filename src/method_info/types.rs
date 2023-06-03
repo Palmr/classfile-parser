@@ -10,7 +10,7 @@ pub struct MethodInfo {
 }
 
 bitflags! {
-    #[derive(Clone, Debug)]
+    #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
     pub struct MethodAccessFlags: u16 {
         const PUBLIC = 0x0001;       // 	Declared public; may be accessed from outside its package.
         const PRIVATE = 0x0002;      // 	Declared private; accessible only within the defining class.
