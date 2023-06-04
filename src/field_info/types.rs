@@ -24,3 +24,12 @@ bitflags! {
         const ENUM = 0x4000;       // 	Declared as an element of an enum.
     }
 }
+
+#[cfg(test)]
+trait TraitTester:
+    Copy + Clone + PartialEq + Eq + PartialOrd + Ord + ::std::hash::Hash + ::std::fmt::Debug
+{
+}
+
+#[cfg(test)]
+impl TraitTester for FieldAccessFlags {}

@@ -26,3 +26,12 @@ bitflags! {
         const SYNTHETIC = 0x1000;    // 	Declared synthetic; not present in the source code.
     }
 }
+
+#[cfg(test)]
+trait TraitTester:
+    Copy + Clone + PartialEq + Eq + PartialOrd + Ord + ::std::hash::Hash + ::std::fmt::Debug
+{
+}
+
+#[cfg(test)]
+impl TraitTester for MethodAccessFlags {}

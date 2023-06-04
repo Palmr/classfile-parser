@@ -35,3 +35,12 @@ bitflags! {
         const ENUM = 0x4000;       //	Declared as an enum type.
     }
 }
+
+#[cfg(test)]
+trait TraitTester:
+    Copy + Clone + PartialEq + Eq + PartialOrd + Ord + ::std::hash::Hash + ::std::fmt::Debug
+{
+}
+
+#[cfg(test)]
+impl TraitTester for ClassAccessFlags {}
