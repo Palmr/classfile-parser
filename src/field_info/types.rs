@@ -10,7 +10,7 @@ pub struct FieldInfo {
 }
 
 bitflags! {
-    #[derive(Clone, Debug)]
+    #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
     pub struct FieldAccessFlags: u16 {
         const PUBLIC = 0x0001;     // 	Declared public; may be accessed from outside its package.
         const PRIVATE = 0x0002;    // 	Declared private; usable only within the defining class.
@@ -24,3 +24,12 @@ bitflags! {
         const ENUM = 0x4000;       // 	Declared as an element of an enum.
     }
 }
+
+#[cfg(test)]
+trait TraitTester:
+    Copy + Clone + PartialEq + Eq + PartialOrd + Ord + ::std::hash::Hash + ::std::fmt::Debug
+{
+}
+
+#[cfg(test)]
+impl TraitTester for FieldAccessFlags {}
