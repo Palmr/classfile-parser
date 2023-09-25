@@ -23,8 +23,7 @@ pub mod types;
 pub use parser::class_parser;
 pub use types::*;
 
-/// Attempt to parse a class file given a class file given a path to a class file
-/// (without .class extension)
+/// Attempt to parse a class file given a path to a class file (without .class extension)
 ///
 /// ```rust
 /// match classfile_parser::parse_class("./java-assets/compiled-classes/BasicClass") {
@@ -50,6 +49,15 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
     parse_class_from_reader(&mut reader, display.to_string())
 }
 
+/// Attempt to parse a class file given a reader that implements the std::io::Read trait.
+/// The file_path parameter is only used in case of errors to provide reasonable error
+/// messages.
+///
+/// ```rust
+/// let mut reader = "this_will_be_parsed_as_classfile".as_bytes();
+/// let result = classfile_parser::parse_class_from_reader(&mut reader, "path/to/Java.class".to_string());
+/// assert!(result.is_err());
+/// ```
 pub fn parse_class_from_reader<T: Read>(
     reader: &mut T,
     file_path: String,
