@@ -103,7 +103,7 @@ fn main() {
       - [ ] RuntimeVisibleTypeAnnotations
       - [ ] RuntimeInvisibleTypeAnnotations
       - [ ] AnnotationDefault
-      - [ ] MethodParameters
+      - [X] MethodParameters
     - [ ] Useful but not critical
       - [x] SourceFile
       - [ ] SourceDebugExtension

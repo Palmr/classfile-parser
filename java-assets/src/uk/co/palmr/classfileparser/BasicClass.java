@@ -28,4 +28,8 @@ public class BasicClass {
   public static double getLEETness() {
     return 1.337;
   }
+
+  public static int add(int a, int b) {
+      return a + b;
+  }
 }
