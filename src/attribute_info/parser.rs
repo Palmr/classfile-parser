@@ -64,8 +64,9 @@ pub fn code_attribute_parser(input: &[u8]) -> Result<(&[u8], CodeAttribute), Err
     )
 }
 
-
-pub fn method_parameters_attribute_parser(input: &[u8]) -> Result<(&[u8], MethodParametersAttribute), Err<&[u8]>> {
+pub fn method_parameters_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], MethodParametersAttribute), Err<&[u8]>> {
     do_parse!(
         input,
             parameters_count: be_u8

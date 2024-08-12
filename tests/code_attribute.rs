@@ -92,17 +92,26 @@ fn lookup_string(c: &classfile_parser::ClassFile, index: u16) -> Option<String> 
 fn method_parameters() {
     let class_bytes = include_bytes!("../java-assets/compiled-classes/BasicClass.class");
     let (_, class) = class_parser(class_bytes).unwrap();
-    let method_info = &class
-        .methods
-        .iter()
-        .last()
-        .unwrap();
+    let method_info = &class.methods.iter().last().unwrap();
 
     // The class was not compiled with "javac -parameters" this required being able to find
     // MethodParameters in the class file, for example:
     // javac -parameters ./java-assets/src/uk/co/palmr/classfileparser/BasicClass.java -d ./java-assets/compiled-classes ; cp ./java-assets/compiled-classes/uk/co/palmr/classfileparser/BasicClass.class ./java-assets/compiled-classes/BasicClass.class
     assert_eq!(method_info.attributes.len(), 2);
-    let (_, method_parameters) = method_parameters_attribute_parser(&method_info.attributes[1].info).unwrap();
-    assert_eq!(lookup_string(&class, method_parameters.parameters.get(0).unwrap().name_index), Some("a".to_string()));
-    assert_eq!(lookup_string(&class, method_parameters.parameters.get(1).unwrap().name_index), Some("b".to_string()));
+    let (_, method_parameters) =
+        method_parameters_attribute_parser(&method_info.attributes[1].info).unwrap();
+    assert_eq!(
+        lookup_string(
+            &class,
+            method_parameters.parameters.get(0).unwrap().name_index
+        ),
+        Some("a".to_string())
+    );
+    assert_eq!(
+        lookup_string(
+            &class,
+            method_parameters.parameters.get(1).unwrap().name_index
+        ),
+        Some("b".to_string())
+    );
 }
