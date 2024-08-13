@@ -64,6 +64,32 @@ pub fn code_attribute_parser(input: &[u8]) -> Result<(&[u8], CodeAttribute), Err
     )
 }
 
+pub fn method_parameters_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], MethodParametersAttribute), Err<&[u8]>> {
+    do_parse!(
+        input,
+            parameters_count: be_u8
+            >> parameters: count!(parameters_parser, parameters_count as usize)
+            >> (MethodParametersAttribute {
+                parameters_count,
+                parameters,
+            })
+    )
+}
+
+pub fn parameters_parser(input: &[u8]) -> Result<(&[u8], ParameterAttribute), Err<&[u8]>> {
+    do_parse!(
+        input,
+        name_index: be_u16
+            >> access_flags: be_u16
+            >> (ParameterAttribute {
+                name_index,
+                access_flags
+            })
+    )
+}
+
 fn same_frame_parser(input: &[u8], frame_type: u8) -> Result<(&[u8], StackMapFrame), Err<&[u8]>> {
     value!(input, SameFrame { frame_type })
 }

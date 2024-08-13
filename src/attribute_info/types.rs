@@ -26,6 +26,18 @@ pub struct CodeAttribute {
 }
 
 #[derive(Clone, Debug)]
+pub struct MethodParametersAttribute {
+    pub parameters_count: u8,
+    pub parameters: Vec<ParameterAttribute>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ParameterAttribute {
+    pub name_index: u16,
+    pub access_flags: u16,
+}
+
+#[derive(Clone, Debug)]
 pub enum VerificationTypeInfo {
     Top,
     Integer,
