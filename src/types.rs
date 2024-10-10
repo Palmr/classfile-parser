@@ -37,6 +37,7 @@ bitflags! {
 }
 
 #[cfg(test)]
+#[allow(dead_code)]
 trait TraitTester:
     Copy + Clone + PartialEq + Eq + PartialOrd + Ord + ::std::hash::Hash + ::std::fmt::Debug
 {
