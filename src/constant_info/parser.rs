@@ -1,5 +1,5 @@
 use nom::{
-    error::ErrorKind,
+    error::{Error, ErrorKind},
     number::complete::{be_f32, be_f64, be_i32, be_i64, be_u16, be_u8},
     Err,
 };
@@ -150,8 +150,8 @@ named!(const_invoke_dynamic<&[u8], ConstantInfo>, do_parse!(
     ))
 ));
 
-type ConstantInfoResult<'a> = Result<(&'a [u8], ConstantInfo), Err<(&'a [u8], ErrorKind)>>;
-type ConstantInfoVecResult<'a> = Result<(&'a [u8], Vec<ConstantInfo>), Err<(&'a [u8], ErrorKind)>>;
+type ConstantInfoResult<'a> = Result<(&'a [u8], ConstantInfo), Err<Error<&'a [u8]>>>;
+type ConstantInfoVecResult<'a> = Result<(&'a [u8], Vec<ConstantInfo>), Err<Error<&'a [u8]>>>;
 
 fn const_block_parser(input: &[u8], const_type: u8) -> ConstantInfoResult {
     match const_type {
