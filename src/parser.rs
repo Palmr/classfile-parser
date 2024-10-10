@@ -4,9 +4,13 @@ use attribute_info::attribute_parser;
 use constant_info::constant_parser;
 use field_info::field_parser;
 use method_info::method_parser;
+use nom::bytes::complete::tag;
+use nom::multi::count;
 use types::{ClassAccessFlags, ClassFile};
 
-named!(magic_parser, tag!(&[0xCA, 0xFE, 0xBA, 0xBE]));
+fn magic_parser(input: &[u8]) -> IResult<&[u8], &[u8]> {
+    tag(&[0xCA, 0xFE, 0xBA, 0xBE])(input)
+}
 
 /// Parse a byte array into a ClassFile. This will probably be deprecated in 0.4.0 in as it returns
 /// a nom IResult type, which exposes the internal parsing library and not a good idea.
@@ -26,40 +30,40 @@ named!(magic_parser, tag!(&[0xCA, 0xFE, 0xBA, 0xBE]));
 /// ```
 pub fn class_parser(input: &[u8]) -> IResult<&[u8], ClassFile> {
     use nom::number::complete::be_u16;
-    do_parse!(
+    let (input, _) = magic_parser(input)?;
+    let (input, minor_version) = be_u16(input)?;
+    let (input, major_version) = be_u16(input)?;
+    let (input, const_pool_size) = be_u16(input)?;
+    let (input, const_pool) = constant_parser(input, (const_pool_size - 1) as usize)?;
+    let (input, access_flags) = be_u16(input)?;
+    let (input, this_class) = be_u16(input)?;
+    let (input, super_class) = be_u16(input)?;
+    let (input, interfaces_count) = be_u16(input)?;
+    let (input, interfaces) = count(be_u16, interfaces_count as usize)(input)?;
+    let (input, fields_count) = be_u16(input)?;
+    let (input, fields) = count(field_parser, fields_count as usize)(input)?;
+    let (input, methods_count) = be_u16(input)?;
+    let (input, methods) = count(method_parser, methods_count as usize)(input)?;
+    let (input, attributes_count) = be_u16(input)?;
+    let (input, attributes) = count(attribute_parser, attributes_count as usize)(input)?;
+    Ok((
         input,
-        magic_parser
-            >> minor_version: be_u16
-            >> major_version: be_u16
-            >> const_pool_size: be_u16
-            >> const_pool: call!(constant_parser, (const_pool_size - 1) as usize)
-            >> access_flags: be_u16
-            >> this_class: be_u16
-            >> super_class: be_u16
-            >> interfaces_count: be_u16
-            >> interfaces: count!(be_u16, interfaces_count as usize)
-            >> fields_count: be_u16
-            >> fields: count!(field_parser, fields_count as usize)
-            >> methods_count: be_u16
-            >> methods: count!(method_parser, methods_count as usize)
-            >> attributes_count: be_u16
-            >> attributes: count!(attribute_parser, attributes_count as usize)
-            >> (ClassFile {
-                minor_version,
-                major_version,
-                const_pool_size,
-                const_pool,
-                access_flags: ClassAccessFlags::from_bits_truncate(access_flags),
-                this_class,
-                super_class,
-                interfaces_count,
-                interfaces,
-                fields_count,
-                fields,
-                methods_count,
-                methods,
-                attributes_count,
-                attributes,
-            })
-    )
+        ClassFile {
+            minor_version,
+            major_version,
+            const_pool_size,
+            const_pool,
+            access_flags: ClassAccessFlags::from_bits_truncate(access_flags),
+            this_class,
+            super_class,
+            interfaces_count,
+            interfaces,
+            fields_count,
+            fields,
+            methods_count,
+            methods,
+            attributes_count,
+            attributes,
+        },
+    ))
 }
