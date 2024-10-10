@@ -7,8 +7,8 @@ use nom::{
     Err as BaseErr,
 };
 
-use attribute_info::types::StackMapFrame::*;
-use attribute_info::*;
+use crate::attribute_info::types::StackMapFrame::*;
+use crate::attribute_info::*;
 
 // Using a type alias here evades a Clippy warning about complex types.
 type Err<E> = BaseErr<Error<E>>;

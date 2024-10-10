@@ -2,6 +2,7 @@
 name = "classfile-parser"
 description = "A parser for Java Class files written in rust"
 version = "0.3.9"
+edition = "2021"
 authors = ["Nick Palmer <nick@palmr.co.uk>"]
 keywords = ["java", "parsing", "class", "classfile"]
 categories = ["parser-implementations"]

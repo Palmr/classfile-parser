@@ -1,4 +1,4 @@
-use attribute_info::AttributeInfo;
+use crate::attribute_info::AttributeInfo;
 
 #[derive(Clone, Debug)]
 pub struct FieldInfo {

@@ -1,7 +1,7 @@
-use attribute_info::AttributeInfo;
-use constant_info::ConstantInfo;
-use field_info::FieldInfo;
-use method_info::MethodInfo;
+use crate::attribute_info::AttributeInfo;
+use crate::constant_info::ConstantInfo;
+use crate::field_info::FieldInfo;
+use crate::method_info::MethodInfo;
 
 #[derive(Clone, Debug)]
 pub struct ClassFile {

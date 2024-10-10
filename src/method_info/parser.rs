@@ -1,8 +1,8 @@
 use nom::{multi::count, number::complete::be_u16, IResult};
 
-use attribute_info::attribute_parser;
+use crate::attribute_info::attribute_parser;
 
-use method_info::{MethodAccessFlags, MethodInfo};
+use crate::method_info::{MethodAccessFlags, MethodInfo};
 
 pub fn method_parser(input: &[u8]) -> IResult<&[u8], MethodInfo> {
     let (input, access_flags) = be_u16(input)?;

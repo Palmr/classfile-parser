@@ -1,3 +1,4 @@
+use crate::constant_info::*;
 use nom::{
     bytes::complete::take,
     combinator::map,
@@ -5,8 +6,6 @@ use nom::{
     number::complete::{be_f32, be_f64, be_i32, be_i64, be_u16, be_u8},
     Err,
 };
-
-use constant_info::*;
 
 fn utf8_constant(input: &[u8]) -> Utf8Constant {
     let utf8_string =

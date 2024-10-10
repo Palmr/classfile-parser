@@ -1,4 +1,4 @@
-use code_attribute::types::Instruction;
+use crate::code_attribute::types::Instruction;
 use nom::{
     bytes::complete::{tag, take},
     combinator::{complete, fail, map, success},

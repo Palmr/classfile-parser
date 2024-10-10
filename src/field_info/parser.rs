@@ -1,8 +1,8 @@
 use nom::{multi::count, number::complete::be_u16, IResult};
 
-use attribute_info::attribute_parser;
+use crate::attribute_info::attribute_parser;
 
-use field_info::{FieldAccessFlags, FieldInfo};
+use crate::field_info::{FieldAccessFlags, FieldInfo};
 
 pub fn field_parser(input: &[u8]) -> IResult<&[u8], FieldInfo> {
     let (input, access_flags) = be_u16(input)?;
