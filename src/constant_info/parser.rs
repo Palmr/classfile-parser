@@ -1,5 +1,7 @@
 use nom::{
-    error::ErrorKind,
+    bytes::complete::take,
+    combinator::map,
+    error::{Error, ErrorKind},
     number::complete::{be_f32, be_f64, be_i32, be_i64, be_u16, be_u8},
     Err,
 };
@@ -15,143 +17,124 @@ fn utf8_constant(input: &[u8]) -> Utf8Constant {
     }
 }
 
-named!(const_utf8<&[u8], ConstantInfo>, do_parse!(
-    length: be_u16 >>
-    constant: map!(take!(length), utf8_constant) >>
-    (ConstantInfo::Utf8(constant))
-));
+fn const_utf8(input: &[u8]) -> ConstantInfoResult {
+    let (input, length) = be_u16(input)?;
+    let (input, constant) = map(take(length), utf8_constant)(input)?;
+    Ok((input, ConstantInfo::Utf8(constant)))
+}
 
-named!(const_integer<&[u8], ConstantInfo>, do_parse!(
-    value: be_i32 >>
-    (ConstantInfo::Integer(
-        IntegerConstant {
-            value,
-        }
-    ))
-));
+fn const_integer(input: &[u8]) -> ConstantInfoResult {
+    let (input, value) = be_i32(input)?;
+    Ok((input, ConstantInfo::Integer(IntegerConstant { value })))
+}
 
-named!(const_float<&[u8], ConstantInfo>, do_parse!(
-    value: be_f32 >>
-    (ConstantInfo::Float(
-        FloatConstant {
-            value,
-        }
-    ))
-));
+fn const_float(input: &[u8]) -> ConstantInfoResult {
+    let (input, value) = be_f32(input)?;
+    Ok((input, ConstantInfo::Float(FloatConstant { value })))
+}
 
-named!(const_long<&[u8], ConstantInfo>, do_parse!(
-    value: be_i64 >>
-    (ConstantInfo::Long(
-        LongConstant {
-            value,
-        }
-    ))
-));
+fn const_long(input: &[u8]) -> ConstantInfoResult {
+    let (input, value) = be_i64(input)?;
+    Ok((input, ConstantInfo::Long(LongConstant { value })))
+}
 
-named!(const_double<&[u8], ConstantInfo>, do_parse!(
-    value: be_f64 >>
-    (ConstantInfo::Double(
-        DoubleConstant {
-            value,
-        }
-    ))
-));
+fn const_double(input: &[u8]) -> ConstantInfoResult {
+    let (input, value) = be_f64(input)?;
+    Ok((input, ConstantInfo::Double(DoubleConstant { value })))
+}
 
-named!(const_class<&[u8], ConstantInfo>, do_parse!(
-    name_index: be_u16 >>
-    (ConstantInfo::Class(
-        ClassConstant {
-            name_index,
-        }
-    ))
-));
+fn const_class(input: &[u8]) -> ConstantInfoResult {
+    let (input, name_index) = be_u16(input)?;
+    Ok((input, ConstantInfo::Class(ClassConstant { name_index })))
+}
 
-named!(const_string<&[u8], ConstantInfo>, do_parse!(
-    string_index: be_u16 >>
-    (ConstantInfo::String(
-        StringConstant {
-            string_index,
-        }
-    ))
-));
+fn const_string(input: &[u8]) -> ConstantInfoResult {
+    let (input, string_index) = be_u16(input)?;
+    Ok((input, ConstantInfo::String(StringConstant { string_index })))
+}
 
-named!(const_field_ref<&[u8], ConstantInfo>, do_parse!(
-    class_index: be_u16 >>
-    name_and_type_index: be_u16 >>
-    (ConstantInfo::FieldRef(
-        FieldRefConstant {
+fn const_field_ref(input: &[u8]) -> ConstantInfoResult {
+    let (input, class_index) = be_u16(input)?;
+    let (input, name_and_type_index) = be_u16(input)?;
+    Ok((
+        input,
+        ConstantInfo::FieldRef(FieldRefConstant {
             class_index,
             name_and_type_index,
-        }
+        }),
     ))
-));
+}
 
-named!(const_method_ref<&[u8], ConstantInfo>, do_parse!(
-    class_index: be_u16 >>
-    name_and_type_index: be_u16 >>
-    (ConstantInfo::MethodRef(
-        MethodRefConstant {
+fn const_method_ref(input: &[u8]) -> ConstantInfoResult {
+    let (input, class_index) = be_u16(input)?;
+    let (input, name_and_type_index) = be_u16(input)?;
+    Ok((
+        input,
+        ConstantInfo::MethodRef(MethodRefConstant {
             class_index,
             name_and_type_index,
-        }
+        }),
     ))
-));
+}
 
-named!(const_interface_method_ref<&[u8], ConstantInfo>, do_parse!(
-    class_index: be_u16 >>
-    name_and_type_index: be_u16 >>
-    (ConstantInfo::InterfaceMethodRef(
-        InterfaceMethodRefConstant {
+fn const_interface_method_ref(input: &[u8]) -> ConstantInfoResult {
+    let (input, class_index) = be_u16(input)?;
+    let (input, name_and_type_index) = be_u16(input)?;
+    Ok((
+        input,
+        ConstantInfo::InterfaceMethodRef(InterfaceMethodRefConstant {
             class_index,
             name_and_type_index,
-        }
+        }),
     ))
-));
+}
 
-named!(const_name_and_type<&[u8], ConstantInfo>, do_parse!(
-    name_index: be_u16 >>
-    descriptor_index: be_u16 >>
-    (ConstantInfo::NameAndType(
-        NameAndTypeConstant {
+fn const_name_and_type(input: &[u8]) -> ConstantInfoResult {
+    let (input, name_index) = be_u16(input)?;
+    let (input, descriptor_index) = be_u16(input)?;
+    Ok((
+        input,
+        ConstantInfo::NameAndType(NameAndTypeConstant {
             name_index,
             descriptor_index,
-        }
+        }),
     ))
-));
+}
 
-named!(const_method_handle<&[u8], ConstantInfo>, do_parse!(
-    reference_kind: be_u8 >>
-    reference_index: be_u16 >>
-    (ConstantInfo::MethodHandle(
-        MethodHandleConstant {
+fn const_method_handle(input: &[u8]) -> ConstantInfoResult {
+    let (input, reference_kind) = be_u8(input)?;
+    let (input, reference_index) = be_u16(input)?;
+    Ok((
+        input,
+        ConstantInfo::MethodHandle(MethodHandleConstant {
             reference_kind,
             reference_index,
-        }
+        }),
     ))
-));
+}
 
-named!(const_method_type<&[u8], ConstantInfo>, do_parse!(
-    descriptor_index: be_u16 >>
-    (ConstantInfo::MethodType(
-        MethodTypeConstant {
-            descriptor_index,
-        }
+fn const_method_type(input: &[u8]) -> ConstantInfoResult {
+    let (input, descriptor_index) = be_u16(input)?;
+    Ok((
+        input,
+        ConstantInfo::MethodType(MethodTypeConstant { descriptor_index }),
     ))
-));
+}
 
-named!(const_invoke_dynamic<&[u8], ConstantInfo>, do_parse!(
-    bootstrap_method_attr_index: be_u16 >>
-    name_and_type_index: be_u16 >>
-    (ConstantInfo::InvokeDynamic(
-        InvokeDynamicConstant {
+fn const_invoke_dynamic(input: &[u8]) -> ConstantInfoResult {
+    let (input, bootstrap_method_attr_index) = be_u16(input)?;
+    let (input, name_and_type_index) = be_u16(input)?;
+    Ok((
+        input,
+        ConstantInfo::InvokeDynamic(InvokeDynamicConstant {
             bootstrap_method_attr_index,
             name_and_type_index,
-        }
+        }),
     ))
-));
+}
 
-type ConstantInfoResult<'a> = Result<(&'a [u8], ConstantInfo), Err<(&'a [u8], ErrorKind)>>;
-type ConstantInfoVecResult<'a> = Result<(&'a [u8], Vec<ConstantInfo>), Err<(&'a [u8], ErrorKind)>>;
+type ConstantInfoResult<'a> = Result<(&'a [u8], ConstantInfo), Err<Error<&'a [u8]>>>;
+type ConstantInfoVecResult<'a> = Result<(&'a [u8], Vec<ConstantInfo>), Err<Error<&'a [u8]>>>;
 
 fn const_block_parser(input: &[u8], const_type: u8) -> ConstantInfoResult {
     match const_type {
@@ -174,10 +157,9 @@ fn const_block_parser(input: &[u8], const_type: u8) -> ConstantInfoResult {
 }
 
 fn single_constant_parser(input: &[u8]) -> ConstantInfoResult {
-    do_parse!(
-        input,
-        const_type: be_u8 >> const_block: call!(const_block_parser, const_type) >> (const_block)
-    )
+    let (input, const_type) = be_u8(input)?;
+    let (input, const_block) = const_block_parser(input, const_type)?;
+    Ok((input, const_block))
 }
 
 pub fn constant_parser(i: &[u8], const_pool_size: usize) -> ConstantInfoVecResult {

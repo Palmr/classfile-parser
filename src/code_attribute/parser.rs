@@ -1,6 +1,10 @@
 use code_attribute::types::Instruction;
 use nom::{
+    bytes::complete::{tag, take},
+    combinator::{complete, fail, map, success},
+    multi::{count, many0},
     number::complete::{be_i16, be_i32, be_i8, be_u16, be_u32, be_u8},
+    sequence::{pair, preceded, tuple},
     IResult, Offset,
 };
 
@@ -8,268 +12,281 @@ fn offset<'a>(remaining: &'a [u8], input: &[u8]) -> IResult<&'a [u8], usize> {
     Ok((remaining, input.offset(remaining)))
 }
 
-fn align(input: &[u8], address: usize) -> IResult<&[u8], &[u8]> {
-    take!(input, (4 - address % 4) % 4)
+fn align(address: usize) -> impl Fn(&[u8]) -> IResult<&[u8], &[u8]> {
+    move |input: &[u8]| take((4 - address % 4) % 4)(input)
 }
 
 fn lookupswitch_parser(input: &[u8]) -> IResult<&[u8], Instruction> {
     // This function provides type annotations required by rustc.
     fn each_pair(input: &[u8]) -> IResult<&[u8], (i32, i32)> {
-        do_parse!(input, lookup: be_i32 >> offset: be_i32 >> (lookup, offset))
+        let (input, lookup) = be_i32(input)?;
+        let (input, offset) = be_i32(input)?;
+        Ok((input, (lookup, offset)))
     }
-
-    do_parse!(
-        input,
-        default: be_i32
-            >> npairs: be_u32
-            >> pairs: count!(call!(each_pair), npairs as usize)
-            >> (Instruction::Lookupswitch { default, pairs })
-    )
+    let (input, default) = be_i32(input)?;
+    let (input, npairs) = be_u32(input)?;
+    let (input, pairs) = count(each_pair, npairs as usize)(input)?;
+    Ok((input, Instruction::Lookupswitch { default, pairs }))
 }
 
 fn tableswitch_parser(input: &[u8]) -> IResult<&[u8], Instruction> {
-    do_parse!(
+    let (input, default) = be_i32(input)?;
+    let (input, low) = be_i32(input)?;
+    let (input, high) = be_i32(input)?;
+    let (input, offsets) = count(be_i32, (high - low + 1) as usize)(input)?;
+    Ok((
         input,
-        default: be_i32
-            >> low: be_i32
-            >> high: be_i32
-            >> offsets: count!(be_i32, (high - low + 1) as usize)
-            >> (Instruction::Tableswitch {
-                default,
-                low,
-                high,
-                offsets,
-            })
-    )
+        Instruction::Tableswitch {
+            default,
+            low,
+            high,
+            offsets,
+        },
+    ))
 }
 
-pub fn code_parser(input: &[u8]) -> IResult<&[u8], Vec<(usize, Instruction)>> {
-    many0!(
-        input,
-        complete!(do_parse!(
-            address: call!(offset, input)
-                >> instruction: call!(instruction_parser, address)
-                >> (address, instruction)
-        ))
-    )
+pub fn code_parser(outer_input: &[u8]) -> IResult<&[u8], Vec<(usize, Instruction)>> {
+    many0(complete(|input| {
+        let (input, address) = offset(input, outer_input)?;
+        let (input, instruction) = instruction_parser(input, address)?;
+        Ok((input, (address, instruction)))
+    }))(outer_input)
 }
 
 pub fn instruction_parser(input: &[u8], address: usize) -> IResult<&[u8], Instruction> {
-    switch!(input, be_u8,
-        0x32 => value!(Instruction::Aaload) |
-        0x53 => value!(Instruction::Aastore) |
-        0x01 => value!(Instruction::Aconstnull) |
-        0x19 => map!(be_u8, Instruction::Aload) |
-        0x2a => value!(Instruction::Aload0) |
-        0x2b => value!(Instruction::Aload1) |
-        0x2c => value!(Instruction::Aload2) |
-        0x2d => value!(Instruction::Aload3) |
-        0xbd => map!(be_u16, Instruction::Anewarray) |
-        0xb0 => value!(Instruction::Areturn) |
-        0xbe => value!(Instruction::Arraylength) |
-        0x3a => map!(be_u8, Instruction::Astore) |
-        0x4b => value!(Instruction::Astore0) |
-        0x4c => value!(Instruction::Astore1) |
-        0x4d => value!(Instruction::Astore2) |
-        0x4e => value!(Instruction::Astore3) |
-        0xbf => value!(Instruction::Athrow) |
-        0x33 => value!(Instruction::Baload) |
-        0x54 => value!(Instruction::Bastore) |
-        0x10 => map!(be_i8, Instruction::Bipush) |
-        0x34 => value!(Instruction::Caload) |
-        0x55 => value!(Instruction::Castore) |
-        0xc0 => map!(be_u16, Instruction::Checkcast) |
-        0x90 => value!(Instruction::D2f) |
-        0x8e => value!(Instruction::D2i) |
-        0x8f => value!(Instruction::D2l) |
-        0x63 => value!(Instruction::Dadd) |
-        0x31 => value!(Instruction::Daload) |
-        0x52 => value!(Instruction::Dastore) |
-        0x98 => value!(Instruction::Dcmpg) |
-        0x97 => value!(Instruction::Dcmpl) |
-        0x0e => value!(Instruction::Dconst0) |
-        0x0f => value!(Instruction::Dconst1) |
-        0x6f => value!(Instruction::Ddiv) |
-        0x18 => map!(be_u8, Instruction::Dload) |
-        0x26 => value!(Instruction::Dload0) |
-        0x27 => value!(Instruction::Dload1) |
-        0x28 => value!(Instruction::Dload2) |
-        0x29 => value!(Instruction::Dload3) |
-        0x6b => value!(Instruction::Dmul) |
-        0x77 => value!(Instruction::Dneg) |
-        0x73 => value!(Instruction::Drem) |
-        0xaf => value!(Instruction::Dreturn) |
-        0x39 => map!(be_u8, Instruction::Dstore) |
-        0x47 => value!(Instruction::Dstore0) |
-        0x48 => value!(Instruction::Dstore1) |
-        0x49 => value!(Instruction::Dstore2) |
-        0x4a => value!(Instruction::Dstore3) |
-        0x67 => value!(Instruction::Dsub) |
-        0x59 => value!(Instruction::Dup) |
-        0x5a => value!(Instruction::Dupx1) |
-        0x5b => value!(Instruction::Dupx2) |
-        0x5c => value!(Instruction::Dup2) |
-        0x5d => value!(Instruction::Dup2x1) |
-        0x5e => value!(Instruction::Dup2x2) |
-        0x8d => value!(Instruction::F2d) |
-        0x8b => value!(Instruction::F2i) |
-        0x8c => value!(Instruction::F2l) |
-        0x62 => value!(Instruction::Fadd) |
-        0x30 => value!(Instruction::Faload) |
-        0x51 => value!(Instruction::Fastore) |
-        0x96 => value!(Instruction::Fcmpg) |
-        0x95 => value!(Instruction::Fcmpl) |
-        0x0b => value!(Instruction::Fconst0) |
-        0x0c => value!(Instruction::Fconst1) |
-        0x0d => value!(Instruction::Fconst2) |
-        0x6e => value!(Instruction::Fdiv) |
-        0x17 => map!(be_u8, Instruction::Fload) |
-        0x22 => value!(Instruction::Fload0) |
-        0x23 => value!(Instruction::Fload1) |
-        0x24 => value!(Instruction::Fload2) |
-        0x25 => value!(Instruction::Fload3) |
-        0x6a => value!(Instruction::Fmul) |
-        0x76 => value!(Instruction::Fneg) |
-        0x72 => value!(Instruction::Frem) |
-        0xae => value!(Instruction::Freturn) |
-        0x38 => map!(be_u8, Instruction::Fstore) |
-        0x43 => value!(Instruction::Fstore0) |
-        0x44 => value!(Instruction::Fstore1) |
-        0x45 => value!(Instruction::Fstore2) |
-        0x46 => value!(Instruction::Fstore3) |
-        0x66 => value!(Instruction::Fsub) |
-        0xb4 => map!(be_u16, Instruction::Getfield) |
-        0xb2 => map!(be_u16, Instruction::Getstatic) |
-        0xa7 => map!(be_i16, Instruction::Goto) |
-        0xc8 => map!(be_i32, Instruction::GotoW) |
-        0x91 => value!(Instruction::I2b) |
-        0x92 => value!(Instruction::I2c) |
-        0x87 => value!(Instruction::I2d) |
-        0x86 => value!(Instruction::I2f) |
-        0x85 => value!(Instruction::I2l) |
-        0x93 => value!(Instruction::I2s) |
-        0x60 => value!(Instruction::Iadd) |
-        0x2e => value!(Instruction::Iaload) |
-        0x7e => value!(Instruction::Iand) |
-        0x4f => value!(Instruction::Iastore) |
-        0x02 => value!(Instruction::Iconstm1) |
-        0x03 => value!(Instruction::Iconst0) |
-        0x04 => value!(Instruction::Iconst1) |
-        0x05 => value!(Instruction::Iconst2) |
-        0x06 => value!(Instruction::Iconst3) |
-        0x07 => value!(Instruction::Iconst4) |
-        0x08 => value!(Instruction::Iconst5) |
-        0x6c => value!(Instruction::Idiv) |
-        0xa5 => map!(be_i16, Instruction::IfAcmpeq) |
-        0xa6 => map!(be_i16, Instruction::IfAcmpne) |
-        0x9f => map!(be_i16, Instruction::IfIcmpeq) |
-        0xa0 => map!(be_i16, Instruction::IfIcmpne) |
-        0xa1 => map!(be_i16, Instruction::IfIcmplt) |
-        0xa2 => map!(be_i16, Instruction::IfIcmpge) |
-        0xa3 => map!(be_i16, Instruction::IfIcmpgt) |
-        0xa4 => map!(be_i16, Instruction::IfIcmple) |
-        0x99 => map!(be_i16, Instruction::Ifeq) |
-        0x9a => map!(be_i16, Instruction::Ifne) |
-        0x9b => map!(be_i16, Instruction::Iflt) |
-        0x9c => map!(be_i16, Instruction::Ifge) |
-        0x9d => map!(be_i16, Instruction::Ifgt) |
-        0x9e => map!(be_i16, Instruction::Ifle) |
-        0xc7 => map!(be_i16, Instruction::Ifnonnull) |
-        0xc6 => map!(be_i16, Instruction::Ifnull) |
-        0x84 => do_parse!(index: be_u8 >> value: be_i8 >> (Instruction::Iinc{index, value})) |
-        0x15 => map!(be_u8, Instruction::Iload) |
-        0x1a => value!(Instruction::Iload0) |
-        0x1b => value!(Instruction::Iload1) |
-        0x1c => value!(Instruction::Iload2) |
-        0x1d => value!(Instruction::Iload3) |
-        0x68 => value!(Instruction::Imul) |
-        0x74 => value!(Instruction::Ineg) |
-        0xc1 => map!(be_u16, Instruction::Instanceof) |
-        0xba => do_parse!(index: be_u16 >> tag!(&[0, 0]) >> (Instruction::Invokedynamic(index))) |
-        0xb9 => do_parse!(index: be_u16 >> count: be_u8 >> tag!(&[0]) >> (Instruction::Invokeinterface{index, count})) |
-        0xb7 => map!(be_u16, Instruction::Invokespecial) |
-        0xb8 => map!(be_u16, Instruction::Invokestatic) |
-        0xb6 => map!(be_u16, Instruction::Invokevirtual) |
-        0x80 => value!(Instruction::Ior) |
-        0x70 => value!(Instruction::Irem) |
-        0xac => value!(Instruction::Ireturn) |
-        0x78 => value!(Instruction::Ishl) |
-        0x7a => value!(Instruction::Ishr) |
-        0x36 => map!(be_u8, Instruction::Istore) |
-        0x3b => value!(Instruction::Istore0) |
-        0x3c => value!(Instruction::Istore1) |
-        0x3d => value!(Instruction::Istore2) |
-        0x3e => value!(Instruction::Istore3) |
-        0x64 => value!(Instruction::Isub) |
-        0x7c => value!(Instruction::Iushr) |
-        0x82 => value!(Instruction::Ixor) |
-        0xa8 => map!(be_i16, Instruction::Jsr) |
-        0xc9 => map!(be_i32, Instruction::JsrW) |
-        0x8a => value!(Instruction::L2d) |
-        0x89 => value!(Instruction::L2f) |
-        0x88 => value!(Instruction::L2i) |
-        0x61 => value!(Instruction::Ladd) |
-        0x2f => value!(Instruction::Laload) |
-        0x7f => value!(Instruction::Land) |
-        0x50 => value!(Instruction::Lastore) |
-        0x94 => value!(Instruction::Lcmp) |
-        0x09 => value!(Instruction::Lconst0) |
-        0x0a => value!(Instruction::Lconst1) |
-        0x12 => map!(be_u8, Instruction::Ldc) |
-        0x13 => map!(be_u16, Instruction::LdcW) |
-        0x14 => map!(be_u16, Instruction::Ldc2W) |
-        0x6d => value!(Instruction::Ldiv) |
-        0x16 => map!(be_u8, Instruction::Lload) |
-        0x1e => value!(Instruction::Lload0) |
-        0x1f => value!(Instruction::Lload1) |
-        0x20 => value!(Instruction::Lload2) |
-        0x21 => value!(Instruction::Lload3) |
-        0x69 => value!(Instruction::Lmul) |
-        0x75 => value!(Instruction::Lneg) |
-        0xab => preceded!(call!(align, address + 1), lookupswitch_parser) |
-        0x81 => value!(Instruction::Lor) |
-        0x71 => value!(Instruction::Lrem) |
-        0xad => value!(Instruction::Lreturn) |
-        0x79 => value!(Instruction::Lshl) |
-        0x7b => value!(Instruction::Lshr) |
-        0x37 => map!(be_u8, Instruction::Lstore) |
-        0x3f => value!(Instruction::Lstore0) |
-        0x40 => value!(Instruction::Lstore1) |
-        0x41 => value!(Instruction::Lstore2) |
-        0x42 => value!(Instruction::Lstore3) |
-        0x65 => value!(Instruction::Lsub) |
-        0x7d => value!(Instruction::Lushr) |
-        0x83 => value!(Instruction::Lxor) |
-        0xc2 => value!(Instruction::Monitorenter) |
-        0xc3 => value!(Instruction::Monitorexit) |
-        0xc5 => do_parse!(index: be_u16 >> dimensions: be_u8 >> (Instruction::Multianewarray{index, dimensions})) |
-        0xbb => map!(be_u16, Instruction::New) |
-        0xbc => map!(be_u8, Instruction::Newarray) |
-        0x00 => value!(Instruction::Nop) |
-        0x57 => value!(Instruction::Pop) |
-        0x58 => value!(Instruction::Pop2) |
-        0xb5 => map!(be_u16, Instruction::Putfield) |
-        0xb3 => map!(be_u16, Instruction::Putstatic) |
-        0xa9 => map!(be_u8, Instruction::Ret) |
-        0xb1 => value!(Instruction::Return) |
-        0x35 => value!(Instruction::Saload) |
-        0x56 => value!(Instruction::Sastore) |
-        0x11 => map!(be_i16, Instruction::Sipush) |
-        0x5f => value!(Instruction::Swap) |
-        0xaa => preceded!(call!(align, address + 1), tableswitch_parser) |
-        0xc4 => switch!(be_u8,
-            0x19 => map!(be_u16, Instruction::AloadWide) |
-            0x3a => map!(be_u16, Instruction::AstoreWide) |
-            0x18 => map!(be_u16, Instruction::DloadWide) |
-            0x39 => map!(be_u16, Instruction::DstoreWide) |
-            0x17 => map!(be_u16, Instruction::FloadWide) |
-            0x38 => map!(be_u16, Instruction::FstoreWide) |
-            0x15 => map!(be_u16, Instruction::IloadWide) |
-            0x36 => map!(be_u16, Instruction::IstoreWide) |
-            0x16 => map!(be_u16, Instruction::LloadWide) |
-            0x37 => map!(be_u16, Instruction::LstoreWide) |
-            0xa9 => map!(be_u16, Instruction::RetWide) |
-            0x84 => do_parse!(index: be_u16 >> value: be_i16 >> (Instruction::IincWide{index, value}))
-        )
-    )
+    let (input, b0) = be_u8(input)?;
+    let (input, instruction) = match b0 {
+        0x32 => success(Instruction::Aaload)(input)?,
+        0x53 => success(Instruction::Aastore)(input)?,
+        0x01 => success(Instruction::Aconstnull)(input)?,
+        0x19 => map(be_u8, Instruction::Aload)(input)?,
+        0x2a => success(Instruction::Aload0)(input)?,
+        0x2b => success(Instruction::Aload1)(input)?,
+        0x2c => success(Instruction::Aload2)(input)?,
+        0x2d => success(Instruction::Aload3)(input)?,
+        0xbd => map(be_u16, Instruction::Anewarray)(input)?,
+        0xb0 => success(Instruction::Areturn)(input)?,
+        0xbe => success(Instruction::Arraylength)(input)?,
+        0x3a => map(be_u8, Instruction::Astore)(input)?,
+        0x4b => success(Instruction::Astore0)(input)?,
+        0x4c => success(Instruction::Astore1)(input)?,
+        0x4d => success(Instruction::Astore2)(input)?,
+        0x4e => success(Instruction::Astore3)(input)?,
+        0xbf => success(Instruction::Athrow)(input)?,
+        0x33 => success(Instruction::Baload)(input)?,
+        0x54 => success(Instruction::Bastore)(input)?,
+        0x10 => map(be_i8, Instruction::Bipush)(input)?,
+        0x34 => success(Instruction::Caload)(input)?,
+        0x55 => success(Instruction::Castore)(input)?,
+        0xc0 => map(be_u16, Instruction::Checkcast)(input)?,
+        0x90 => success(Instruction::D2f)(input)?,
+        0x8e => success(Instruction::D2i)(input)?,
+        0x8f => success(Instruction::D2l)(input)?,
+        0x63 => success(Instruction::Dadd)(input)?,
+        0x31 => success(Instruction::Daload)(input)?,
+        0x52 => success(Instruction::Dastore)(input)?,
+        0x98 => success(Instruction::Dcmpg)(input)?,
+        0x97 => success(Instruction::Dcmpl)(input)?,
+        0x0e => success(Instruction::Dconst0)(input)?,
+        0x0f => success(Instruction::Dconst1)(input)?,
+        0x6f => success(Instruction::Ddiv)(input)?,
+        0x18 => map(be_u8, Instruction::Dload)(input)?,
+        0x26 => success(Instruction::Dload0)(input)?,
+        0x27 => success(Instruction::Dload1)(input)?,
+        0x28 => success(Instruction::Dload2)(input)?,
+        0x29 => success(Instruction::Dload3)(input)?,
+        0x6b => success(Instruction::Dmul)(input)?,
+        0x77 => success(Instruction::Dneg)(input)?,
+        0x73 => success(Instruction::Drem)(input)?,
+        0xaf => success(Instruction::Dreturn)(input)?,
+        0x39 => map(be_u8, Instruction::Dstore)(input)?,
+        0x47 => success(Instruction::Dstore0)(input)?,
+        0x48 => success(Instruction::Dstore1)(input)?,
+        0x49 => success(Instruction::Dstore2)(input)?,
+        0x4a => success(Instruction::Dstore3)(input)?,
+        0x67 => success(Instruction::Dsub)(input)?,
+        0x59 => success(Instruction::Dup)(input)?,
+        0x5a => success(Instruction::Dupx1)(input)?,
+        0x5b => success(Instruction::Dupx2)(input)?,
+        0x5c => success(Instruction::Dup2)(input)?,
+        0x5d => success(Instruction::Dup2x1)(input)?,
+        0x5e => success(Instruction::Dup2x2)(input)?,
+        0x8d => success(Instruction::F2d)(input)?,
+        0x8b => success(Instruction::F2i)(input)?,
+        0x8c => success(Instruction::F2l)(input)?,
+        0x62 => success(Instruction::Fadd)(input)?,
+        0x30 => success(Instruction::Faload)(input)?,
+        0x51 => success(Instruction::Fastore)(input)?,
+        0x96 => success(Instruction::Fcmpg)(input)?,
+        0x95 => success(Instruction::Fcmpl)(input)?,
+        0x0b => success(Instruction::Fconst0)(input)?,
+        0x0c => success(Instruction::Fconst1)(input)?,
+        0x0d => success(Instruction::Fconst2)(input)?,
+        0x6e => success(Instruction::Fdiv)(input)?,
+        0x17 => map(be_u8, Instruction::Fload)(input)?,
+        0x22 => success(Instruction::Fload0)(input)?,
+        0x23 => success(Instruction::Fload1)(input)?,
+        0x24 => success(Instruction::Fload2)(input)?,
+        0x25 => success(Instruction::Fload3)(input)?,
+        0x6a => success(Instruction::Fmul)(input)?,
+        0x76 => success(Instruction::Fneg)(input)?,
+        0x72 => success(Instruction::Frem)(input)?,
+        0xae => success(Instruction::Freturn)(input)?,
+        0x38 => map(be_u8, Instruction::Fstore)(input)?,
+        0x43 => success(Instruction::Fstore0)(input)?,
+        0x44 => success(Instruction::Fstore1)(input)?,
+        0x45 => success(Instruction::Fstore2)(input)?,
+        0x46 => success(Instruction::Fstore3)(input)?,
+        0x66 => success(Instruction::Fsub)(input)?,
+        0xb4 => map(be_u16, Instruction::Getfield)(input)?,
+        0xb2 => map(be_u16, Instruction::Getstatic)(input)?,
+        0xa7 => map(be_i16, Instruction::Goto)(input)?,
+        0xc8 => map(be_i32, Instruction::GotoW)(input)?,
+        0x91 => success(Instruction::I2b)(input)?,
+        0x92 => success(Instruction::I2c)(input)?,
+        0x87 => success(Instruction::I2d)(input)?,
+        0x86 => success(Instruction::I2f)(input)?,
+        0x85 => success(Instruction::I2l)(input)?,
+        0x93 => success(Instruction::I2s)(input)?,
+        0x60 => success(Instruction::Iadd)(input)?,
+        0x2e => success(Instruction::Iaload)(input)?,
+        0x7e => success(Instruction::Iand)(input)?,
+        0x4f => success(Instruction::Iastore)(input)?,
+        0x02 => success(Instruction::Iconstm1)(input)?,
+        0x03 => success(Instruction::Iconst0)(input)?,
+        0x04 => success(Instruction::Iconst1)(input)?,
+        0x05 => success(Instruction::Iconst2)(input)?,
+        0x06 => success(Instruction::Iconst3)(input)?,
+        0x07 => success(Instruction::Iconst4)(input)?,
+        0x08 => success(Instruction::Iconst5)(input)?,
+        0x6c => success(Instruction::Idiv)(input)?,
+        0xa5 => map(be_i16, Instruction::IfAcmpeq)(input)?,
+        0xa6 => map(be_i16, Instruction::IfAcmpne)(input)?,
+        0x9f => map(be_i16, Instruction::IfIcmpeq)(input)?,
+        0xa0 => map(be_i16, Instruction::IfIcmpne)(input)?,
+        0xa1 => map(be_i16, Instruction::IfIcmplt)(input)?,
+        0xa2 => map(be_i16, Instruction::IfIcmpge)(input)?,
+        0xa3 => map(be_i16, Instruction::IfIcmpgt)(input)?,
+        0xa4 => map(be_i16, Instruction::IfIcmple)(input)?,
+        0x99 => map(be_i16, Instruction::Ifeq)(input)?,
+        0x9a => map(be_i16, Instruction::Ifne)(input)?,
+        0x9b => map(be_i16, Instruction::Iflt)(input)?,
+        0x9c => map(be_i16, Instruction::Ifge)(input)?,
+        0x9d => map(be_i16, Instruction::Ifgt)(input)?,
+        0x9e => map(be_i16, Instruction::Ifle)(input)?,
+        0xc7 => map(be_i16, Instruction::Ifnonnull)(input)?,
+        0xc6 => map(be_i16, Instruction::Ifnull)(input)?,
+        0x84 => map(pair(be_u8, be_i8), |(index, value)| Instruction::Iinc {
+            index,
+            value,
+        })(input)?,
+        0x15 => map(be_u8, Instruction::Iload)(input)?,
+        0x1a => success(Instruction::Iload0)(input)?,
+        0x1b => success(Instruction::Iload1)(input)?,
+        0x1c => success(Instruction::Iload2)(input)?,
+        0x1d => success(Instruction::Iload3)(input)?,
+        0x68 => success(Instruction::Imul)(input)?,
+        0x74 => success(Instruction::Ineg)(input)?,
+        0xc1 => map(be_u16, Instruction::Instanceof)(input)?,
+        0xba => map(pair(be_u16, tag(&[0, 0])), |(index, _)| {
+            Instruction::Invokedynamic(index)
+        })(input)?,
+        0xb9 => map(tuple((be_u16, be_u8, tag(&[0]))), |(index, count, _)| {
+            Instruction::Invokeinterface { index, count }
+        })(input)?,
+        0xb7 => map(be_u16, Instruction::Invokespecial)(input)?,
+        0xb8 => map(be_u16, Instruction::Invokestatic)(input)?,
+        0xb6 => map(be_u16, Instruction::Invokevirtual)(input)?,
+        0x80 => success(Instruction::Ior)(input)?,
+        0x70 => success(Instruction::Irem)(input)?,
+        0xac => success(Instruction::Ireturn)(input)?,
+        0x78 => success(Instruction::Ishl)(input)?,
+        0x7a => success(Instruction::Ishr)(input)?,
+        0x36 => map(be_u8, Instruction::Istore)(input)?,
+        0x3b => success(Instruction::Istore0)(input)?,
+        0x3c => success(Instruction::Istore1)(input)?,
+        0x3d => success(Instruction::Istore2)(input)?,
+        0x3e => success(Instruction::Istore3)(input)?,
+        0x64 => success(Instruction::Isub)(input)?,
+        0x7c => success(Instruction::Iushr)(input)?,
+        0x82 => success(Instruction::Ixor)(input)?,
+        0xa8 => map(be_i16, Instruction::Jsr)(input)?,
+        0xc9 => map(be_i32, Instruction::JsrW)(input)?,
+        0x8a => success(Instruction::L2d)(input)?,
+        0x89 => success(Instruction::L2f)(input)?,
+        0x88 => success(Instruction::L2i)(input)?,
+        0x61 => success(Instruction::Ladd)(input)?,
+        0x2f => success(Instruction::Laload)(input)?,
+        0x7f => success(Instruction::Land)(input)?,
+        0x50 => success(Instruction::Lastore)(input)?,
+        0x94 => success(Instruction::Lcmp)(input)?,
+        0x09 => success(Instruction::Lconst0)(input)?,
+        0x0a => success(Instruction::Lconst1)(input)?,
+        0x12 => map(be_u8, Instruction::Ldc)(input)?,
+        0x13 => map(be_u16, Instruction::LdcW)(input)?,
+        0x14 => map(be_u16, Instruction::Ldc2W)(input)?,
+        0x6d => success(Instruction::Ldiv)(input)?,
+        0x16 => map(be_u8, Instruction::Lload)(input)?,
+        0x1e => success(Instruction::Lload0)(input)?,
+        0x1f => success(Instruction::Lload1)(input)?,
+        0x20 => success(Instruction::Lload2)(input)?,
+        0x21 => success(Instruction::Lload3)(input)?,
+        0x69 => success(Instruction::Lmul)(input)?,
+        0x75 => success(Instruction::Lneg)(input)?,
+        0xab => preceded(align(address + 1), lookupswitch_parser)(input)?,
+        0x81 => success(Instruction::Lor)(input)?,
+        0x71 => success(Instruction::Lrem)(input)?,
+        0xad => success(Instruction::Lreturn)(input)?,
+        0x79 => success(Instruction::Lshl)(input)?,
+        0x7b => success(Instruction::Lshr)(input)?,
+        0x37 => map(be_u8, Instruction::Lstore)(input)?,
+        0x3f => success(Instruction::Lstore0)(input)?,
+        0x40 => success(Instruction::Lstore1)(input)?,
+        0x41 => success(Instruction::Lstore2)(input)?,
+        0x42 => success(Instruction::Lstore3)(input)?,
+        0x65 => success(Instruction::Lsub)(input)?,
+        0x7d => success(Instruction::Lushr)(input)?,
+        0x83 => success(Instruction::Lxor)(input)?,
+        0xc2 => success(Instruction::Monitorenter)(input)?,
+        0xc3 => success(Instruction::Monitorexit)(input)?,
+        0xc5 => map(pair(be_u16, be_u8), |(index, dimensions)| {
+            Instruction::Multianewarray { index, dimensions }
+        })(input)?,
+        0xbb => map(be_u16, Instruction::New)(input)?,
+        0xbc => map(be_u8, Instruction::Newarray)(input)?,
+        0x00 => success(Instruction::Nop)(input)?,
+        0x57 => success(Instruction::Pop)(input)?,
+        0x58 => success(Instruction::Pop2)(input)?,
+        0xb5 => map(be_u16, Instruction::Putfield)(input)?,
+        0xb3 => map(be_u16, Instruction::Putstatic)(input)?,
+        0xa9 => map(be_u8, Instruction::Ret)(input)?,
+        0xb1 => success(Instruction::Return)(input)?,
+        0x35 => success(Instruction::Saload)(input)?,
+        0x56 => success(Instruction::Sastore)(input)?,
+        0x11 => map(be_i16, Instruction::Sipush)(input)?,
+        0x5f => success(Instruction::Swap)(input)?,
+        0xaa => preceded(align(address + 1), tableswitch_parser)(input)?,
+        0xc4 => {
+            let (input, b1) = be_u8(input)?;
+            match b1 {
+                0x19 => map(be_u16, Instruction::AloadWide)(input)?,
+                0x3a => map(be_u16, Instruction::AstoreWide)(input)?,
+                0x18 => map(be_u16, Instruction::DloadWide)(input)?,
+                0x39 => map(be_u16, Instruction::DstoreWide)(input)?,
+                0x17 => map(be_u16, Instruction::FloadWide)(input)?,
+                0x38 => map(be_u16, Instruction::FstoreWide)(input)?,
+                0x15 => map(be_u16, Instruction::IloadWide)(input)?,
+                0x36 => map(be_u16, Instruction::IstoreWide)(input)?,
+                0x16 => map(be_u16, Instruction::LloadWide)(input)?,
+                0x37 => map(be_u16, Instruction::LstoreWide)(input)?,
+                0xa9 => map(be_u16, Instruction::RetWide)(input)?,
+                0x84 => map(pair(be_u16, be_i16), |(index, value)| {
+                    Instruction::IincWide { index, value }
+                })(input)?,
+                _ => fail(input)?,
+            }
+        }
+        _ => fail(input)?,
+    };
+    Ok((input, instruction))
 }
