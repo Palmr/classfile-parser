@@ -1,5 +1,3 @@
-package uk.co.palmr.classfileparser;
-
 public class BasicClass {
   private final String stringField;
   private final Integer integerField;

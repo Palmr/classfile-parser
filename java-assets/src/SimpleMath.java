@@ -1,5 +1,3 @@
-package uk.co.palmr.classfileparser;
-
 public class SimpleMath {
   public static void main(String[] args) {
     System.out.println("Integer math:");

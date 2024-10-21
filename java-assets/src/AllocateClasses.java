@@ -1,5 +1,3 @@
-package uk.co.palmr.classfileparser;
-
 import java.util.ArrayList;
 import java.util.List;
 

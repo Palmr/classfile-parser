@@ -1,5 +1,3 @@
-package uk.co.palmr.classfileparser;
-
 public class InterfaceImplementor implements BasicInterface {
 
   public static void main(String[] args) {

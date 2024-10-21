@@ -1,5 +1,3 @@
-package uk.co.palmr.classfileparser;
-
 public class Instructions {
   public static int[] test(int x) {
     int a = 0;
