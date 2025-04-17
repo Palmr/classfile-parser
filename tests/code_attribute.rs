@@ -2,7 +2,9 @@ extern crate classfile_parser;
 
 use classfile_parser::attribute_info::{code_attribute_parser, method_parameters_attribute_parser};
 use classfile_parser::class_parser;
-use classfile_parser::code_attribute::{code_parser, instruction_parser, Instruction};
+use classfile_parser::code_attribute::{
+    code_parser, instruction_parser, Instruction, LocalVariableTableAttribute,
+};
 use classfile_parser::method_info::MethodAccessFlags;
 
 #[test]
@@ -113,5 +115,61 @@ fn method_parameters() {
             method_parameters.parameters.get(1).unwrap().name_index
         ),
         Some("b".to_string())
+    );
+}
+
+#[test]
+fn local_variable_table() {
+    // The class was not compiled with "javac -g"
+    let class_bytes = include_bytes!("../java-assets/compiled-classes/LocalVariableTable.class");
+    let (_, class) = class_parser(class_bytes).unwrap();
+    let method_info = &class.methods.iter().last().unwrap();
+
+    let code_attribute = method_info
+        .attributes
+        .iter()
+        .find_map(|attribute_info| {
+            match lookup_string(&class, attribute_info.attribute_name_index)?.as_str() {
+                "Code" => {
+                    classfile_parser::attribute_info::code_attribute_parser(&attribute_info.info)
+                        .ok()
+                }
+                _ => None,
+            }
+        })
+        .map(|i| i.1)
+        .unwrap();
+
+    let local_variable_table_attribute: LocalVariableTableAttribute = code_attribute
+        .attributes
+        .iter()
+        .find_map(|attribute_info| {
+            match lookup_string(&class, attribute_info.attribute_name_index)?.as_str() {
+                "LocalVariableTable" => {
+                    classfile_parser::code_attribute::local_variable_table_parser(
+                        &attribute_info.info,
+                    )
+                    .ok()
+                }
+                _ => None,
+            }
+        })
+        .map(|a| a.1)
+        .unwrap();
+
+    let types: Vec<String> = local_variable_table_attribute
+        .items
+        .iter()
+        .filter_map(|i| lookup_string(&class, i.descriptor_index))
+        .collect();
+
+    // All used types in method code block of last method
+    assert_eq!(
+        types,
+        vec![
+            "LLocalVariableTable;".to_string(),
+            "Ljava/util/HashMap;".to_string(),
+            "I".to_string()
+        ]
     );
 }
