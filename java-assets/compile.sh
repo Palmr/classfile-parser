@@ -26,6 +26,7 @@ javac -d java-assets/compiled-classes/ java-assets/src/Instructions.java
 javac -d java-assets/compiled-classes/ java-assets/src/UnicodeStrings.java
 javac -d java-assets/compiled-classes/ java-assets/src/DeprecatedAnnotation.java
 
+javac -g -d java-assets/compiled-classes/ java-assets/src/LocalVariableTable.java
 javac -d java-assets/compiled-classes/ java-assets/src/HelloWorld.java
 printf '\xde\xad\xbe\xef' > java-assets/compiled-classes/malformed.class
 tail -c+5 java-assets/compiled-classes/HelloWorld.class >> java-assets/compiled-classes/malformed.class

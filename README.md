@@ -108,6 +108,6 @@ fn main() {
       - [x] SourceFile
       - [ ] SourceDebugExtension
       - [ ] LineNumberTable
-      - [ ] LocalVariableTable
+      - [x] LocalVariableTable
       - [ ] LocalVariableTypeTable
       - [ ] Deprecated

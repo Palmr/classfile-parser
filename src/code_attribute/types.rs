@@ -234,3 +234,18 @@ pub enum Instruction {
         offsets: Vec<i32>,
     },
 }
+
+#[derive(Clone, Debug)]
+pub struct LocalVariableTableAttribute {
+    pub local_variable_table_length: u16,
+    pub items: Vec<LocalVariableTableItem>,
+}
+
+#[derive(Clone, Debug)]
+pub struct LocalVariableTableItem {
+    pub start_pc: u16,
+    pub length: u16,
+    pub name_index: u16,
+    pub descriptor_index: u16,
+    pub index: u16,
+}
