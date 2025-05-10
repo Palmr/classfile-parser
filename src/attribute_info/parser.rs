@@ -288,15 +288,6 @@ pub fn bootstrap_methods_attribute_parser(
 pub fn sourcefile_attribute_parser(
     input: &[u8],
 ) -> Result<(&[u8], SourceFileAttribute), Err<&[u8]>> {
-    let (input, attribute_name_index) = be_u16(input)?;
-    let (input, attribute_length) = be_u32(input)?;
     let (input, sourcefile_index) = be_u16(input)?;
-    Ok((
-        input,
-        SourceFileAttribute {
-            attribute_name_index,
-            attribute_length,
-            sourcefile_index,
-        },
-    ))
+    Ok((input, SourceFileAttribute { sourcefile_index }))
 }
