@@ -130,12 +130,6 @@ pub struct BootstrapMethodsAttribute {
 /// [see more](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.7.10)
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct SourceFileAttribute {
-    /// The value of the attribute_name_index item must be a valid index into the constant_pool table.
-    /// The constant_pool entry at that index must be a CONSTANT_Utf8_info structure
-    /// representing the string "SourceFile".
-    pub attribute_name_index: u16,
-    /// The value of the attribute_length item must be two.
-    pub attribute_length: u32,
     /// The value of the sourcefile_index item must be a valid index into the constant_pool table.
     /// The constant_pool entry at that index must be a CONSTANT_Utf8_info structure representing a string.
     pub sourcefile_index: u16,

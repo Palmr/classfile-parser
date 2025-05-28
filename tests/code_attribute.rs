@@ -173,3 +173,31 @@ fn local_variable_table() {
         ]
     );
 }
+
+#[test]
+fn source_file() {
+    let class_bytes = include_bytes!("../java-assets/compiled-classes/BasicClass.class");
+    let (_, class) = class_parser(class_bytes).unwrap();
+
+    let source = class
+        .attributes
+        .iter()
+        .find_map(|attribute_info| {
+            match lookup_string(&class, attribute_info.attribute_name_index)?.as_str() {
+                "SourceFile" => classfile_parser::attribute_info::sourcefile_attribute_parser(
+                    &attribute_info.info,
+                )
+                .ok(),
+                o => {
+                    dbg!(o);
+                    None
+                }
+            }
+        })
+        .map(|i| i.1)
+        .unwrap();
+
+    let s = lookup_string(&class, source.sourcefile_index).unwrap();
+
+    assert_eq!(s, "BasicClass.java");
+}
