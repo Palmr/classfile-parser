@@ -1,10 +1,10 @@
 use nom::{
+    Err as BaseErr,
     bytes::complete::take,
     combinator::{map, success},
     error::{Error, ErrorKind},
     multi::count,
-    number::complete::{be_u16, be_u32, be_u8},
-    Err as BaseErr,
+    number::complete::{be_u8, be_u16, be_u32},
 };
 
 use crate::attribute_info::types::StackMapFrame::*;
@@ -90,6 +90,412 @@ pub fn parameters_parser(input: &[u8]) -> Result<(&[u8], ParameterAttribute), Er
         ParameterAttribute {
             name_index,
             access_flags,
+        },
+    ))
+}
+
+pub fn inner_classes_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], InnerClassesAttribute), Err<&[u8]>> {
+    let (input, number_of_classes) = be_u16(input)?;
+    let (input, classes) = count(inner_class_info_parser, number_of_classes as usize)(input)?;
+    let ret = (
+        input,
+        InnerClassesAttribute {
+            number_of_classes,
+            classes,
+        },
+    );
+
+    Ok(ret)
+}
+
+pub fn inner_class_info_parser(input: &[u8]) -> Result<(&[u8], InnerClassInfo), Err<&[u8]>> {
+    let (input, inner_class_info_index) = be_u16(input)?;
+    let (input, outer_class_info_index) = be_u16(input)?;
+    let (input, inner_name_index) = be_u16(input)?;
+    let (input, inner_class_access_flags) = be_u16(input)?;
+    Ok((
+        input,
+        InnerClassInfo {
+            inner_class_info_index,
+            outer_class_info_index,
+            inner_name_index,
+            inner_class_access_flags,
+        },
+    ))
+}
+
+pub fn enclosing_method_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], EnclosingMethodAttribute), Err<&[u8]>> {
+    let (input, class_index) = be_u16(input)?;
+    let (input, method_index) = be_u16(input)?;
+    Ok((
+        input,
+        EnclosingMethodAttribute {
+            class_index,
+            method_index,
+        },
+    ))
+}
+
+pub fn signature_attribute_parser(input: &[u8]) -> Result<(&[u8], SignatureAttribute), Err<&[u8]>> {
+    let (input, signature_index) = be_u16(input)?;
+    Ok((input, SignatureAttribute { signature_index }))
+}
+
+pub fn runtime_visible_annotations_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], RuntimeVisibleAnnotationsAttribute), Err<&[u8]>> {
+    let (input, num_annotations) = be_u16(input)?;
+    let (input, annotations) = count(annotation_parser, num_annotations as usize)(input)?;
+    Ok((
+        input,
+        RuntimeVisibleAnnotationsAttribute {
+            num_annotations,
+            annotations,
+        },
+    ))
+}
+
+pub fn runtime_invisible_annotations_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], RuntimeInvisibleAnnotationsAttribute), Err<&[u8]>> {
+    let (input, num_annotations) = be_u16(input)?;
+    let (input, annotations) = count(annotation_parser, num_annotations as usize)(input)?;
+    Ok((
+        input,
+        RuntimeInvisibleAnnotationsAttribute {
+            num_annotations,
+            annotations,
+        },
+    ))
+}
+
+pub fn runtime_visible_parameter_annotations_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], RuntimeVisibleParameterAnnotationsAttribute), Err<&[u8]>> {
+    let (input, num_parameters) = be_u8(input)?;
+    let (input, parameter_annotations) = count(
+        runtime_visible_annotations_attribute_parser,
+        num_parameters as usize,
+    )(input)?;
+    Ok((
+        input,
+        RuntimeVisibleParameterAnnotationsAttribute {
+            num_parameters,
+            parameter_annotations,
+        },
+    ))
+}
+
+pub fn runtime_invisible_parameter_annotations_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], RuntimeInvisibleParameterAnnotationsAttribute), Err<&[u8]>> {
+    let (input, num_parameters) = be_u8(input)?;
+    let (input, parameter_annotations) = count(
+        runtime_invisible_annotations_attribute_parser,
+        num_parameters as usize,
+    )(input)?;
+    Ok((
+        input,
+        RuntimeInvisibleParameterAnnotationsAttribute {
+            num_parameters,
+            parameter_annotations,
+        },
+    ))
+}
+pub fn runtime_visible_type_annotations_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], RuntimeVisibleTypeAnnotationsAttribute), Err<&[u8]>> {
+    let (input, num_annotations) = be_u16(input)?;
+    let (input, type_annotations) = count(type_annotation_parser, num_annotations as usize)(input)?;
+
+    Ok((
+        input,
+        RuntimeVisibleTypeAnnotationsAttribute {
+            num_annotations,
+            type_annotations,
+        },
+    ))
+}
+
+pub fn runtime_invisible_type_annotations_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], RuntimeInvisibleTypeAnnotationsAttribute), Err<&[u8]>> {
+    let (input, num_annotations) = be_u16(input)?;
+    let (input, type_annotations) = count(type_annotation_parser, num_annotations as usize)(input)?;
+
+    Ok((
+        input,
+        RuntimeInvisibleTypeAnnotationsAttribute {
+            num_annotations,
+            type_annotations,
+        },
+    ))
+}
+
+pub fn type_annotation_parser(input: &[u8]) -> Result<(&[u8], TypeAnnotation), Err<&[u8]>> {
+    let (input, target_type) = be_u8(input)?;
+    let mut target_info: TargetInfo = TargetInfo::Empty;
+    match target_type {
+        0x0 | 0x1 => {
+            let (_input, type_parameter_index) = be_u8(input)?;
+            target_info = TargetInfo::TypeParameter {
+                type_parameter_index,
+            };
+        }
+        0x10 => {
+            let (_input, supertype_index) = be_u16(input)?;
+            target_info = TargetInfo::SuperType { supertype_index };
+        }
+        0x11..=0x12 => {
+            let (input, type_parameter_index) = be_u8(input)?;
+            let (_input, bound_index) = be_u8(input)?;
+            target_info = TargetInfo::TypeParameterBound {
+                type_parameter_index,
+                bound_index,
+            }
+        }
+        0x13..=0x15 => {
+            // Empty target_info
+        }
+        0x16 => {
+            let (_input, formal_parameter_index) = be_u8(input)?;
+            target_info = TargetInfo::FormalParameter {
+                formal_parameter_index,
+            };
+        }
+        0x17 => {
+            let (_input, throws_type_index) = be_u16(input)?;
+            target_info = TargetInfo::Throws { throws_type_index };
+        }
+        0x40 | 0x41 => {
+            let (input, table_length) = be_u16(input)?;
+            let (_input, tables) = count(
+                local_variable_table_annotation_parser,
+                table_length as usize,
+            )(input)?;
+            target_info = TargetInfo::LocalVar {
+                table_length,
+                tables,
+            };
+        }
+        0x42 => {
+            let (_input, exception_table_index) = be_u16(input)?;
+            target_info = TargetInfo::Catch {
+                exception_table_index,
+            }
+        }
+        0x43..=0x46 => {
+            let (_input, offset) = be_u16(input)?;
+            target_info = TargetInfo::Offset { offset }
+        }
+        0x47..=0x4B => {
+            let (input, offset) = be_u16(input)?;
+            let (_input, type_argument_index) = be_u8(input)?;
+            target_info = TargetInfo::TypeArgument {
+                offset,
+                type_argument_index,
+            };
+        }
+        _ => {
+            eprintln!(
+                "Parsing RuntimeVisibleTypeAnnotationsAttribute with target_type = {}",
+                target_type
+            );
+        }
+    }
+    let (input, target_path) = target_path_parser(input)?;
+    let (input, type_index) = be_u16(input)?;
+    let (input, num_element_value_pairs) = be_u16(input)?;
+    let (input, element_value_pairs) =
+        count(element_value_pair_parser, num_element_value_pairs as usize)(input)?;
+
+    Ok((
+        input,
+        TypeAnnotation {
+            target_type,
+            target_info,
+            target_path,
+            type_index,
+            num_element_value_pairs,
+            element_value_pairs,
+        },
+    ))
+}
+
+fn target_path_parser(input: &[u8]) -> Result<(&[u8], TypePath), Err<&[u8]>> {
+    let (input, path_length) = be_u8(input)?;
+    let (input, paths) = count(
+        |input| {
+            let (input, type_path_kind) = be_u8(input)?;
+            let (input, type_argument_index) = be_u8(input)?;
+            Ok((
+                input,
+                TypePathEntry {
+                    type_path_kind,
+                    type_argument_index,
+                },
+            ))
+        },
+        path_length as usize,
+    )(input)?;
+    Ok((input, TypePath { path_length, paths }))
+}
+
+pub fn local_variable_table_annotation_parser(
+    input: &[u8],
+) -> Result<(&[u8], LocalVarTableAnnotation), Err<&[u8]>> {
+    let (input, start_pc) = be_u16(input)?;
+    let (input, length) = be_u16(input)?;
+    let (input, index) = be_u16(input)?;
+    Ok((
+        input,
+        LocalVarTableAnnotation {
+            start_pc,
+            length,
+            index,
+        },
+    ))
+}
+fn annotation_parser(input: &[u8]) -> Result<(&[u8], RuntimeAnnotation), Err<&[u8]>> {
+    let (input, type_index) = be_u16(input)?;
+    let (input, num_element_value_pairs) = be_u16(input)?;
+    eprintln!(
+        "Parsing annotation with type index = {}, and {} element value pairs",
+        type_index, num_element_value_pairs
+    );
+    let (input, element_value_pairs) =
+        count(element_value_pair_parser, num_element_value_pairs as usize)(input)?;
+    Ok((
+        input,
+        RuntimeAnnotation {
+            type_index,
+            num_element_value_pairs,
+            element_value_pairs,
+        },
+    ))
+}
+
+fn element_value_pair_parser(input: &[u8]) -> Result<(&[u8], ElementValuePair), Err<&[u8]>> {
+    let (input, element_name_index) = be_u16(input)?;
+    let (input, value) = element_value_parser(input)?;
+    Ok((
+        input,
+        ElementValuePair {
+            element_name_index,
+            value,
+        },
+    ))
+}
+
+fn array_value_parser(input: &[u8]) -> Result<(&[u8], ElementArrayValue), Err<&[u8]>> {
+    let (input, num_values) = be_u16(input)?;
+    let (input, values) = count(element_value_parser, num_values as usize)(input)?;
+    Ok((input, ElementArrayValue { num_values, values }))
+}
+
+pub fn element_value_parser(input: &[u8]) -> Result<(&[u8], ElementValue), Err<&[u8]>> {
+    let (input, tag) = be_u8(input)?;
+    eprintln!("Element value parsing: tag = {}", tag as char);
+
+    match tag as char {
+        'B' | 'C' | 'I' | 'S' | 'Z' | 'D' | 'F' | 'J' | 's' => {
+            let (input, const_value_index) = be_u16(input)?;
+            eprintln!(
+                "Element value parsing: const_value_index = {}",
+                const_value_index
+            );
+            Ok((
+                input,
+                ElementValue::ConstValueIndex {
+                    tag: tag as char,
+                    value: const_value_index,
+                },
+            ))
+        }
+        'e' => {
+            let (input, enum_const_value) = enum_const_value_parser(input)?;
+            eprintln!(
+                "Element value parsing: enum_const_value = {:?}",
+                enum_const_value
+            );
+            Ok((input, ElementValue::EnumConst(enum_const_value)))
+        }
+        'c' => {
+            let (input, class_info_index) = be_u16(input)?;
+            eprintln!(
+                "Element value parsing: class_info_index = {}",
+                class_info_index
+            );
+            Ok((input, ElementValue::ClassInfoIndex(class_info_index)))
+        }
+        '@' => {
+            let (input, annotation_value) = annotation_parser(input)?;
+            eprintln!(
+                "Element value parsing: annotation_value = {:?}",
+                annotation_value
+            );
+            Ok((input, ElementValue::AnnotationValue(annotation_value)))
+        }
+        '[' => {
+            let (input, array_value) = array_value_parser(input)?;
+            eprintln!("Element value parsing: array_value = {:?}", array_value);
+            Ok((input, ElementValue::ElementArray(array_value)))
+        }
+        _ => Result::Err(Err::Error(error_position!(input, ErrorKind::NoneOf))),
+    }
+}
+
+fn enum_const_value_parser(input: &[u8]) -> Result<(&[u8], EnumConstValue), Err<&[u8]>> {
+    let (input, type_name_index) = be_u16(input)?;
+    let (input, const_name_index) = be_u16(input)?;
+    Ok((
+        input,
+        EnumConstValue {
+            type_name_index,
+            const_name_index,
+        },
+    ))
+}
+
+// not even really parsing ...
+pub fn source_debug_extension_parser(
+    input: &[u8],
+) -> Result<(&[u8], SourceDebugExtensionAttribute), Err<&[u8]>> {
+    let debug_extension = Vec::from(input);
+    Ok((input, SourceDebugExtensionAttribute { debug_extension }))
+}
+
+pub fn line_number_table_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], LineNumberTable), Err<&[u8]>> {
+    let (input, line_number_table_length) = be_u16(input)?;
+    let (input, line_number_table) = count(
+        line_number_table_entry_parser,
+        line_number_table_length as usize,
+    )(input)?;
+    Ok((
+        input,
+        LineNumberTable {
+            line_number_table_length,
+            line_number_table,
+        },
+    ))
+}
+
+pub fn line_number_table_entry_parser(
+    input: &[u8],
+) -> Result<(&[u8], LineNumberTableEntry), Err<&[u8]>> {
+    let (input, start_pc) = be_u16(input)?;
+    let (input, line_number) = be_u16(input)?;
+    Ok((
+        input,
+        LineNumberTableEntry {
+            start_pc,
+            line_number,
         },
     ))
 }

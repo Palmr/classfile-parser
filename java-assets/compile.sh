@@ -25,6 +25,8 @@ javac -d java-assets/compiled-classes/ -g:none java-assets/src/Factorial.java
 javac -d java-assets/compiled-classes/ java-assets/src/Instructions.java
 javac -d java-assets/compiled-classes/ java-assets/src/UnicodeStrings.java
 javac -d java-assets/compiled-classes/ java-assets/src/DeprecatedAnnotation.java
+javac -d java-assets/compiled-classes/ java-assets/src/InnerClasses.java
+javac -d java-assets/compiled-classes/ java-assets/src/Annotations.java
 
 javac -g -d java-assets/compiled-classes/ java-assets/src/LocalVariableTable.java
 javac -d java-assets/compiled-classes/ java-assets/src/HelloWorld.java

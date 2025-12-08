@@ -249,3 +249,18 @@ pub struct LocalVariableTableItem {
     pub descriptor_index: u16,
     pub index: u16,
 }
+
+#[derive(Clone, Debug)]
+pub struct LocalVariableTypeTableAttribute {
+    pub local_variable_type_table_length: u16,
+    pub local_variable_type_table: Vec<LocalVariableTypeTableItem>,
+}
+
+#[derive(Clone, Debug)]
+pub struct LocalVariableTypeTableItem {
+    pub start_pc: u16,
+    pub length: u16,
+    pub name_index: u16,
+    pub signature_index: u16,
+    pub index: u16,
+}

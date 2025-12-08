@@ -1,15 +1,18 @@
 use crate::code_attribute::types::Instruction;
 use nom::{
+    Err as BaseErr, IResult, Offset,
     bytes::complete::{tag, take},
     combinator::{complete, fail, map, success},
     error::Error,
     multi::{count, many0},
-    number::complete::{be_i16, be_i32, be_i8, be_u16, be_u32, be_u8},
+    number::complete::{be_i8, be_i16, be_i32, be_u8, be_u16, be_u32},
     sequence::{pair, preceded, tuple},
-    Err as BaseErr, IResult, Offset,
 };
 
-use super::{LocalVariableTableAttribute, LocalVariableTableItem};
+use super::{
+    LocalVariableTableAttribute, LocalVariableTableItem, LocalVariableTypeTableAttribute,
+    LocalVariableTypeTableItem,
+};
 type Err<E> = BaseErr<Error<E>>;
 
 fn offset<'a>(remaining: &'a [u8], input: &[u8]) -> IResult<&'a [u8], usize> {
@@ -327,6 +330,43 @@ pub fn variable_table_item_parser(
             length,
             name_index,
             descriptor_index,
+            index,
+        },
+    ))
+}
+
+pub fn local_variable_type_table_parser(
+    input: &[u8],
+) -> Result<(&[u8], LocalVariableTypeTableAttribute), Err<&[u8]>> {
+    let (input, local_variable_type_table_length) = be_u16(input)?;
+    let (input, local_variable_type_table) = count(
+        local_variable_type_table_item_parser,
+        local_variable_type_table_length as usize,
+    )(input)?;
+    Ok((
+        input,
+        LocalVariableTypeTableAttribute {
+            local_variable_type_table_length,
+            local_variable_type_table,
+        },
+    ))
+}
+
+pub fn local_variable_type_table_item_parser(
+    input: &[u8],
+) -> Result<(&[u8], LocalVariableTypeTableItem), Err<&[u8]>> {
+    let (input, start_pc) = be_u16(input)?;
+    let (input, length) = be_u16(input)?;
+    let (input, name_index) = be_u16(input)?;
+    let (input, signature_index) = be_u16(input)?;
+    let (input, index) = be_u16(input)?;
+    Ok((
+        input,
+        LocalVariableTypeTableItem {
+            start_pc,
+            length,
+            name_index,
+            signature_index,
             index,
         },
     ))

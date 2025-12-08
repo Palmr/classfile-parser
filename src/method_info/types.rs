@@ -1,17 +1,25 @@
 use crate::attribute_info::AttributeInfo;
 
+use binrw::binrw;
+
 #[derive(Clone, Debug)]
+#[binrw]
+#[brw(big)]
 pub struct MethodInfo {
     pub access_flags: MethodAccessFlags,
     pub name_index: u16,
     pub descriptor_index: u16,
     pub attributes_count: u16,
+    #[br(args { count: attributes_count.into() })]
     pub attributes: Vec<AttributeInfo>,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[binrw]
+pub struct MethodAccessFlags(u16);
+
 bitflags! {
-    #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-    pub struct MethodAccessFlags: u16 {
+    impl MethodAccessFlags: u16 {
         const PUBLIC = 0x0001;       // 	Declared public; may be accessed from outside its package.
         const PRIVATE = 0x0002;      // 	Declared private; accessible only within the defining class.
         const PROTECTED = 0x0004;    // 	Declared protected; may be accessed within subclasses.

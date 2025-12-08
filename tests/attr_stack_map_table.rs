@@ -18,19 +18,13 @@ fn test_attribute_stack_map_table() {
             println!("Constant pool:");
             for (const_index, const_item) in c.const_pool.iter().enumerate() {
                 println!("\t[{}] = {:?}", (const_index + 1), const_item);
-                match *const_item {
-                    ConstantInfo::Utf8(ref c) => {
-                        if c.utf8_string == "StackMapTable" {
-                            if stack_map_table_index != 0 {
-                                assert!(
-                                    false,
-                                    "Should not find more than one StackMapTable constant"
-                                );
-                            }
-                            stack_map_table_index = (const_index + 1) as u16;
-                        }
+                if let ConstantInfo::Utf8(ref c) = *const_item
+                    && c.utf8_string.to_string() == "StackMapTable"
+                {
+                    if stack_map_table_index != 0 {
+                        panic!("Should not find more than one StackMapTable constant");
                     }
-                    _ => {}
+                    stack_map_table_index = (const_index + 1) as u16;
                 }
             }
             println!("Methods:");
@@ -54,16 +48,13 @@ fn test_attribute_stack_map_table() {
             println!("Code Attrs:");
             for (idx, code_attr) in code.attributes.iter().enumerate() {
                 println!("\t[{}] = {:?}", idx, code_attr);
-                match *code_attr {
-                    AttributeInfo {
-                        ref attribute_name_index,
-                        attribute_length: _,
-                        info: _,
-                    } => {
-                        if attribute_name_index == &stack_map_table_index {
-                            stack_map_table_attr_index = idx;
-                        }
-                    }
+                let AttributeInfo {
+                    ref attribute_name_index,
+                    attribute_length: _,
+                    info: _,
+                } = *code_attr;
+                if attribute_name_index == &stack_map_table_index {
+                    stack_map_table_attr_index = idx;
                 }
             }
 

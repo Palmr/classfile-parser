@@ -2,7 +2,7 @@
 name = "classfile-parser"
 description = "A parser for Java Class files written in rust"
 version = "0.3.9"
-edition = "2021"
+edition = "2024"
 authors = ["Nick Palmer <nick@palmr.co.uk>"]
 keywords = ["java", "parsing", "class", "classfile"]
 categories = ["parser-implementations"]
@@ -12,6 +12,10 @@ license = "MIT"
 exclude = ["java-assets/out/**/*"]
 
 [dependencies]
-nom = "7"
+nom = "^7"
 bitflags = "^2.3"
 cesu8 = "^1.1"
+binrw = "0.15.0"
+
+[dev-dependencies]
+assert_matches = "1.5.0"

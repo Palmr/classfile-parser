@@ -1,4 +1,4 @@
-use nom::{multi::count, number::complete::be_u16, IResult};
+use nom::{IResult, multi::count, number::complete::be_u16};
 
 use crate::attribute_info::attribute_parser;
 

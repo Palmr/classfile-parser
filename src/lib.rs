@@ -1,7 +1,7 @@
 //! A parser for [Java Classfiles](https://docs.oracle.com/javase/specs/jvms/se10/html/jvms-4.html)
 
 use std::fs::File;
-use std::io::{prelude::*, BufReader};
+use std::io::{BufReader, prelude::*};
 use std::path::Path;
 
 #[macro_use]
@@ -46,34 +46,38 @@ pub fn parse_class(class_name: &str) -> Result<ClassFile, String> {
     };
 
     let mut reader = BufReader::new(file);
-    parse_class_from_reader(&mut reader, display.to_string())
+    parse_class_from_reader(&mut reader)
 }
 
 /// Attempt to parse a class file given a reader that implements the std::io::Read trait.
-/// The file_path parameter is only used in case of errors to provide reasonable error
-/// messages.
+/// Parameters shouldn't be passed for the sole purpose of debug output, this should be
+/// abstracted instead.
+/// OLD: The file_path parameter is only used in case of errors to provide
+/// reasonable error messages.
 ///
 /// ```rust
 /// let mut reader = "this_will_be_parsed_as_classfile".as_bytes();
-/// let result = classfile_parser::parse_class_from_reader(&mut reader, "path/to/Java.class".to_string());
+/// let result = classfile_parser::parse_class_from_reader(&mut reader);
 /// assert!(result.is_err());
 /// ```
-pub fn parse_class_from_reader<T: Read>(
-    reader: &mut T,
-    file_path: String,
-) -> Result<ClassFile, String> {
+pub fn parse_class_from_reader<T: Read>(reader: &mut T) -> Result<ClassFile, String> {
     let mut class_bytes = Vec::new();
-    if let Err(why) = reader.read_to_end(&mut class_bytes) {
-        return Err(format!(
-            "Unable to read {}: {}",
-            file_path,
-            &why.to_string()
-        ));
-    }
+    reader
+        .read_to_end(&mut class_bytes)
+        .expect("cannot continue, read_to_end failed");
 
     let parsed_class = class_parser(&class_bytes);
     match parsed_class {
-        Ok((_, c)) => Ok(c),
-        _ => Err(format!("Failed to parse classfile {}", file_path)),
+        Ok((a, c)) => {
+            if !a.is_empty() {
+                eprintln!(
+                    "Warning: not all bytes were consumed when parsing classfile, {} bytes remaining",
+                    a.len()
+                );
+            }
+
+            Ok(c)
+        }
+        Err(e) => Err(format!("Failed to parse classfile: {}", e)),
     }
 }

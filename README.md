@@ -24,7 +24,7 @@ use classfile_parser::class_parser;
 
 fn main() {
     let classfile_bytes = include_bytes!("../path/to/JavaClass.class");
-    
+
     match class_parser(classfile_bytes) {
         Ok((_, class_file)) => {
             println!(
@@ -84,30 +84,30 @@ fn main() {
 - [x] Methods
 - [x] Attributes
   - [x] Basic attribute info block parsing
-  - [ ] Known typed attributes parsing
+  - [x] Known typed attributes parsing
     - [x] Critical for JVM
       - [x] ConstantValue
       - [x] Code
       - [x] StackMapTable
       - [x] Exceptions
       - [x] BootstrapMethods
-    - [ ] Critical for Java SE
-      - [ ] InnerClasses
-      - [ ] EnclosingMethod
-      - [ ] Synthetic
-      - [ ] Signature
-      - [ ] RuntimeVisibleAnnotations
-      - [ ] RuntimeInvisibleAnnotations
-      - [ ] RuntimeVisibleParameterAnnotations
-      - [ ] RuntimeInvisibleParameterAnnotations
-      - [ ] RuntimeVisibleTypeAnnotations
-      - [ ] RuntimeInvisibleTypeAnnotations
-      - [ ] AnnotationDefault
+    - [x] Critical for Java SE
+      - [x] InnerClasses
+      - [x] EnclosingMethod
+      - [x] Synthetic
+      - [x] Signature
+      - [x] RuntimeVisibleAnnotations
+      - [x] RuntimeInvisibleAnnotations
+      - [x] RuntimeVisibleParameterAnnotations
+      - [x] RuntimeInvisibleParameterAnnotations
+      - [x] RuntimeVisibleTypeAnnotations
+      - [x] RuntimeInvisibleTypeAnnotations
+      - [x] AnnotationDefault
       - [X] MethodParameters
-    - [ ] Useful but not critical
+    - [x] Useful but not critical
       - [x] SourceFile
-      - [ ] SourceDebugExtension
-      - [ ] LineNumberTable
+      - [~] SourceDebugExtension
+      - [x] LineNumberTable
       - [x] LocalVariableTable
-      - [ ] LocalVariableTypeTable
-      - [ ] Deprecated
+      - [x] LocalVariableTypeTable
+      - [x] Deprecated
