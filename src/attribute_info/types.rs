@@ -343,3 +343,39 @@ pub struct SourceFileAttribute {
     /// The constant_pool entry at that index must be a CONSTANT_Utf8_info structure representing a string.
     pub sourcefile_index: u16,
 }
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ModuleAttribute {
+    pub module_name_index: u16,
+    pub module_flags: u16,
+    pub module_version_index: u16,
+    pub requires: Vec<ModuleRequiresAttribute>,
+    pub exports: Vec<ModuleExportsAttribute>,
+    pub opens: Vec<ModuleOpensAttribute>,
+    pub uses: Vec<u16>,
+    pub provides: Vec<ModuleProvidesAttribute>,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct ModuleRequiresAttribute {
+    pub requires_index: u16,
+    pub requires_flags: u16,
+    pub requires_version_index: u16,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ModuleExportsAttribute {
+    pub exports_index: u16,
+    pub exports_flags: u16,
+    pub exports_to_index: Vec<u16>,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ModuleOpensAttribute {
+    pub opens_index: u16,
+    pub opens_flags: u16,
+    pub opens_to_index: Vec<u16>,
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ModuleProvidesAttribute {
+    pub provides_index: u16,
+    pub provides_with_index: Vec<u16>,
+}
