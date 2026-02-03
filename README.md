@@ -84,7 +84,6 @@ fn main() {
 - [x] Methods
 - [x] Attributes
   - [x] Basic attribute info block parsing
-  - [x] Module
   - [x] Known typed attributes parsing
     - [x] Critical for JVM
       - [x] ConstantValue
@@ -112,3 +111,4 @@ fn main() {
       - [x] LocalVariableTable
       - [x] LocalVariableTypeTable
       - [x] Deprecated
+      - [x] Module
