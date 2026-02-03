@@ -717,7 +717,8 @@ pub fn module_attribute_parser(input: &[u8]) -> Result<(&[u8], ModuleAttribute),
     let (input, uses) = count(be_u16, uses_count as usize)(input)?;
 
     let (input, provides_count) = be_u16(input)?;
-    let (input, provides) = count(module_provides_attribute_parser, provides_count as usize)(input)?;
+    let (input, provides) =
+        count(module_provides_attribute_parser, provides_count as usize)(input)?;
 
     Ok((
         input,
@@ -733,6 +734,7 @@ pub fn module_attribute_parser(input: &[u8]) -> Result<(&[u8], ModuleAttribute),
         },
     ))
 }
+
 pub fn module_requires_attribute_parser(
     input: &[u8],
 ) -> Result<(&[u8], ModuleRequiresAttribute), Err<&[u8]>> {
@@ -786,6 +788,7 @@ pub fn module_opens_attribute_parser(
         },
     ))
 }
+
 pub fn module_provides_attribute_parser(
     input: &[u8],
 ) -> Result<(&[u8], ModuleProvidesAttribute), Err<&[u8]>> {
