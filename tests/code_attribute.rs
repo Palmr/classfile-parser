@@ -6,10 +6,11 @@ extern crate classfile_parser;
 //use std::assert_matches::assert_matches;
 
 use classfile_parser::attribute_info::{
-    DefaultAnnotation, ElementValue, InnerClassAccessFlags, TargetInfo, code_attribute_parser,
-    element_value_parser, enclosing_method_attribute_parser, inner_classes_attribute_parser,
+    DefaultAnnotation, ElementValue, InnerClassAccessFlags, ModuleAttribute,
+    ModuleExportsAttribute, ModuleRequiresAttribute, code_attribute_parser, element_value_parser,
+    enclosing_method_attribute_parser, inner_classes_attribute_parser,
     line_number_table_attribute_parser, method_parameters_attribute_parser,
-    runtime_invisible_annotations_attribute_parser,
+    module_attribute_parser, runtime_invisible_annotations_attribute_parser,
     runtime_invisible_parameter_annotations_attribute_parser,
     runtime_visible_annotations_attribute_parser,
     runtime_visible_parameter_annotations_attribute_parser,
@@ -21,7 +22,7 @@ use classfile_parser::code_attribute::{
     Instruction, LocalVariableTableAttribute, code_parser, instruction_parser,
     local_variable_type_table_parser,
 };
-use classfile_parser::constant_info::{ConstantInfo, Utf8Constant};
+use classfile_parser::constant_info::ConstantInfo;
 use classfile_parser::method_info::MethodAccessFlags;
 
 #[test]
@@ -102,9 +103,9 @@ fn test_class() {
 fn lookup_string(c: &classfile_parser::ClassFile, index: u16) -> Option<String> {
     let con = &c.const_pool[(index - 1) as usize];
     match con {
-        classfile_parser::constant_info::ConstantInfo::Utf8(utf8) => {
-            Some(utf8.utf8_string.to_string())
-        }
+        ConstantInfo::Utf8(utf8) => Some(utf8.utf8_string.to_string()),
+        ConstantInfo::Module(m) => lookup_string(c, m.name_index),
+        ConstantInfo::Package(p) => lookup_string(c, p.name_index),
         _ => None,
     }
 }
@@ -863,4 +864,66 @@ fn deprecated() {
         .collect::<Vec<_>>();
 
     assert_eq!(deprecated_field_attribute.len(), 1);
+}
+
+#[test]
+fn module_info() {
+    let class_bytes = include_bytes!("../java-assets/compiled-classes/module-info.class");
+    let (_, class) = class_parser(class_bytes).unwrap();
+
+    let module = class
+        .attributes
+        .iter()
+        .find(|attribute_info| {
+            matches!(
+                lookup_string(&class, attribute_info.attribute_name_index)
+                    .unwrap()
+                    .as_str(),
+                "Module"
+            )
+        })
+        .unwrap();
+
+    let (rest, module) = module_attribute_parser(&module.info).unwrap();
+    assert_eq!(rest.len(), 0);
+
+    let exptected = ModuleAttribute {
+        module_name_index: 6,
+        module_flags: 0,
+        module_version_index: 0,
+        requires: vec![ModuleRequiresAttribute {
+            requires_index: 8,
+            requires_flags: 32768,
+            requires_version_index: 10,
+        }],
+        exports: vec![ModuleExportsAttribute {
+            exports_index: 11,
+            exports_flags: 0,
+            exports_to_index: vec![],
+        }],
+        opens: vec![],
+        uses: vec![],
+        provides: vec![],
+    };
+
+    assert_eq!(module, exptected);
+
+    assert_eq!(
+        lookup_string(&class, exptected.module_name_index)
+            .unwrap()
+            .as_str(),
+        "my.module"
+    );
+    assert_eq!(
+        lookup_string(&class, exptected.requires.first().unwrap().requires_index)
+            .unwrap()
+            .as_str(),
+        "java.base"
+    );
+    assert_eq!(
+        lookup_string(&class, exptected.exports.first().unwrap().exports_index)
+            .unwrap()
+            .as_str(),
+        "com/some"
+    );
 }

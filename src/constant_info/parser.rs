@@ -131,6 +131,16 @@ fn const_invoke_dynamic(input: &[u8]) -> ConstantInfoResult<'_> {
     ))
 }
 
+fn const_module(input: &[u8]) -> ConstantInfoResult<'_> {
+    let (input, name_index) = be_u16(input)?;
+    Ok((input, ConstantInfo::Module(ModuleConstant { name_index })))
+}
+
+fn const_package(input: &[u8]) -> ConstantInfoResult<'_> {
+    let (input, name_index) = be_u16(input)?;
+    Ok((input, ConstantInfo::Package(PackageConstant { name_index })))
+}
+
 type ConstantInfoResult<'a> = Result<(&'a [u8], ConstantInfo), Err<Error<&'a [u8]>>>;
 type ConstantInfoVecResult<'a> = Result<(&'a [u8], Vec<ConstantInfo>), Err<Error<&'a [u8]>>>;
 
@@ -150,6 +160,8 @@ fn const_block_parser(input: &[u8], const_type: u8) -> ConstantInfoResult<'_> {
         15 => const_method_handle(input),
         16 => const_method_type(input),
         18 => const_invoke_dynamic(input),
+        19 => const_module(input),
+        20 => const_package(input),
         _ => Result::Err(Err::Error(error_position!(input, ErrorKind::Alt))),
     }
 }

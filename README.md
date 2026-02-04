@@ -111,3 +111,4 @@ fn main() {
       - [x] LocalVariableTable
       - [x] LocalVariableTypeTable
       - [x] Deprecated
+      - [x] Module

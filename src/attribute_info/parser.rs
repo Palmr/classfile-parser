@@ -697,3 +697,110 @@ pub fn sourcefile_attribute_parser(
     let (input, sourcefile_index) = be_u16(input)?;
     Ok((input, SourceFileAttribute { sourcefile_index }))
 }
+
+pub fn module_attribute_parser(input: &[u8]) -> Result<(&[u8], ModuleAttribute), Err<&[u8]>> {
+    let (input, module_name_index) = be_u16(input)?;
+    let (input, module_flags) = be_u16(input)?;
+    let (input, module_version_index) = be_u16(input)?;
+
+    let (input, requires_count) = be_u16(input)?;
+    let (input, requires) =
+        count(module_requires_attribute_parser, requires_count as usize)(input)?;
+
+    let (input, exports_count) = be_u16(input)?;
+    let (input, exports) = count(module_exports_attribute_parser, exports_count as usize)(input)?;
+
+    let (input, opens_count) = be_u16(input)?;
+    let (input, opens) = count(module_opens_attribute_parser, opens_count as usize)(input)?;
+
+    let (input, uses_count) = be_u16(input)?;
+    let (input, uses) = count(be_u16, uses_count as usize)(input)?;
+
+    let (input, provides_count) = be_u16(input)?;
+    let (input, provides) =
+        count(module_provides_attribute_parser, provides_count as usize)(input)?;
+
+    Ok((
+        input,
+        ModuleAttribute {
+            module_name_index,
+            module_flags,
+            module_version_index,
+            requires,
+            exports,
+            opens,
+            uses,
+            provides,
+        },
+    ))
+}
+
+pub fn module_requires_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], ModuleRequiresAttribute), Err<&[u8]>> {
+    let (input, requires_index) = be_u16(input)?;
+    let (input, requires_flags) = be_u16(input)?;
+    let (input, requires_version_index) = be_u16(input)?;
+
+    Ok((
+        input,
+        ModuleRequiresAttribute {
+            requires_index,
+            requires_flags,
+            requires_version_index,
+        },
+    ))
+}
+
+pub fn module_exports_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], ModuleExportsAttribute), Err<&[u8]>> {
+    let (input, exports_index) = be_u16(input)?;
+    let (input, exports_flags) = be_u16(input)?;
+    let (input, exports_to_count) = be_u16(input)?;
+
+    let (input, exports_to_index) = count(be_u16, exports_to_count as usize)(input)?;
+
+    Ok((
+        input,
+        ModuleExportsAttribute {
+            exports_index,
+            exports_flags,
+            exports_to_index,
+        },
+    ))
+}
+
+pub fn module_opens_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], ModuleOpensAttribute), Err<&[u8]>> {
+    let (input, opens_index) = be_u16(input)?;
+    let (input, opens_flags) = be_u16(input)?;
+    let (input, opens_to_count) = be_u16(input)?;
+    let (input, opens_to_index) = count(be_u16, opens_to_count as usize)(input)?;
+
+    Ok((
+        input,
+        ModuleOpensAttribute {
+            opens_index,
+            opens_flags,
+            opens_to_index,
+        },
+    ))
+}
+
+pub fn module_provides_attribute_parser(
+    input: &[u8],
+) -> Result<(&[u8], ModuleProvidesAttribute), Err<&[u8]>> {
+    let (input, provides_index) = be_u16(input)?;
+    let (input, provides_with_count) = be_u16(input)?;
+    let (input, provides_with_index) = count(be_u16, provides_with_count as usize)(input)?;
+
+    Ok((
+        input,
+        ModuleProvidesAttribute {
+            provides_index,
+            provides_with_index,
+        },
+    ))
+}

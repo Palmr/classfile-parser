@@ -13,6 +13,7 @@ pub use self::parser::exceptions_attribute_parser;
 pub use self::parser::inner_classes_attribute_parser;
 pub use self::parser::line_number_table_attribute_parser;
 pub use self::parser::method_parameters_attribute_parser;
+pub use self::parser::module_attribute_parser;
 pub use self::parser::runtime_invisible_annotations_attribute_parser;
 pub use self::parser::runtime_invisible_parameter_annotations_attribute_parser;
 pub use self::parser::runtime_invisible_type_annotations_attribute_parser;
