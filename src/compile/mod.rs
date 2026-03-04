@@ -58,6 +58,12 @@ pub enum InsertMode {
     Replace,
     /// Insert compiled code at the beginning, preserving the original body.
     Prepend,
+    /// Insert compiled code at the end, after the original body.
+    ///
+    /// The trailing return instruction(s) of the original method are stripped
+    /// so the original code falls through to the appended code. The appended
+    /// code is responsible for returning.
+    Append,
 }
 
 impl Default for InsertMode {
@@ -131,6 +137,21 @@ pub fn compile_method_body(
     options: &CompileOptions,
 ) -> Result<(), CompileError> {
     patch::compile_method_body_impl(source, class_file, method_name, options)
+}
+
+/// Compile Java source and append it after an existing method body.
+///
+/// The trailing return instructions of the original body are stripped
+/// so the original code falls through to the appended code.
+pub fn append_method_body(
+    source: &str,
+    class_file: &mut ClassFile,
+    method_name: &str,
+    options: &CompileOptions,
+) -> Result<(), CompileError> {
+    let mut opts = options.clone();
+    opts.insert_mode = InsertMode::Append;
+    patch::compile_method_body_impl(source, class_file, method_name, &opts)
 }
 
 /// Compile Java source and prepend it to an existing method body.
@@ -253,6 +274,41 @@ macro_rules! prepend_method {
             $method,
             &$crate::compile::CompileOptions {
                 insert_mode: $crate::compile::InsertMode::Prepend,
+                ..$crate::compile::CompileOptions::default()
+            },
+        )
+    };
+}
+
+/// Append compiled Java source after the end of a method body.
+///
+/// The original method's trailing return is stripped so it falls through
+/// to the appended code. The appended code is responsible for returning.
+///
+/// ```ignore
+/// append_method!(class_file, "main", r#"{ System.out.println("exiting main"); }"#)?;
+/// ```
+#[macro_export]
+macro_rules! append_method {
+    ($class_file:expr, $method:expr, $source:expr) => {
+        $crate::compile::append_method_body(
+            $source,
+            &mut $class_file,
+            $method,
+            &$crate::compile::CompileOptions {
+                generate_stack_map_table: true,
+                insert_mode: $crate::compile::InsertMode::Append,
+                ..$crate::compile::CompileOptions::default()
+            },
+        )
+    };
+    ($class_file:expr, $method:expr, $source:expr, no_verify) => {
+        $crate::compile::append_method_body(
+            $source,
+            &mut $class_file,
+            $method,
+            &$crate::compile::CompileOptions {
+                insert_mode: $crate::compile::InsertMode::Append,
                 ..$crate::compile::CompileOptions::default()
             },
         )
