@@ -525,7 +525,7 @@ pub enum TargetInfo {
         type_parameter_index: u8,
         bound_index: u8,
     },
-    #[br(pre_assert(target_type >= 0x13 && target_type <= 0x15))]
+    #[br(pre_assert((0x13..=0x15).contains(&target_type)))]
     Empty,
     #[br(pre_assert(target_type == 0x16))]
     FormalParameter {
@@ -545,11 +545,11 @@ pub enum TargetInfo {
     Catch {
         exception_table_index: u16,
     },
-    #[br(pre_assert(target_type >= 0x43 && target_type <= 0x46))]
+    #[br(pre_assert((0x43..=0x46).contains(&target_type)))]
     Offset {
         offset: u16,
     },
-    #[br(pre_assert(target_type >= 0x47 && target_type <= 0x4B))]
+    #[br(pre_assert((0x47..=0x4B).contains(&target_type)))]
     TypeArgument {
         offset: u16,
         type_argument_index: u8,

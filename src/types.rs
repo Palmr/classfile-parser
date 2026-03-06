@@ -213,11 +213,10 @@ impl ClassFile {
     /// Find the 1-based constant pool index of a UTF-8 entry matching the given string.
     pub fn find_utf8_index(&self, value: &str) -> Option<u16> {
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::Utf8(u) = entry {
-                if u.utf8_string == value {
+            if let ConstantInfo::Utf8(u) = entry
+                && u.utf8_string == value {
                     return Some((i + 1) as u16);
                 }
-            }
         }
         None
     }
@@ -289,11 +288,10 @@ impl ClassFile {
         let utf8_index = self.get_or_add_utf8(value);
         // Search for an existing String constant pointing to this Utf8
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::String(s) = entry {
-                if s.string_index == utf8_index {
+            if let ConstantInfo::String(s) = entry
+                && s.string_index == utf8_index {
                     return (i + 1) as u16;
                 }
-            }
         }
         let string_index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -319,11 +317,10 @@ impl ClassFile {
     pub fn get_or_add_class(&mut self, name: &str) -> u16 {
         let utf8_index = self.get_or_add_utf8(name);
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::Class(c) = entry {
-                if c.name_index == utf8_index {
+            if let ConstantInfo::Class(c) = entry
+                && c.name_index == utf8_index {
                     return (i + 1) as u16;
                 }
-            }
         }
         let class_index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -352,11 +349,10 @@ impl ClassFile {
         let name_index = self.get_or_add_utf8(name);
         let descriptor_index = self.get_or_add_utf8(descriptor);
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::NameAndType(nat) = entry {
-                if nat.name_index == name_index && nat.descriptor_index == descriptor_index {
+            if let ConstantInfo::NameAndType(nat) = entry
+                && nat.name_index == name_index && nat.descriptor_index == descriptor_index {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -377,11 +373,10 @@ impl ClassFile {
         let class_index = self.get_or_add_class(class_name);
         let nat_index = self.get_or_add_name_and_type(method_name, descriptor);
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::MethodRef(r) = entry {
-                if r.class_index == class_index && r.name_and_type_index == nat_index {
+            if let ConstantInfo::MethodRef(r) = entry
+                && r.class_index == class_index && r.name_and_type_index == nat_index {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -402,11 +397,10 @@ impl ClassFile {
         let class_index = self.get_or_add_class(class_name);
         let nat_index = self.get_or_add_name_and_type(field_name, descriptor);
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::FieldRef(r) = entry {
-                if r.class_index == class_index && r.name_and_type_index == nat_index {
+            if let ConstantInfo::FieldRef(r) = entry
+                && r.class_index == class_index && r.name_and_type_index == nat_index {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -427,11 +421,10 @@ impl ClassFile {
         let class_index = self.get_or_add_class(class_name);
         let nat_index = self.get_or_add_name_and_type(method_name, descriptor);
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::InterfaceMethodRef(r) = entry {
-                if r.class_index == class_index && r.name_and_type_index == nat_index {
+            if let ConstantInfo::InterfaceMethodRef(r) = entry
+                && r.class_index == class_index && r.name_and_type_index == nat_index {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -445,11 +438,10 @@ impl ClassFile {
     /// Get or add an Integer constant, deduplicating.
     pub fn get_or_add_integer(&mut self, value: i32) -> u16 {
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::Integer(c) = entry {
-                if c.value == value {
+            if let ConstantInfo::Integer(c) = entry
+                && c.value == value {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -460,11 +452,10 @@ impl ClassFile {
     /// Get or add a Float constant, deduplicating.
     pub fn get_or_add_float(&mut self, value: f32) -> u16 {
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::Float(c) = entry {
-                if c.value.to_bits() == value.to_bits() {
+            if let ConstantInfo::Float(c) = entry
+                && c.value.to_bits() == value.to_bits() {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -475,11 +466,10 @@ impl ClassFile {
     /// Get or add a Long constant, deduplicating. Adds Unusable sentinel.
     pub fn get_or_add_long(&mut self, value: i64) -> u16 {
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::Long(c) = entry {
-                if c.value == value {
+            if let ConstantInfo::Long(c) = entry
+                && c.value == value {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -491,11 +481,10 @@ impl ClassFile {
     /// Get or add a Double constant, deduplicating. Adds Unusable sentinel.
     pub fn get_or_add_double(&mut self, value: f64) -> u16 {
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::Double(c) = entry {
-                if c.value.to_bits() == value.to_bits() {
+            if let ConstantInfo::Double(c) = entry
+                && c.value.to_bits() == value.to_bits() {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -506,11 +495,10 @@ impl ClassFile {
 
     pub fn get_or_add_method_handle(&mut self, reference_kind: u8, reference_index: u16) -> u16 {
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::MethodHandle(c) = entry {
-                if c.reference_kind == reference_kind && c.reference_index == reference_index {
+            if let ConstantInfo::MethodHandle(c) = entry
+                && c.reference_kind == reference_kind && c.reference_index == reference_index {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -524,11 +512,10 @@ impl ClassFile {
     pub fn get_or_add_method_type(&mut self, descriptor: &str) -> u16 {
         let desc_idx = self.get_or_add_utf8(descriptor);
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::MethodType(c) = entry {
-                if c.descriptor_index == desc_idx {
+            if let ConstantInfo::MethodType(c) = entry
+                && c.descriptor_index == desc_idx {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
@@ -546,13 +533,12 @@ impl ClassFile {
     ) -> u16 {
         let nat_idx = self.get_or_add_name_and_type(name, descriptor);
         for (i, entry) in self.const_pool.iter().enumerate() {
-            if let ConstantInfo::InvokeDynamic(c) = entry {
-                if c.bootstrap_method_attr_index == bootstrap_method_attr_index
+            if let ConstantInfo::InvokeDynamic(c) = entry
+                && c.bootstrap_method_attr_index == bootstrap_method_attr_index
                     && c.name_and_type_index == nat_idx
                 {
                     return (i + 1) as u16;
                 }
-            }
         }
         let index = (self.const_pool.len() + 1) as u16;
         self.const_pool
