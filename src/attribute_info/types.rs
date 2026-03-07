@@ -59,10 +59,36 @@ fn write_code_instructions(code: &Vec<Instruction>) -> BinResult<()> {
 pub struct AttributeInfo {
     pub attribute_name_index: u16,
     pub attribute_length: u32,
-    #[br(count = attribute_length)]
+    #[br(parse_with = validated_info_reader, args(attribute_length))]
     pub info: Vec<u8>,
     #[brw(ignore)]
     pub info_parsed: Option<AttributeInfoVariant>,
+}
+
+/// Read `attribute_length` bytes for AttributeInfo::info, but first validate
+/// that the declared length doesn't exceed remaining data (prevents OOM from
+/// malicious u32 values in untrusted class files).
+#[binrw::parser(reader)]
+fn validated_info_reader(length: u32) -> BinResult<Vec<u8>> {
+    let len = length as usize;
+    if len > 0 {
+        let pos = reader.stream_position()?;
+        let end = reader.seek(std::io::SeekFrom::End(0))?;
+        reader.seek(std::io::SeekFrom::Start(pos))?;
+        let remaining = end.saturating_sub(pos) as usize;
+        if len > remaining {
+            return Err(binrw::Error::AssertFail {
+                pos,
+                message: format!(
+                    "attribute_length {} exceeds remaining {} bytes",
+                    len, remaining
+                ),
+            });
+        }
+    }
+    let mut buf = vec![0u8; len];
+    reader.read_exact(&mut buf)?;
+    Ok(buf)
 }
 
 impl InterpretInner for AttributeInfo {

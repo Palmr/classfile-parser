@@ -68,8 +68,11 @@ fn const_pool_parser<R: Read + Seek>(
     endian: Endian,
     args: VecArgs<()>,
 ) -> BinResult<Vec<ConstantInfo>> {
+    let count = args.count.saturating_sub(1);
+    // Each CP entry is at least 3 bytes (1 tag + 2 data).
+    validate_count_vs_remaining(r, count, 3, "constant_pool_count")?;
     let mut v = vec![];
-    while v.len() < args.count - 1 {
+    while v.len() < count {
         v.push(ConstantInfo::read_options(r, endian, args.inner)?);
         if matches!(
             v.last().unwrap(),
@@ -80,6 +83,35 @@ fn const_pool_parser<R: Read + Seek>(
     }
 
     Ok(v)
+}
+
+/// Validate that `count * min_entry_size` fits within the remaining data.
+fn validate_count_vs_remaining<R: Read + Seek>(
+    r: &mut R,
+    count: usize,
+    min_entry_size: usize,
+    label: &str,
+) -> BinResult<()> {
+    if count == 0 {
+        return Ok(());
+    }
+    let pos = r.stream_position().map_err(binrw::Error::Io)?;
+    let end = r.seek(std::io::SeekFrom::End(0)).map_err(binrw::Error::Io)?;
+    r.seek(std::io::SeekFrom::Start(pos)).map_err(binrw::Error::Io)?;
+    let remaining = end.saturating_sub(pos) as usize;
+    if count * min_entry_size > remaining {
+        return Err(binrw::Error::AssertFail {
+            pos,
+            message: format!(
+                "{} {} requires at least {} bytes but only {} remain",
+                label,
+                count,
+                count * min_entry_size,
+                remaining
+            ),
+        });
+    }
+    Ok(())
 }
 
 impl BinRead for ClassFile {
@@ -114,6 +146,8 @@ impl BinRead for ClassFile {
         let this_class = u16::read_options(reader, Endian::Big, ())?;
         let super_class = u16::read_options(reader, Endian::Big, ())?;
         let interfaces_count = u16::read_options(reader, Endian::Big, ())?;
+        // Each interface is a u16 (2 bytes)
+        validate_count_vs_remaining(reader, interfaces_count as usize, 2, "interfaces_count")?;
         let interfaces = Vec::<u16>::read_options(
             reader,
             Endian::Big,
@@ -123,6 +157,8 @@ impl BinRead for ClassFile {
             },
         )?;
         let fields_count = u16::read_options(reader, Endian::Big, ())?;
+        // Each field is at least 8 bytes (flags + name_idx + desc_idx + attr_count)
+        validate_count_vs_remaining(reader, fields_count as usize, 8, "fields_count")?;
         let mut fields = Vec::<FieldInfo>::read_options(
             reader,
             Endian::Big,
@@ -133,6 +169,8 @@ impl BinRead for ClassFile {
         )?;
 
         let methods_count = u16::read_options(reader, Endian::Big, ())?;
+        // Each method is at least 8 bytes (flags + name_idx + desc_idx + attr_count)
+        validate_count_vs_remaining(reader, methods_count as usize, 8, "methods_count")?;
         let mut methods = Vec::<MethodInfo>::read_options(
             reader,
             Endian::Big,
@@ -143,6 +181,8 @@ impl BinRead for ClassFile {
         )?;
 
         let attributes_count = u16::read_options(reader, Endian::Big, ())?;
+        // Each attribute is at least 6 bytes (name_idx + length)
+        validate_count_vs_remaining(reader, attributes_count as usize, 6, "attributes_count")?;
         let mut attributes = Vec::<AttributeInfo>::read_options(
             reader,
             Endian::Big,
