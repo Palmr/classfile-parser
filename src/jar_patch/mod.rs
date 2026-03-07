@@ -62,7 +62,7 @@ pub fn patch_jar_method(
     options: &CompileOptions,
 ) -> JarPatchResult<()> {
     let mut class_file = jar.parse_class(class_path)?;
-    compile_method_body(source, &mut class_file, method_name, options)?;
+    compile_method_body(source, &mut class_file, method_name, None, options)?;
     jar.set_class(class_path, &class_file)?;
     Ok(())
 }
@@ -80,7 +80,7 @@ pub fn patch_jar_class(
 ) -> JarPatchResult<()> {
     let mut class_file = jar.parse_class(class_path)?;
     for &(method_name, source) in patches {
-        compile_method_body(source, &mut class_file, method_name, options)?;
+        compile_method_body(source, &mut class_file, method_name, None, options)?;
     }
     jar.set_class(class_path, &class_file)?;
     Ok(())

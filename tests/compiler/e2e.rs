@@ -35,6 +35,7 @@ fn test_compile_e2e_hello_compiled() {
         r#"{ System.out.println("Compiled!"); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -57,6 +58,7 @@ fn test_compile_e2e_return_value() {
         r#"{ System.out.println(99); }"#,
         &mut class_file,
         "intMath",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -89,6 +91,7 @@ fn test_compile_e2e_if_else() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -118,6 +121,7 @@ fn test_compile_e2e_while_loop() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -145,6 +149,7 @@ fn test_compile_e2e_for_loop() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -171,6 +176,7 @@ fn test_compile_e2e_arithmetic() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -204,6 +210,7 @@ fn test_compile_e2e_nested_if() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -242,6 +249,7 @@ fn test_compile_e2e_switch() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -275,6 +283,7 @@ fn test_compile_e2e_switch_default() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -304,6 +313,7 @@ fn test_compile_e2e_try_catch() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -331,6 +341,7 @@ fn test_compile_e2e_try_finally() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -361,6 +372,7 @@ fn test_compile_e2e_stackmap_if_else() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -390,6 +402,7 @@ fn test_compile_e2e_stackmap_while() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -417,6 +430,7 @@ fn test_compile_e2e_stackmap_try_catch() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -445,6 +459,7 @@ fn test_compile_e2e_long_arithmetic() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -470,6 +485,7 @@ fn test_compile_e2e_double_arithmetic() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -495,6 +511,7 @@ fn test_compile_e2e_float_arithmetic() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -521,6 +538,7 @@ fn test_compile_e2e_widening() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -549,6 +567,7 @@ fn test_compile_e2e_long_comparison() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -574,6 +593,7 @@ fn test_compile_e2e_cast_types() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -598,6 +618,7 @@ fn test_compile_e2e_unary_neg_long() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -623,6 +644,7 @@ fn test_compile_e2e_string_concat() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -648,6 +670,7 @@ fn test_compile_e2e_string_concat_int() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -672,6 +695,7 @@ fn test_compile_e2e_string_concat_chain() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -700,6 +724,7 @@ fn test_compile_e2e_typed_array_long() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -726,6 +751,7 @@ fn test_compile_e2e_typed_array_double() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -759,6 +785,7 @@ fn test_compile_e2e_foreach_array() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -788,6 +815,7 @@ fn test_compile_e2e_multi_catch() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -814,6 +842,7 @@ fn test_compile_e2e_synchronized() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -842,6 +871,7 @@ fn test_compile_e2e_var() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -866,6 +896,7 @@ fn test_compile_e2e_var_long() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -893,6 +924,7 @@ fn test_compile_e2e_multi_dim_array() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -923,6 +955,7 @@ fn test_compile_e2e_switch_expr() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -951,6 +984,7 @@ fn test_compile_e2e_switch_expr_default() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -990,6 +1024,7 @@ fn test_compile_e2e_switch_fallthrough() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1020,6 +1055,7 @@ fn test_compile_e2e_foreach_list() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1047,6 +1083,7 @@ fn test_compile_e2e_null_concatenation() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1075,6 +1112,7 @@ fn test_compile_e2e_multicatch_second_type() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1108,6 +1146,7 @@ fn test_compile_e2e_trycatch_in_loop_continue() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1140,6 +1179,7 @@ fn test_compile_e2e_synchronized_exception_path() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1169,6 +1209,7 @@ fn test_compile_e2e_int_overflow_wraps() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1201,6 +1242,7 @@ fn test_compile_e2e_narrowing_casts() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1234,6 +1276,7 @@ fn test_compile_e2e_ternary_side_effect() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1266,6 +1309,7 @@ fn test_compile_e2e_bool_from_comparison() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1297,6 +1341,7 @@ fn test_compile_e2e_var_inferred_type() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1329,6 +1374,7 @@ fn test_compile_e2e_array_length() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();

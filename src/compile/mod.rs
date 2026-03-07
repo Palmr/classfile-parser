@@ -130,13 +130,18 @@ pub fn generate_bytecode_with_options(
 }
 
 /// Compile Java source and replace a method's body in the class file.
+///
+/// When `method_descriptor` is `Some`, the method is matched by both name and
+/// descriptor, disambiguating overloaded methods. When `None`, the first method
+/// with the given name is used (legacy behavior).
 pub fn compile_method_body(
     source: &str,
     class_file: &mut ClassFile,
     method_name: &str,
+    method_descriptor: Option<&str>,
     options: &CompileOptions,
 ) -> Result<(), CompileError> {
-    patch::compile_method_body_impl(source, class_file, method_name, options)
+    patch::compile_method_body_impl(source, class_file, method_name, method_descriptor, options)
 }
 
 /// Compile Java source and append it after an existing method body.
@@ -147,11 +152,12 @@ pub fn append_method_body(
     source: &str,
     class_file: &mut ClassFile,
     method_name: &str,
+    method_descriptor: Option<&str>,
     options: &CompileOptions,
 ) -> Result<(), CompileError> {
     let mut opts = options.clone();
     opts.insert_mode = InsertMode::Append;
-    patch::compile_method_body_impl(source, class_file, method_name, &opts)
+    patch::compile_method_body_impl(source, class_file, method_name, method_descriptor, &opts)
 }
 
 /// Compile Java source and prepend it to an existing method body.
@@ -163,11 +169,12 @@ pub fn prepend_method_body(
     source: &str,
     class_file: &mut ClassFile,
     method_name: &str,
+    method_descriptor: Option<&str>,
     options: &CompileOptions,
 ) -> Result<(), CompileError> {
     let mut opts = options.clone();
     opts.insert_mode = InsertMode::Prepend;
-    patch::compile_method_body_impl(source, class_file, method_name, &opts)
+    patch::compile_method_body_impl(source, class_file, method_name, method_descriptor, &opts)
 }
 
 /// Compile and patch a single method body in a class file.
@@ -191,6 +198,7 @@ macro_rules! patch_method {
             $source,
             &mut $class_file,
             $method,
+            None,
             &$crate::compile::CompileOptions {
                 generate_stack_map_table: true,
                 ..$crate::compile::CompileOptions::default()
@@ -202,6 +210,7 @@ macro_rules! patch_method {
             $source,
             &mut $class_file,
             $method,
+            None,
             &$crate::compile::CompileOptions::default(),
         )
     };
@@ -260,6 +269,7 @@ macro_rules! prepend_method {
             $source,
             &mut $class_file,
             $method,
+            None,
             &$crate::compile::CompileOptions {
                 generate_stack_map_table: true,
                 insert_mode: $crate::compile::InsertMode::Prepend,
@@ -272,6 +282,7 @@ macro_rules! prepend_method {
             $source,
             &mut $class_file,
             $method,
+            None,
             &$crate::compile::CompileOptions {
                 insert_mode: $crate::compile::InsertMode::Prepend,
                 ..$crate::compile::CompileOptions::default()

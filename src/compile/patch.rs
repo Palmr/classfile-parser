@@ -217,24 +217,45 @@ fn reencode_frames_absolute(frames: &[(u32, StackMapFrame)]) -> Vec<StackMapFram
 }
 
 /// Compile Java source and replace a method's body in the class file.
+///
+/// When `method_descriptor` is `Some`, the method is matched by both name and
+/// descriptor, disambiguating overloaded methods. When `None`, the first method
+/// with the given name is used.
 pub fn compile_method_body_impl(
     source: &str,
     class_file: &mut ClassFile,
     method_name: &str,
+    method_descriptor: Option<&str>,
     options: &CompileOptions,
 ) -> Result<(), CompileError> {
-    // Find the method
+    // Find the method by name (and optionally descriptor)
     let method_idx = class_file
         .methods
         .iter()
         .position(|m| {
-            matches!(
+            let name_matches = matches!(
                 &class_file.const_pool[(m.name_index - 1) as usize],
                 ConstantInfo::Utf8(u) if u.utf8_string == method_name
-            )
+            );
+            if !name_matches {
+                return false;
+            }
+            // If a descriptor is provided, also check it matches
+            if let Some(desc) = method_descriptor {
+                matches!(
+                    &class_file.const_pool[(m.descriptor_index - 1) as usize],
+                    ConstantInfo::Utf8(u) if u.utf8_string == desc
+                )
+            } else {
+                true
+            }
         })
         .ok_or_else(|| CompileError::MethodNotFound {
-            name: method_name.to_string(),
+            name: if let Some(desc) = method_descriptor {
+                format!("{method_name}{desc}")
+            } else {
+                method_name.to_string()
+            },
         })?;
 
     // Get method info

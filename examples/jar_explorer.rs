@@ -1282,9 +1282,9 @@ impl<'a> App<'a> {
 
         let opts = CompileOptions::default();
         let result = if prepend {
-            prepend_method_body(&source, &mut cf, &method_name, &opts)
+            prepend_method_body(&source, &mut cf, &method_name, None, &opts)
         } else {
-            compile_method_body(&source, &mut cf, &method_name, &opts)
+            compile_method_body(&source, &mut cf, &method_name, None, &opts)
         };
 
         match result {

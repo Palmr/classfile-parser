@@ -16,6 +16,7 @@ fn test_prepend_println() {
         r#"{ System.out.println("original"); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -24,6 +25,7 @@ fn test_prepend_println() {
         r#"{ System.out.println("before"); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -46,6 +48,7 @@ fn test_prepend_with_param_access() {
         r#"{ System.out.println(arg0); }"#,
         &mut class_file,
         "withParams",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -55,6 +58,7 @@ fn test_prepend_with_param_access() {
         r#"{ PrependTest.withParams("world"); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -77,6 +81,7 @@ fn test_prepend_with_local_variable() {
         r#"{ int y = 99; System.out.println("y=" + y); }"#,
         &mut class_file,
         "withLocal",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -86,6 +91,7 @@ fn test_prepend_with_local_variable() {
         r#"{ PrependTest.withLocal(); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -107,6 +113,7 @@ fn test_prepend_to_method_with_try_catch() {
         r#"{ System.out.println("before try"); }"#,
         &mut class_file,
         "withTryCatch",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -116,6 +123,7 @@ fn test_prepend_to_method_with_try_catch() {
         r#"{ PrependTest.withTryCatch(); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -138,6 +146,7 @@ fn test_prepend_with_branches() {
         r#"{ if (arg0 > 0) { System.out.println("positive"); } else { System.out.println("non-positive"); } }"#,
         &mut class_file,
         "withBranch",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -147,6 +156,7 @@ fn test_prepend_with_branches() {
         r#"{ PrependTest.withBranch(5); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -169,6 +179,7 @@ fn test_prepend_macro() {
         r#"{ System.out.println("original"); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -209,6 +220,7 @@ fn test_wide_local_then_narrow_with_branch() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -251,6 +263,7 @@ fn test_stackmap_large_delta_extended_frame() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -282,6 +295,7 @@ fn test_prepend_stackmap_reencoding_threshold() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -302,6 +316,7 @@ fn test_prepend_stackmap_reencoding_threshold() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &opts,
     )
     .unwrap();

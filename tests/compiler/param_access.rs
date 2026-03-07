@@ -50,6 +50,7 @@ fn test_param_access_positional_arg0() {
         r#"{ System.out.println(arg0.length); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -72,6 +73,7 @@ fn test_param_access_debug_name() {
         r#"{ System.out.println(args.length); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -95,6 +97,7 @@ fn test_param_access_wide_types() {
         r#"{ System.out.println(arg0); System.out.println(arg1); System.out.println(arg2); }"#,
         &mut class_file,
         "wideParams",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -105,6 +108,7 @@ fn test_param_access_wide_types() {
         r#"{ ParamAccess.wideParams(42, 123456789L, "hello"); }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -127,6 +131,7 @@ fn test_param_access_instance_method() {
         r#"{ System.out.println(arg0); }"#,
         &mut class_file,
         "instanceMethod",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -139,6 +144,7 @@ fn test_param_access_instance_method() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();

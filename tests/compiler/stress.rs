@@ -36,6 +36,7 @@ fn test_stress_nested_loop_break_continue() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -70,6 +71,7 @@ fn test_stress_fizzbuzz() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -111,6 +113,7 @@ fn test_stress_switch_lookup() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -149,6 +152,7 @@ fn test_stress_switch_table() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -197,6 +201,7 @@ fn test_stress_mixed_type_arithmetic() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -235,6 +240,7 @@ fn test_stress_compound_assign_types() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -271,6 +277,7 @@ fn test_stress_bitwise_ops() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -312,6 +319,7 @@ fn test_stress_cast_chain() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -351,6 +359,7 @@ fn test_stress_increment_decrement() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -386,6 +395,7 @@ fn test_stress_string_concat_all_types() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -414,6 +424,7 @@ fn test_stress_string_concat_loop() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -450,6 +461,7 @@ fn test_stress_array_comprehensive() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -492,6 +504,7 @@ fn test_stress_multi_dim_array_compute() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -537,6 +550,7 @@ fn test_stress_typed_arrays() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -582,6 +596,7 @@ fn test_stress_try_catch_complex() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -618,6 +633,7 @@ fn test_stress_multi_catch_variants() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -655,6 +671,7 @@ fn test_stress_nested_try_catch() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -686,6 +703,7 @@ fn test_stress_nested_ternary() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -740,6 +758,7 @@ fn test_stress_short_circuit() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -774,6 +793,7 @@ fn test_stress_stringbuilder_chain() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -807,6 +827,7 @@ fn test_stress_arraylist() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .expect("ArrayList compilation should succeed with descriptor inference");
@@ -835,6 +856,7 @@ fn test_stress_sb_length() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .expect("StringBuilder length compilation should succeed");
@@ -872,6 +894,7 @@ fn test_stress_instanceof_cast() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -914,6 +937,7 @@ fn test_stress_var_inference() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -941,6 +965,7 @@ fn test_stress_var_new_object() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -977,6 +1002,7 @@ fn test_stress_switch_expr_as_arg() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1008,6 +1034,7 @@ fn test_stress_switch_expr_multi_value() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1058,6 +1085,7 @@ fn test_stress_bubble_sort() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1090,6 +1118,7 @@ fn test_stress_fibonacci() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1121,6 +1150,7 @@ fn test_stress_gcd() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1150,6 +1180,7 @@ fn test_stress_power_of_two() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1189,6 +1220,7 @@ fn test_stress_feature_combo() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1221,6 +1253,7 @@ fn test_stress_null_handling() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1255,6 +1288,7 @@ fn test_stress_large_constants() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1300,6 +1334,7 @@ fn test_stress_empty_constructs() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1332,6 +1367,7 @@ fn test_stress_char_arithmetic() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1368,6 +1404,7 @@ fn test_stress_verified_complex_flow() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1406,6 +1443,7 @@ fn test_stress_verified_switch() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1442,6 +1480,7 @@ fn test_stress_verified_foreach() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .expect("compilation should succeed");
@@ -1483,6 +1522,7 @@ fn test_stress_multiple_synchronized() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
@@ -1529,6 +1569,7 @@ fn test_stress_sieve_of_eratosthenes() {
         }"#,
         &mut class_file,
         "main",
+        None,
         &CompileOptions::default(),
     )
     .unwrap();
