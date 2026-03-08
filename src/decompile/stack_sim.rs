@@ -11,7 +11,10 @@ use std::collections::HashMap;
 
 /// Build a lookup table from local variable index to name using the
 /// LocalVariableTable sub-attribute of the CodeAttribute (when available).
-fn build_local_name_table(code_attr: &CodeAttribute, const_pool: &[ConstantInfo]) -> HashMap<u16, String> {
+fn build_local_name_table(
+    code_attr: &CodeAttribute,
+    const_pool: &[ConstantInfo],
+) -> HashMap<u16, String> {
     let mut names = HashMap::new();
     for attr in &code_attr.attributes {
         if let Some(AttributeInfoVariant::LocalVariableTable(lvt)) = &attr.info_parsed {
@@ -35,15 +38,16 @@ fn make_local(index: u16, ty: JvmType, names: &HashMap<u16, String>) -> LocalVar
 }
 
 /// Resolve a constant pool field reference to (class_name, field_name, field_type).
-fn resolve_field_ref(
-    const_pool: &[ConstantInfo],
-    index: u16,
-) -> (String, String, JvmType) {
+fn resolve_field_ref(const_pool: &[ConstantInfo], index: u16) -> (String, String, JvmType) {
     if let Some((class_name, field_name, descriptor)) = util::resolve_ref(const_pool, index) {
         let field_type = parse_type_descriptor(descriptor).unwrap_or(JvmType::Unknown);
         (class_name.to_string(), field_name.to_string(), field_type)
     } else {
-        (format!("<class?#{}>", index), format!("<field?#{}>", index), JvmType::Unknown)
+        (
+            format!("<class?#{}>", index),
+            format!("<field?#{}>", index),
+            JvmType::Unknown,
+        )
     }
 }
 
@@ -53,8 +57,8 @@ fn resolve_method_ref(
     index: u16,
 ) -> (String, String, String, Vec<JvmType>, JvmType) {
     if let Some((class_name, method_name, descriptor)) = util::resolve_ref(const_pool, index) {
-        let (params, ret) = parse_method_descriptor(descriptor)
-            .unwrap_or_else(|| (vec![], JvmType::Unknown));
+        let (params, ret) =
+            parse_method_descriptor(descriptor).unwrap_or_else(|| (vec![], JvmType::Unknown));
         (
             class_name.to_string(),
             method_name.to_string(),
@@ -114,7 +118,9 @@ pub fn simulate_block(
     /// Pop from the stack or return an Unresolved placeholder.
     macro_rules! pop {
         ($stack:expr) => {
-            $stack.pop().unwrap_or(Expr::Unresolved("stack_underflow".to_string()))
+            $stack
+                .pop()
+                .unwrap_or(Expr::Unresolved("stack_underflow".to_string()))
         };
     }
 
@@ -155,7 +161,11 @@ pub fn simulate_block(
             // Loads
             // ============================================================
             Instruction::Iload(idx) => {
-                stack.push(Expr::LocalLoad(make_local(*idx as u16, JvmType::Int, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    *idx as u16,
+                    JvmType::Int,
+                    &local_names,
+                )));
             }
             Instruction::Iload0 => {
                 stack.push(Expr::LocalLoad(make_local(0, JvmType::Int, &local_names)));
@@ -171,7 +181,11 @@ pub fn simulate_block(
             }
 
             Instruction::Lload(idx) => {
-                stack.push(Expr::LocalLoad(make_local(*idx as u16, JvmType::Long, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    *idx as u16,
+                    JvmType::Long,
+                    &local_names,
+                )));
             }
             Instruction::Lload0 => {
                 stack.push(Expr::LocalLoad(make_local(0, JvmType::Long, &local_names)));
@@ -187,7 +201,11 @@ pub fn simulate_block(
             }
 
             Instruction::Fload(idx) => {
-                stack.push(Expr::LocalLoad(make_local(*idx as u16, JvmType::Float, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    *idx as u16,
+                    JvmType::Float,
+                    &local_names,
+                )));
             }
             Instruction::Fload0 => {
                 stack.push(Expr::LocalLoad(make_local(0, JvmType::Float, &local_names)));
@@ -203,19 +221,39 @@ pub fn simulate_block(
             }
 
             Instruction::Dload(idx) => {
-                stack.push(Expr::LocalLoad(make_local(*idx as u16, JvmType::Double, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    *idx as u16,
+                    JvmType::Double,
+                    &local_names,
+                )));
             }
             Instruction::Dload0 => {
-                stack.push(Expr::LocalLoad(make_local(0, JvmType::Double, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    0,
+                    JvmType::Double,
+                    &local_names,
+                )));
             }
             Instruction::Dload1 => {
-                stack.push(Expr::LocalLoad(make_local(1, JvmType::Double, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    1,
+                    JvmType::Double,
+                    &local_names,
+                )));
             }
             Instruction::Dload2 => {
-                stack.push(Expr::LocalLoad(make_local(2, JvmType::Double, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    2,
+                    JvmType::Double,
+                    &local_names,
+                )));
             }
             Instruction::Dload3 => {
-                stack.push(Expr::LocalLoad(make_local(3, JvmType::Double, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    3,
+                    JvmType::Double,
+                    &local_names,
+                )));
             }
 
             Instruction::Aload(idx) => {
@@ -223,44 +261,84 @@ pub fn simulate_block(
                 if idx16 == 0 && !is_static {
                     stack.push(Expr::This);
                 } else {
-                    stack.push(Expr::LocalLoad(make_local(idx16, JvmType::Reference("java/lang/Object".to_string()), &local_names)));
+                    stack.push(Expr::LocalLoad(make_local(
+                        idx16,
+                        JvmType::Reference("java/lang/Object".to_string()),
+                        &local_names,
+                    )));
                 }
             }
             Instruction::Aload0 => {
                 if !is_static {
                     stack.push(Expr::This);
                 } else {
-                    stack.push(Expr::LocalLoad(make_local(0, JvmType::Reference("java/lang/Object".to_string()), &local_names)));
+                    stack.push(Expr::LocalLoad(make_local(
+                        0,
+                        JvmType::Reference("java/lang/Object".to_string()),
+                        &local_names,
+                    )));
                 }
             }
             Instruction::Aload1 => {
-                stack.push(Expr::LocalLoad(make_local(1, JvmType::Reference("java/lang/Object".to_string()), &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    1,
+                    JvmType::Reference("java/lang/Object".to_string()),
+                    &local_names,
+                )));
             }
             Instruction::Aload2 => {
-                stack.push(Expr::LocalLoad(make_local(2, JvmType::Reference("java/lang/Object".to_string()), &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    2,
+                    JvmType::Reference("java/lang/Object".to_string()),
+                    &local_names,
+                )));
             }
             Instruction::Aload3 => {
-                stack.push(Expr::LocalLoad(make_local(3, JvmType::Reference("java/lang/Object".to_string()), &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    3,
+                    JvmType::Reference("java/lang/Object".to_string()),
+                    &local_names,
+                )));
             }
 
             // Wide loads
             Instruction::IloadWide(idx) => {
-                stack.push(Expr::LocalLoad(make_local(*idx, JvmType::Int, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    *idx,
+                    JvmType::Int,
+                    &local_names,
+                )));
             }
             Instruction::LloadWide(idx) => {
-                stack.push(Expr::LocalLoad(make_local(*idx, JvmType::Long, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    *idx,
+                    JvmType::Long,
+                    &local_names,
+                )));
             }
             Instruction::FloadWide(idx) => {
-                stack.push(Expr::LocalLoad(make_local(*idx, JvmType::Float, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    *idx,
+                    JvmType::Float,
+                    &local_names,
+                )));
             }
             Instruction::DloadWide(idx) => {
-                stack.push(Expr::LocalLoad(make_local(*idx, JvmType::Double, &local_names)));
+                stack.push(Expr::LocalLoad(make_local(
+                    *idx,
+                    JvmType::Double,
+                    &local_names,
+                )));
             }
             Instruction::AloadWide(idx) => {
                 if *idx == 0 && !is_static {
                     stack.push(Expr::This);
                 } else {
-                    stack.push(Expr::LocalLoad(make_local(*idx, JvmType::Reference("java/lang/Object".to_string()), &local_names)));
+                    stack.push(Expr::LocalLoad(make_local(
+                        *idx,
+                        JvmType::Reference("java/lang/Object".to_string()),
+                        &local_names,
+                    )));
                 }
             }
 
@@ -269,129 +347,243 @@ pub fn simulate_block(
             // ============================================================
             Instruction::Istore(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx as u16, JvmType::Int, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(*idx as u16, JvmType::Int, &local_names),
+                    value: val,
+                });
             }
             Instruction::Istore0 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(0, JvmType::Int, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(0, JvmType::Int, &local_names),
+                    value: val,
+                });
             }
             Instruction::Istore1 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(1, JvmType::Int, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(1, JvmType::Int, &local_names),
+                    value: val,
+                });
             }
             Instruction::Istore2 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(2, JvmType::Int, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(2, JvmType::Int, &local_names),
+                    value: val,
+                });
             }
             Instruction::Istore3 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(3, JvmType::Int, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(3, JvmType::Int, &local_names),
+                    value: val,
+                });
             }
 
             Instruction::Lstore(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx as u16, JvmType::Long, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(*idx as u16, JvmType::Long, &local_names),
+                    value: val,
+                });
             }
             Instruction::Lstore0 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(0, JvmType::Long, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(0, JvmType::Long, &local_names),
+                    value: val,
+                });
             }
             Instruction::Lstore1 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(1, JvmType::Long, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(1, JvmType::Long, &local_names),
+                    value: val,
+                });
             }
             Instruction::Lstore2 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(2, JvmType::Long, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(2, JvmType::Long, &local_names),
+                    value: val,
+                });
             }
             Instruction::Lstore3 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(3, JvmType::Long, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(3, JvmType::Long, &local_names),
+                    value: val,
+                });
             }
 
             Instruction::Fstore(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx as u16, JvmType::Float, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(*idx as u16, JvmType::Float, &local_names),
+                    value: val,
+                });
             }
             Instruction::Fstore0 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(0, JvmType::Float, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(0, JvmType::Float, &local_names),
+                    value: val,
+                });
             }
             Instruction::Fstore1 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(1, JvmType::Float, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(1, JvmType::Float, &local_names),
+                    value: val,
+                });
             }
             Instruction::Fstore2 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(2, JvmType::Float, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(2, JvmType::Float, &local_names),
+                    value: val,
+                });
             }
             Instruction::Fstore3 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(3, JvmType::Float, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(3, JvmType::Float, &local_names),
+                    value: val,
+                });
             }
 
             Instruction::Dstore(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx as u16, JvmType::Double, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(*idx as u16, JvmType::Double, &local_names),
+                    value: val,
+                });
             }
             Instruction::Dstore0 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(0, JvmType::Double, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(0, JvmType::Double, &local_names),
+                    value: val,
+                });
             }
             Instruction::Dstore1 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(1, JvmType::Double, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(1, JvmType::Double, &local_names),
+                    value: val,
+                });
             }
             Instruction::Dstore2 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(2, JvmType::Double, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(2, JvmType::Double, &local_names),
+                    value: val,
+                });
             }
             Instruction::Dstore3 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(3, JvmType::Double, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(3, JvmType::Double, &local_names),
+                    value: val,
+                });
             }
 
             Instruction::Astore(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx as u16, JvmType::Reference("java/lang/Object".to_string()), &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(
+                        *idx as u16,
+                        JvmType::Reference("java/lang/Object".to_string()),
+                        &local_names,
+                    ),
+                    value: val,
+                });
             }
             Instruction::Astore0 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(0, JvmType::Reference("java/lang/Object".to_string()), &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(
+                        0,
+                        JvmType::Reference("java/lang/Object".to_string()),
+                        &local_names,
+                    ),
+                    value: val,
+                });
             }
             Instruction::Astore1 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(1, JvmType::Reference("java/lang/Object".to_string()), &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(
+                        1,
+                        JvmType::Reference("java/lang/Object".to_string()),
+                        &local_names,
+                    ),
+                    value: val,
+                });
             }
             Instruction::Astore2 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(2, JvmType::Reference("java/lang/Object".to_string()), &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(
+                        2,
+                        JvmType::Reference("java/lang/Object".to_string()),
+                        &local_names,
+                    ),
+                    value: val,
+                });
             }
             Instruction::Astore3 => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(3, JvmType::Reference("java/lang/Object".to_string()), &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(
+                        3,
+                        JvmType::Reference("java/lang/Object".to_string()),
+                        &local_names,
+                    ),
+                    value: val,
+                });
             }
 
             // Wide stores
             Instruction::IstoreWide(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx, JvmType::Int, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(*idx, JvmType::Int, &local_names),
+                    value: val,
+                });
             }
             Instruction::LstoreWide(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx, JvmType::Long, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(*idx, JvmType::Long, &local_names),
+                    value: val,
+                });
             }
             Instruction::FstoreWide(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx, JvmType::Float, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(*idx, JvmType::Float, &local_names),
+                    value: val,
+                });
             }
             Instruction::DstoreWide(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx, JvmType::Double, &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(*idx, JvmType::Double, &local_names),
+                    value: val,
+                });
             }
             Instruction::AstoreWide(idx) => {
                 let val = pop!(stack);
-                stmts.push(Stmt::LocalStore { var: make_local(*idx, JvmType::Reference("java/lang/Object".to_string()), &local_names), value: val });
+                stmts.push(Stmt::LocalStore {
+                    var: make_local(
+                        *idx,
+                        JvmType::Reference("java/lang/Object".to_string()),
+                        &local_names,
+                    ),
+                    value: val,
+                });
             }
 
             // ============================================================
@@ -400,54 +592,95 @@ pub fn simulate_block(
             Instruction::Iaload => {
                 let index = pop!(stack);
                 let array = pop!(stack);
-                stack.push(Expr::ArrayLoad { array: Box::new(array), index: Box::new(index), element_type: JvmType::Int });
+                stack.push(Expr::ArrayLoad {
+                    array: Box::new(array),
+                    index: Box::new(index),
+                    element_type: JvmType::Int,
+                });
             }
             Instruction::Laload => {
                 let index = pop!(stack);
                 let array = pop!(stack);
-                stack.push(Expr::ArrayLoad { array: Box::new(array), index: Box::new(index), element_type: JvmType::Long });
+                stack.push(Expr::ArrayLoad {
+                    array: Box::new(array),
+                    index: Box::new(index),
+                    element_type: JvmType::Long,
+                });
             }
             Instruction::Faload => {
                 let index = pop!(stack);
                 let array = pop!(stack);
-                stack.push(Expr::ArrayLoad { array: Box::new(array), index: Box::new(index), element_type: JvmType::Float });
+                stack.push(Expr::ArrayLoad {
+                    array: Box::new(array),
+                    index: Box::new(index),
+                    element_type: JvmType::Float,
+                });
             }
             Instruction::Daload => {
                 let index = pop!(stack);
                 let array = pop!(stack);
-                stack.push(Expr::ArrayLoad { array: Box::new(array), index: Box::new(index), element_type: JvmType::Double });
+                stack.push(Expr::ArrayLoad {
+                    array: Box::new(array),
+                    index: Box::new(index),
+                    element_type: JvmType::Double,
+                });
             }
             Instruction::Aaload => {
                 let index = pop!(stack);
                 let array = pop!(stack);
-                stack.push(Expr::ArrayLoad { array: Box::new(array), index: Box::new(index), element_type: JvmType::Reference("java/lang/Object".to_string()) });
+                stack.push(Expr::ArrayLoad {
+                    array: Box::new(array),
+                    index: Box::new(index),
+                    element_type: JvmType::Reference("java/lang/Object".to_string()),
+                });
             }
             Instruction::Baload => {
                 let index = pop!(stack);
                 let array = pop!(stack);
-                stack.push(Expr::ArrayLoad { array: Box::new(array), index: Box::new(index), element_type: JvmType::Byte });
+                stack.push(Expr::ArrayLoad {
+                    array: Box::new(array),
+                    index: Box::new(index),
+                    element_type: JvmType::Byte,
+                });
             }
             Instruction::Caload => {
                 let index = pop!(stack);
                 let array = pop!(stack);
-                stack.push(Expr::ArrayLoad { array: Box::new(array), index: Box::new(index), element_type: JvmType::Char });
+                stack.push(Expr::ArrayLoad {
+                    array: Box::new(array),
+                    index: Box::new(index),
+                    element_type: JvmType::Char,
+                });
             }
             Instruction::Saload => {
                 let index = pop!(stack);
                 let array = pop!(stack);
-                stack.push(Expr::ArrayLoad { array: Box::new(array), index: Box::new(index), element_type: JvmType::Short });
+                stack.push(Expr::ArrayLoad {
+                    array: Box::new(array),
+                    index: Box::new(index),
+                    element_type: JvmType::Short,
+                });
             }
 
             // ============================================================
             // Array stores
             // ============================================================
-            Instruction::Iastore | Instruction::Lastore | Instruction::Fastore
-            | Instruction::Dastore | Instruction::Aastore | Instruction::Bastore
-            | Instruction::Castore | Instruction::Sastore => {
+            Instruction::Iastore
+            | Instruction::Lastore
+            | Instruction::Fastore
+            | Instruction::Dastore
+            | Instruction::Aastore
+            | Instruction::Bastore
+            | Instruction::Castore
+            | Instruction::Sastore => {
                 let value = pop!(stack);
                 let index = pop!(stack);
                 let array = pop!(stack);
-                stmts.push(Stmt::ArrayStore { array, index, value });
+                stmts.push(Stmt::ArrayStore {
+                    array,
+                    index,
+                    value,
+                });
             }
 
             // ============================================================
@@ -552,32 +785,55 @@ pub fn simulate_block(
             Instruction::Iadd | Instruction::Ladd | Instruction::Fadd | Instruction::Dadd => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Add, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Add,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Isub | Instruction::Lsub | Instruction::Fsub | Instruction::Dsub => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Sub, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Sub,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Imul | Instruction::Lmul | Instruction::Fmul | Instruction::Dmul => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Mul, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Mul,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Idiv | Instruction::Ldiv | Instruction::Fdiv | Instruction::Ddiv => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Div, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Div,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Irem | Instruction::Lrem | Instruction::Frem | Instruction::Drem => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Rem, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Rem,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
 
             Instruction::Ineg | Instruction::Lneg | Instruction::Fneg | Instruction::Dneg => {
                 let operand = pop!(stack);
-                stack.push(Expr::UnaryOp { op: UnaryOp::Neg, operand: Box::new(operand) });
+                stack.push(Expr::UnaryOp {
+                    op: UnaryOp::Neg,
+                    operand: Box::new(operand),
+                });
             }
 
             // ============================================================
@@ -586,32 +842,56 @@ pub fn simulate_block(
             Instruction::Ishl | Instruction::Lshl => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Shl, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Shl,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Ishr | Instruction::Lshr => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Shr, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Shr,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Iushr | Instruction::Lushr => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Ushr, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Ushr,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Iand | Instruction::Land => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::And, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::And,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Ior | Instruction::Lor => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Or, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Or,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Ixor | Instruction::Lxor => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::BinaryOp { op: BinOp::Xor, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::BinaryOp {
+                    op: BinOp::Xor,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
 
             // ============================================================
@@ -619,63 +899,108 @@ pub fn simulate_block(
             // ============================================================
             Instruction::I2l => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Long, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Long,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::I2f => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Float, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Float,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::I2d => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Double, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Double,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::L2i => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Int, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Int,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::L2f => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Float, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Float,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::L2d => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Double, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Double,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::F2i => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Int, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Int,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::F2l => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Long, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Long,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::F2d => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Double, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Double,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::D2i => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Int, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Int,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::D2l => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Long, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Long,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::D2f => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Float, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Float,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::I2b => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Byte, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Byte,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::I2c => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Char, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Char,
+                    operand: Box::new(operand),
+                });
             }
             Instruction::I2s => {
                 let operand = pop!(stack);
-                stack.push(Expr::Cast { target_type: JvmType::Short, operand: Box::new(operand) });
+                stack.push(Expr::Cast {
+                    target_type: JvmType::Short,
+                    operand: Box::new(operand),
+                });
             }
 
             // ============================================================
@@ -684,27 +1009,47 @@ pub fn simulate_block(
             Instruction::Lcmp => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::CmpResult { kind: CmpKind::LCmp, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::CmpResult {
+                    kind: CmpKind::LCmp,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Fcmpl => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::CmpResult { kind: CmpKind::FCmpL, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::CmpResult {
+                    kind: CmpKind::FCmpL,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Fcmpg => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::CmpResult { kind: CmpKind::FCmpG, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::CmpResult {
+                    kind: CmpKind::FCmpG,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Dcmpl => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::CmpResult { kind: CmpKind::DCmpL, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::CmpResult {
+                    kind: CmpKind::DCmpL,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::Dcmpg => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                stack.push(Expr::CmpResult { kind: CmpKind::DCmpG, left: Box::new(left), right: Box::new(right) });
+                stack.push(Expr::CmpResult {
+                    kind: CmpKind::DCmpG,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
 
             // ============================================================
@@ -738,43 +1083,75 @@ pub fn simulate_block(
             Instruction::IfIcmpeq(_) => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                branch_condition = Some(Expr::Compare { op: CompareOp::Eq, left: Box::new(left), right: Box::new(right) });
+                branch_condition = Some(Expr::Compare {
+                    op: CompareOp::Eq,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::IfIcmpne(_) => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                branch_condition = Some(Expr::Compare { op: CompareOp::Ne, left: Box::new(left), right: Box::new(right) });
+                branch_condition = Some(Expr::Compare {
+                    op: CompareOp::Ne,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::IfIcmplt(_) => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                branch_condition = Some(Expr::Compare { op: CompareOp::Lt, left: Box::new(left), right: Box::new(right) });
+                branch_condition = Some(Expr::Compare {
+                    op: CompareOp::Lt,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::IfIcmpge(_) => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                branch_condition = Some(Expr::Compare { op: CompareOp::Ge, left: Box::new(left), right: Box::new(right) });
+                branch_condition = Some(Expr::Compare {
+                    op: CompareOp::Ge,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::IfIcmpgt(_) => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                branch_condition = Some(Expr::Compare { op: CompareOp::Gt, left: Box::new(left), right: Box::new(right) });
+                branch_condition = Some(Expr::Compare {
+                    op: CompareOp::Gt,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::IfIcmple(_) => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                branch_condition = Some(Expr::Compare { op: CompareOp::Le, left: Box::new(left), right: Box::new(right) });
+                branch_condition = Some(Expr::Compare {
+                    op: CompareOp::Le,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
 
             Instruction::IfAcmpeq(_) => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                branch_condition = Some(Expr::Compare { op: CompareOp::Eq, left: Box::new(left), right: Box::new(right) });
+                branch_condition = Some(Expr::Compare {
+                    op: CompareOp::Eq,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
             Instruction::IfAcmpne(_) => {
                 let right = pop!(stack);
                 let left = pop!(stack);
-                branch_condition = Some(Expr::Compare { op: CompareOp::Ne, left: Box::new(left), right: Box::new(right) });
+                branch_condition = Some(Expr::Compare {
+                    op: CompareOp::Ne,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                });
             }
 
             Instruction::Ifnull(_) => {
@@ -1078,7 +1455,9 @@ pub fn simulate_block(
             // ============================================================
             Instruction::Arraylength => {
                 let array = pop!(stack);
-                stack.push(Expr::ArrayLength { array: Box::new(array) });
+                stack.push(Expr::ArrayLength {
+                    array: Box::new(array),
+                });
             }
 
             Instruction::Checkcast(idx) => {
@@ -1108,11 +1487,17 @@ pub fn simulate_block(
             // ============================================================
             Instruction::Monitorenter => {
                 let object = pop!(stack);
-                stmts.push(Stmt::Monitor { enter: true, object });
+                stmts.push(Stmt::Monitor {
+                    enter: true,
+                    object,
+                });
             }
             Instruction::Monitorexit => {
                 let object = pop!(stack);
-                stmts.push(Stmt::Monitor { enter: false, object });
+                stmts.push(Stmt::Monitor {
+                    enter: false,
+                    object,
+                });
             }
 
             // ============================================================
@@ -1121,8 +1506,11 @@ pub fn simulate_block(
             Instruction::Return => {
                 stmts.push(Stmt::Return(None));
             }
-            Instruction::Ireturn | Instruction::Lreturn | Instruction::Freturn
-            | Instruction::Dreturn | Instruction::Areturn => {
+            Instruction::Ireturn
+            | Instruction::Lreturn
+            | Instruction::Freturn
+            | Instruction::Dreturn
+            | Instruction::Areturn => {
                 let val = pop!(stack);
                 stmts.push(Stmt::Return(Some(val)));
             }
@@ -1190,7 +1578,11 @@ pub fn simulate_all_blocks(
 /// fold the comparison into a direct Compare expression.
 fn make_if_zero_cond(val: Expr, op: CompareOp) -> Expr {
     match val {
-        Expr::CmpResult { kind: _, ref left, ref right } => {
+        Expr::CmpResult {
+            kind: _,
+            ref left,
+            ref right,
+        } => {
             // The cmp result is compared to 0 with the given op.
             // We can fold this: e.g., `fcmpl(a, b) < 0` becomes `a < b`.
             Expr::Compare {
@@ -1199,13 +1591,11 @@ fn make_if_zero_cond(val: Expr, op: CompareOp) -> Expr {
                 right: right.clone(),
             }
         }
-        _ => {
-            Expr::Compare {
-                op,
-                left: Box::new(val),
-                right: Box::new(Expr::IntLiteral(0)),
-            }
-        }
+        _ => Expr::Compare {
+            op,
+            left: Box::new(val),
+            right: Box::new(Expr::IntLiteral(0)),
+        },
     }
 }
 
@@ -1215,14 +1605,23 @@ fn pop_args(stack: &mut Vec<Expr>, param_types: &[JvmType]) -> Vec<Expr> {
     let n = param_types.len();
     let mut args = Vec::with_capacity(n);
     for _ in 0..n {
-        args.push(stack.pop().unwrap_or(Expr::Unresolved("missing_arg".to_string())));
+        args.push(
+            stack
+                .pop()
+                .unwrap_or(Expr::Unresolved("missing_arg".to_string())),
+        );
     }
     args.reverse();
     args
 }
 
 /// If a method returns void, emit the call as a statement; otherwise push the result.
-fn push_or_emit_call(call: Expr, return_type: &JvmType, stack: &mut Vec<Expr>, stmts: &mut Vec<Stmt>) {
+fn push_or_emit_call(
+    call: Expr,
+    return_type: &JvmType,
+    stack: &mut Vec<Expr>,
+    stmts: &mut Vec<Stmt>,
+) {
     if *return_type == JvmType::Void {
         stmts.push(Stmt::ExprStmt(call));
     } else {
@@ -1236,11 +1635,11 @@ fn push_or_emit_call(call: Expr, return_type: &JvmType, stack: &mut Vec<Expr>, s
 /// replace the original UninitNew that was left below the dup.
 fn replace_uninit_new(stack: &mut Vec<Expr>, class_name: &str, replacement: &Expr) {
     for item in stack.iter_mut().rev() {
-        if let Expr::UninitNew { class_name: cn } = item {
-            if cn == class_name {
-                *item = replacement.clone();
-                return;
-            }
+        if let Expr::UninitNew { class_name: cn } = item
+            && cn == class_name
+        {
+            *item = replacement.clone();
+            return;
         }
     }
 }
@@ -1253,9 +1652,11 @@ fn resolve_invokedynamic(
 ) -> (u16, String, String, Vec<JvmType>, JvmType) {
     match const_pool.get((index as usize).wrapping_sub(1)) {
         Some(ConstantInfo::InvokeDynamic(indy)) => {
-            if let Some((name, desc)) = util::get_name_and_type(const_pool, indy.name_and_type_index) {
-                let (params, ret) = parse_method_descriptor(desc)
-                    .unwrap_or_else(|| (vec![], JvmType::Unknown));
+            if let Some((name, desc)) =
+                util::get_name_and_type(const_pool, indy.name_and_type_index)
+            {
+                let (params, ret) =
+                    parse_method_descriptor(desc).unwrap_or_else(|| (vec![], JvmType::Unknown));
                 (
                     indy.bootstrap_method_attr_index,
                     name.to_string(),
@@ -1264,10 +1665,22 @@ fn resolve_invokedynamic(
                     ret,
                 )
             } else {
-                (indy.bootstrap_method_attr_index, format!("<indy#{}>", index), String::new(), vec![], JvmType::Unknown)
+                (
+                    indy.bootstrap_method_attr_index,
+                    format!("<indy#{}>", index),
+                    String::new(),
+                    vec![],
+                    JvmType::Unknown,
+                )
             }
         }
-        _ => (0, format!("<indy?#{}>", index), String::new(), vec![], JvmType::Unknown),
+        _ => (
+            0,
+            format!("<indy?#{}>", index),
+            String::new(),
+            vec![],
+            JvmType::Unknown,
+        ),
     }
 }
 

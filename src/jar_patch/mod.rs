@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::compile::{compile_method_body, CompileError, CompileOptions};
+use crate::compile::{CompileError, CompileOptions, compile_method_body};
 use crate::jar_utils::{JarError, JarFile};
 
 // ---------------------------------------------------------------------------

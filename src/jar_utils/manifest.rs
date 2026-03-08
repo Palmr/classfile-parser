@@ -182,9 +182,7 @@ impl JarManifest {
 
     /// Get or create a per-entry section by name (mutable).
     pub fn entry_section_mut(&mut self, name: impl Into<String>) -> &mut ManifestAttributes {
-        self.entries
-            .entry(name.into())
-            .or_insert_with(ManifestAttributes::new)
+        self.entries.entry(name.into()).or_default()
     }
 
     /// Create a default manifest with `Manifest-Version: 1.0`.

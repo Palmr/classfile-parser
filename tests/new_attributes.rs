@@ -1,13 +1,13 @@
 extern crate classfile_parser;
 
 use std::fs::File;
-use std::io::prelude::*;
 use std::io::Cursor;
+use std::io::prelude::*;
 
-use binrw::prelude::*;
 use binrw::BinWrite;
-use classfile_parser::attribute_info::AttributeInfoVariant;
+use binrw::prelude::*;
 use classfile_parser::ClassFile;
+use classfile_parser::attribute_info::AttributeInfoVariant;
 
 fn load_class(path: &str) -> ClassFile {
     let mut contents: Vec<u8> = Vec::new();
@@ -16,7 +16,11 @@ fn load_class(path: &str) -> ClassFile {
     ClassFile::read(&mut Cursor::new(contents)).expect("failed to parse class file")
 }
 
-fn find_attr<'a>(attrs: &'a [classfile_parser::attribute_info::AttributeInfo], name: &str, class: &ClassFile) -> Option<&'a AttributeInfoVariant> {
+fn find_attr<'a>(
+    attrs: &'a [classfile_parser::attribute_info::AttributeInfo],
+    name: &str,
+    class: &ClassFile,
+) -> Option<&'a AttributeInfoVariant> {
     for attr in attrs {
         if let Some(ref parsed) = attr.info_parsed {
             let attr_name = match &class.const_pool[(attr.attribute_name_index - 1) as usize] {
@@ -185,8 +189,7 @@ fn module_packages_parse() {
         0x00, 0x0A, // package_index[1] = 10
     ];
 
-    let parsed =
-        ModulePackagesAttribute::read(&mut Cursor::new(&bytes)).expect("failed to parse");
+    let parsed = ModulePackagesAttribute::read(&mut Cursor::new(&bytes)).expect("failed to parse");
     assert_eq!(parsed.package_count, 2);
     assert_eq!(parsed.package_index, vec![5, 10]);
 
@@ -205,8 +208,7 @@ fn module_main_class_parse() {
     // ModuleMainClass { main_class_index: 42 }
     let bytes: Vec<u8> = vec![0x00, 0x2A]; // 42
 
-    let parsed =
-        ModuleMainClassAttribute::read(&mut Cursor::new(&bytes)).expect("failed to parse");
+    let parsed = ModuleMainClassAttribute::read(&mut Cursor::new(&bytes)).expect("failed to parse");
     assert_eq!(parsed.main_class_index, 42);
 
     // Round-trip

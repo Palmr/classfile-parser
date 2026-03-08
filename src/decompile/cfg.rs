@@ -36,17 +36,28 @@ pub fn build_cfg(code_attr: &CodeAttribute) -> ControlFlowGraph {
                 leaders.insert((addr as i64 + *offset as i64) as u32);
                 leaders.insert(next_addr);
             }
-            Instruction::Ifeq(off) | Instruction::Ifne(off) | Instruction::Iflt(off)
-            | Instruction::Ifge(off) | Instruction::Ifgt(off) | Instruction::Ifle(off)
-            | Instruction::IfIcmpeq(off) | Instruction::IfIcmpne(off)
-            | Instruction::IfIcmplt(off) | Instruction::IfIcmpge(off)
-            | Instruction::IfIcmpgt(off) | Instruction::IfIcmple(off)
-            | Instruction::IfAcmpeq(off) | Instruction::IfAcmpne(off)
-            | Instruction::Ifnull(off) | Instruction::Ifnonnull(off) => {
+            Instruction::Ifeq(off)
+            | Instruction::Ifne(off)
+            | Instruction::Iflt(off)
+            | Instruction::Ifge(off)
+            | Instruction::Ifgt(off)
+            | Instruction::Ifle(off)
+            | Instruction::IfIcmpeq(off)
+            | Instruction::IfIcmpne(off)
+            | Instruction::IfIcmplt(off)
+            | Instruction::IfIcmpge(off)
+            | Instruction::IfIcmpgt(off)
+            | Instruction::IfIcmple(off)
+            | Instruction::IfAcmpeq(off)
+            | Instruction::IfAcmpne(off)
+            | Instruction::Ifnull(off)
+            | Instruction::Ifnonnull(off) => {
                 leaders.insert((addr as i64 + *off as i64) as u32);
                 leaders.insert(next_addr);
             }
-            Instruction::Tableswitch { default, offsets, .. } => {
+            Instruction::Tableswitch {
+                default, offsets, ..
+            } => {
                 leaders.insert((addr as i64 + *default as i64) as u32);
                 for off in offsets {
                     leaders.insert((addr as i64 + *off as i64) as u32);
@@ -60,8 +71,12 @@ pub fn build_cfg(code_attr: &CodeAttribute) -> ControlFlowGraph {
                 }
                 leaders.insert(next_addr);
             }
-            Instruction::Return | Instruction::Ireturn | Instruction::Lreturn
-            | Instruction::Freturn | Instruction::Dreturn | Instruction::Areturn
+            Instruction::Return
+            | Instruction::Ireturn
+            | Instruction::Lreturn
+            | Instruction::Freturn
+            | Instruction::Dreturn
+            | Instruction::Areturn
             | Instruction::Athrow => {
                 leaders.insert(next_addr);
             }
@@ -83,8 +98,11 @@ pub fn build_cfg(code_attr: &CodeAttribute) -> ControlFlowGraph {
     // Step 2: Build basic blocks
     let leader_vec: Vec<u32> = leaders.iter().copied().collect();
     let mut blocks = BTreeMap::new();
-    let addr_to_idx: BTreeMap<u32, usize> =
-        addressed.iter().enumerate().map(|(i, (a, _))| (*a, i)).collect();
+    let addr_to_idx: BTreeMap<u32, usize> = addressed
+        .iter()
+        .enumerate()
+        .map(|(i, (a, _))| (*a, i))
+        .collect();
 
     for (li, &leader_addr) in leader_vec.iter().enumerate() {
         if !addr_to_idx.contains_key(&leader_addr) {
@@ -236,7 +254,12 @@ fn build_terminator(instr: &Instruction, addr: u32, next: u32) -> Terminator {
             if_true: (addr as i64 + *off as i64) as u32,
             if_false: next,
         },
-        Instruction::Tableswitch { default, low, high, offsets } => {
+        Instruction::Tableswitch {
+            default,
+            low,
+            high,
+            offsets,
+        } => {
             let targets: Vec<u32> = offsets
                 .iter()
                 .map(|off| (addr as i64 + *off as i64) as u32)
@@ -258,10 +281,12 @@ fn build_terminator(instr: &Instruction, addr: u32, next: u32) -> Terminator {
                 pairs: abs_pairs,
             }
         }
-        Instruction::Return | Instruction::Ireturn | Instruction::Lreturn
-        | Instruction::Freturn | Instruction::Dreturn | Instruction::Areturn => {
-            Terminator::Return
-        }
+        Instruction::Return
+        | Instruction::Ireturn
+        | Instruction::Lreturn
+        | Instruction::Freturn
+        | Instruction::Dreturn
+        | Instruction::Areturn => Terminator::Return,
         Instruction::Athrow => Terminator::Throw,
         Instruction::Jsr(off) => Terminator::Jsr {
             target: (addr as i64 + *off as i64) as u32,

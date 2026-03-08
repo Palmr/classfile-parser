@@ -1,11 +1,11 @@
 use std::io::{Cursor, Seek};
 
-use binrw::{binrw, io::TakeSeekExt, BinRead, BinResult, BinWrite, Endian};
+use binrw::{BinRead, BinResult, BinWrite, Endian, binrw, io::TakeSeekExt};
 
 use crate::{
+    InterpretInner,
     code_attribute::{Instruction, LocalVariableTableAttribute, LocalVariableTypeTableAttribute},
     constant_info::{ConstantInfo, Utf8Constant},
-    InterpretInner,
 };
 
 /// Custom parser for reading instructions from a code array.
@@ -124,17 +124,15 @@ impl InterpretInner for AttributeInfo {
 
         self.info_parsed = match attr_name.as_str() {
             "ConstantValue" => try_read!(be: ConstantValueAttribute, ConstantValue),
-            "Code" => {
-                match CodeAttribute::read(&mut Cursor::new(&mut self.info)) {
-                    Ok(mut code) => {
-                        for attr in &mut code.attributes {
-                            attr.interpret_inner(constant_pool);
-                        }
-                        Some(AttributeInfoVariant::Code(code))
+            "Code" => match CodeAttribute::read(&mut Cursor::new(&mut self.info)) {
+                Ok(mut code) => {
+                    for attr in &mut code.attributes {
+                        attr.interpret_inner(constant_pool);
                     }
-                    Err(_) => None,
+                    Some(AttributeInfoVariant::Code(code))
                 }
-            }
+                Err(_) => None,
+            },
             "StackMapTable" => try_read!(StackMapTableAttribute, StackMapTable),
             "BootstrapMethods" => try_read!(BootstrapMethodsAttribute, BootstrapMethods),
             "Exceptions" => try_read!(ExceptionsAttribute, Exceptions),
@@ -145,15 +143,37 @@ impl InterpretInner for AttributeInfo {
             "SourceFile" => try_read!(SourceFileAttribute, SourceFile),
             "LineNumberTable" => try_read!(LineNumberTableAttribute, LineNumberTable),
             "LocalVariableTable" => try_read!(LocalVariableTableAttribute, LocalVariableTable),
-            "LocalVariableTypeTable" => try_read!(LocalVariableTypeTableAttribute, LocalVariableTypeTable),
-            "SourceDebugExtension" => try_read!(SourceDebugExtensionAttribute, SourceDebugExtension),
+            "LocalVariableTypeTable" => {
+                try_read!(LocalVariableTypeTableAttribute, LocalVariableTypeTable)
+            }
+            "SourceDebugExtension" => {
+                try_read!(SourceDebugExtensionAttribute, SourceDebugExtension)
+            }
             "Deprecated" => try_read!(DeprecatedAttribute, Deprecated),
-            "RuntimeVisibleAnnotations" => try_read!(RuntimeVisibleAnnotationsAttribute, RuntimeVisibleAnnotations),
-            "RuntimeInvisibleAnnotations" => try_read!(RuntimeInvisibleAnnotationsAttribute, RuntimeInvisibleAnnotations),
-            "RuntimeVisibleParameterAnnotations" => try_read!(RuntimeVisibleParameterAnnotationsAttribute, RuntimeVisibleParameterAnnotations),
-            "RuntimeInvisibleParameterAnnotations" => try_read!(RuntimeInvisibleParameterAnnotationsAttribute, RuntimeInvisibleParameterAnnotations),
-            "RuntimeVisibleTypeAnnotations" => try_read!(RuntimeVisibleTypeAnnotationsAttribute, RuntimeVisibleTypeAnnotations),
-            "RuntimeInvisibleTypeAnnotations" => try_read!(RuntimeInvisibleTypeAnnotationsAttribute, RuntimeInvisibleTypeAnnotations),
+            "RuntimeVisibleAnnotations" => try_read!(
+                RuntimeVisibleAnnotationsAttribute,
+                RuntimeVisibleAnnotations
+            ),
+            "RuntimeInvisibleAnnotations" => try_read!(
+                RuntimeInvisibleAnnotationsAttribute,
+                RuntimeInvisibleAnnotations
+            ),
+            "RuntimeVisibleParameterAnnotations" => try_read!(
+                RuntimeVisibleParameterAnnotationsAttribute,
+                RuntimeVisibleParameterAnnotations
+            ),
+            "RuntimeInvisibleParameterAnnotations" => try_read!(
+                RuntimeInvisibleParameterAnnotationsAttribute,
+                RuntimeInvisibleParameterAnnotations
+            ),
+            "RuntimeVisibleTypeAnnotations" => try_read!(
+                RuntimeVisibleTypeAnnotationsAttribute,
+                RuntimeVisibleTypeAnnotations
+            ),
+            "RuntimeInvisibleTypeAnnotations" => try_read!(
+                RuntimeInvisibleTypeAnnotationsAttribute,
+                RuntimeInvisibleTypeAnnotations
+            ),
             "AnnotationDefault" => try_read!(AnnotationDefaultAttribute, AnnotationDefault),
             "MethodParameters" => try_read!(MethodParametersAttribute, MethodParameters),
             "Module" => try_read!(ModuleAttribute, Module),
@@ -161,19 +181,17 @@ impl InterpretInner for AttributeInfo {
             "ModuleMainClass" => try_read!(ModuleMainClassAttribute, ModuleMainClass),
             "NestHost" => try_read!(NestHostAttribute, NestHost),
             "NestMembers" => try_read!(NestMembersAttribute, NestMembers),
-            "Record" => {
-                match RecordAttribute::read(&mut Cursor::new(&mut self.info)) {
-                    Ok(mut record) => {
-                        for component in &mut record.components {
-                            for attr in &mut component.attributes {
-                                attr.interpret_inner(constant_pool);
-                            }
+            "Record" => match RecordAttribute::read(&mut Cursor::new(&mut self.info)) {
+                Ok(mut record) => {
+                    for component in &mut record.components {
+                        for attr in &mut component.attributes {
+                            attr.interpret_inner(constant_pool);
                         }
-                        Some(AttributeInfoVariant::Record(record))
                     }
-                    Err(_) => None,
+                    Some(AttributeInfoVariant::Record(record))
                 }
-            }
+                Err(_) => None,
+            },
             "PermittedSubclasses" => try_read!(PermittedSubclassesAttribute, PermittedSubclasses),
             unhandled => Some(AttributeInfoVariant::Unknown(String::from(unhandled))),
         };
@@ -209,12 +227,8 @@ impl AttributeInfo {
                     AttributeInfoVariant::LocalVariableTable(v) => v.write(&mut cursor)?,
                     AttributeInfoVariant::LocalVariableTypeTable(v) => v.write(&mut cursor)?,
                     AttributeInfoVariant::Deprecated(v) => v.write(&mut cursor)?,
-                    AttributeInfoVariant::RuntimeVisibleAnnotations(v) => {
-                        v.write(&mut cursor)?
-                    }
-                    AttributeInfoVariant::RuntimeInvisibleAnnotations(v) => {
-                        v.write(&mut cursor)?
-                    }
+                    AttributeInfoVariant::RuntimeVisibleAnnotations(v) => v.write(&mut cursor)?,
+                    AttributeInfoVariant::RuntimeInvisibleAnnotations(v) => v.write(&mut cursor)?,
                     AttributeInfoVariant::RuntimeVisibleParameterAnnotations(v) => {
                         v.write(&mut cursor)?
                     }
@@ -327,8 +341,7 @@ impl CodeAttribute {
         for instruction in &self.code {
             let pos = buf.stream_position()?;
             let address = pos as u32;
-            instruction
-                .write_options(&mut buf, Endian::Big, binrw::args! { address: address })?;
+            instruction.write_options(&mut buf, Endian::Big, binrw::args! { address: address })?;
         }
         self.code_length = buf.into_inner().len() as u32;
         self.exception_table_length = self.exception_table.len() as u16;
@@ -381,8 +394,7 @@ impl CodeAttribute {
             instr.write_options(&mut buf, Endian::Big, binrw::args! { address })?;
         }
         let byte_count = (buf.stream_position()? - range_start_pos) as usize;
-        self.code
-            .splice(range, vec![Instruction::Nop; byte_count]);
+        self.code.splice(range, vec![Instruction::Nop; byte_count]);
         Ok(())
     }
 }
@@ -539,13 +551,9 @@ pub struct TypeAnnotation {
 #[br(import(target_type: u8))]
 pub enum TargetInfo {
     #[br(pre_assert(target_type == 0x00 || target_type == 0x01))]
-    TypeParameter {
-        type_parameter_index: u8,
-    },
+    TypeParameter { type_parameter_index: u8 },
     #[br(pre_assert(target_type == 0x10))]
-    SuperType {
-        supertype_index: u16,
-    },
+    SuperType { supertype_index: u16 },
     #[br(pre_assert(target_type == 0x11 || target_type == 0x12))]
     TypeParameterBound {
         type_parameter_index: u8,
@@ -554,13 +562,9 @@ pub enum TargetInfo {
     #[br(pre_assert((0x13..=0x15).contains(&target_type)))]
     Empty,
     #[br(pre_assert(target_type == 0x16))]
-    FormalParameter {
-        formal_parameter_index: u8,
-    },
+    FormalParameter { formal_parameter_index: u8 },
     #[br(pre_assert(target_type == 0x17))]
-    Throws {
-        throws_type_index: u16,
-    },
+    Throws { throws_type_index: u16 },
     #[br(pre_assert(target_type == 0x40 || target_type == 0x41))]
     LocalVar {
         table_length: u16,
@@ -568,13 +572,9 @@ pub enum TargetInfo {
         tables: Vec<LocalVarTableAnnotation>,
     },
     #[br(pre_assert(target_type == 0x42))]
-    Catch {
-        exception_table_index: u16,
-    },
+    Catch { exception_table_index: u16 },
     #[br(pre_assert((0x43..=0x46).contains(&target_type)))]
-    Offset {
-        offset: u16,
-    },
+    Offset { offset: u16 },
     #[br(pre_assert((0x47..=0x4B).contains(&target_type)))]
     TypeArgument {
         offset: u16,

@@ -140,11 +140,11 @@ impl JavaRenderer {
         }
 
         // Extends
-        if let Some(ref super_class) = class.super_class {
-            if class.kind == ClassKind::Class {
-                decl.push_str(" extends ");
-                decl.push_str(&super_class.display_name());
-            }
+        if let Some(ref super_class) = class.super_class
+            && class.kind == ClassKind::Class
+        {
+            decl.push_str(" extends ");
+            decl.push_str(&super_class.display_name());
         }
 
         // Implements / extends (for interfaces)
@@ -220,11 +220,8 @@ impl JavaRenderer {
     }
 
     fn render_enum_constants(&mut self, class: &JavaClass) {
-        let enum_fields: Vec<&JavaField> = class
-            .fields
-            .iter()
-            .filter(|f| f.is_enum_constant)
-            .collect();
+        let enum_fields: Vec<&JavaField> =
+            class.fields.iter().filter(|f| f.is_enum_constant).collect();
 
         if !enum_fields.is_empty() {
             for (i, field) in enum_fields.iter().enumerate() {
@@ -403,7 +400,8 @@ impl JavaRenderer {
             self.render_body(body);
             self.indent_level -= 1;
             self.writeln("}");
-        } else if method.is_abstract || method.is_native
+        } else if method.is_abstract
+            || method.is_native
             || (*class_kind == ClassKind::Interface && !method.is_default && !method.is_static)
         {
             self.raw(";");
@@ -429,7 +427,11 @@ impl JavaRenderer {
                     self.render_structured_stmt(s);
                 }
             }
-            StructuredStmt::If { condition, then_body, else_body } => {
+            StructuredStmt::If {
+                condition,
+                then_body,
+                else_body,
+            } => {
                 self.write_indent();
                 self.raw(&format!("if ({}) {{", self.render_expr(condition)));
                 self.raw_newline();
@@ -462,10 +464,21 @@ impl JavaRenderer {
                 self.raw(&format!("}} while ({});", self.render_expr(condition)));
                 self.raw_newline();
             }
-            StructuredStmt::For { init, condition, update, body } => {
+            StructuredStmt::For {
+                init,
+                condition,
+                update,
+                body,
+            } => {
                 self.write_indent();
-                let init_str = init.as_ref().map(|s| self.render_stmt_inline(s)).unwrap_or_default();
-                let update_str = update.as_ref().map(|s| self.render_stmt_inline(s)).unwrap_or_default();
+                let init_str = init
+                    .as_ref()
+                    .map(|s| self.render_stmt_inline(s))
+                    .unwrap_or_default();
+                let update_str = update
+                    .as_ref()
+                    .map(|s| self.render_stmt_inline(s))
+                    .unwrap_or_default();
                 self.raw(&format!(
                     "for ({}; {}; {}) {{",
                     init_str,
@@ -478,7 +491,11 @@ impl JavaRenderer {
                 self.indent_level -= 1;
                 self.writeln("}");
             }
-            StructuredStmt::ForEach { var, iterable, body } => {
+            StructuredStmt::ForEach {
+                var,
+                iterable,
+                body,
+            } => {
                 self.write_indent();
                 let type_name = var.ty.simple_name();
                 let var_name = var.name.as_deref().unwrap_or("item");
@@ -494,18 +511,26 @@ impl JavaRenderer {
                 self.indent_level -= 1;
                 self.writeln("}");
             }
-            StructuredStmt::Switch { expr, cases, default } => {
+            StructuredStmt::Switch {
+                expr,
+                cases,
+                default,
+            } => {
                 self.write_indent();
                 self.raw(&format!("switch ({}) {{", self.render_expr(expr)));
                 self.raw_newline();
                 self.indent_level += 1;
                 for case in cases {
                     self.write_indent();
-                    let labels: Vec<String> = case.values.iter().map(|v| match v {
-                        SwitchValue::Int(i) => format!("{}", i),
-                        SwitchValue::String(s) => format!("\"{}\"", s),
-                        SwitchValue::Enum { const_name, .. } => const_name.clone(),
-                    }).collect();
+                    let labels: Vec<String> = case
+                        .values
+                        .iter()
+                        .map(|v| match v {
+                            SwitchValue::Int(i) => format!("{}", i),
+                            SwitchValue::String(s) => format!("\"{}\"", s),
+                            SwitchValue::Enum { const_name, .. } => const_name.clone(),
+                        })
+                        .collect();
                     for (i, label) in labels.iter().enumerate() {
                         if i > 0 {
                             self.raw_newline();
@@ -531,7 +556,11 @@ impl JavaRenderer {
                 self.indent_level -= 1;
                 self.writeln("}");
             }
-            StructuredStmt::TryCatch { try_body, catches, finally_body } => {
+            StructuredStmt::TryCatch {
+                try_body,
+                catches,
+                finally_body,
+            } => {
                 self.writeln("try {");
                 self.indent_level += 1;
                 self.render_structured_stmt(try_body);
@@ -554,7 +583,11 @@ impl JavaRenderer {
                 }
                 self.writeln("}");
             }
-            StructuredStmt::TryWithResources { resources, body, catches } => {
+            StructuredStmt::TryWithResources {
+                resources,
+                body,
+                catches,
+            } => {
                 self.write_indent();
                 self.raw("try (");
                 for (i, (var, init)) in resources.iter().enumerate() {
@@ -563,7 +596,12 @@ impl JavaRenderer {
                     }
                     let type_name = var.ty.simple_name();
                     let var_name = var.name.as_deref().unwrap_or("r");
-                    self.raw(&format!("{} {} = {}", type_name, var_name, self.render_expr(init)));
+                    self.raw(&format!(
+                        "{} {} = {}",
+                        type_name,
+                        var_name,
+                        self.render_expr(init)
+                    ));
                 }
                 self.raw(") {");
                 self.raw_newline();
@@ -612,7 +650,11 @@ impl JavaRenderer {
             StructuredStmt::Assert { condition, message } => {
                 self.write_indent();
                 if let Some(msg) = message {
-                    self.raw(&format!("assert {} : {};", self.render_expr(condition), self.render_expr(msg)));
+                    self.raw(&format!(
+                        "assert {} : {};",
+                        self.render_expr(condition),
+                        self.render_expr(msg)
+                    ));
                 } else {
                     self.raw(&format!("assert {};", self.render_expr(condition)));
                 }
@@ -634,16 +676,35 @@ impl JavaRenderer {
                 let default_name = format!("var{}", var.index);
                 let var_name = var.name.as_deref().unwrap_or(&default_name);
                 // TODO: Track which variables have been declared vs assigned
-                self.writeln(&format!("{} {} = {};", type_name, var_name, self.render_expr(value)));
+                self.writeln(&format!(
+                    "{} {} = {};",
+                    type_name,
+                    var_name,
+                    self.render_expr(value)
+                ));
             }
-            Stmt::FieldStore { object, class_name, field_name, value, .. } => {
+            Stmt::FieldStore {
+                object,
+                class_name,
+                field_name,
+                value,
+                ..
+            } => {
                 let target = match object {
                     Some(obj) => format!("{}.{}", self.render_expr(obj), field_name),
-                    None => format!("{}.{}", descriptor::simple_class_name(class_name), field_name),
+                    None => format!(
+                        "{}.{}",
+                        descriptor::simple_class_name(class_name),
+                        field_name
+                    ),
                 };
                 self.writeln(&format!("{} = {};", target, self.render_expr(value)));
             }
-            Stmt::ArrayStore { array, index, value } => {
+            Stmt::ArrayStore {
+                array,
+                index,
+                value,
+            } => {
                 self.writeln(&format!(
                     "{}[{}] = {};",
                     self.render_expr(array),
@@ -692,8 +753,11 @@ impl JavaRenderer {
                 if v.is_nan() {
                     "Float.NaN".into()
                 } else if v.is_infinite() {
-                    if *v > 0.0 { "Float.POSITIVE_INFINITY".into() }
-                    else { "Float.NEGATIVE_INFINITY".into() }
+                    if *v > 0.0 {
+                        "Float.POSITIVE_INFINITY".into()
+                    } else {
+                        "Float.NEGATIVE_INFINITY".into()
+                    }
                 } else {
                     format!("{}f", v)
                 }
@@ -702,8 +766,11 @@ impl JavaRenderer {
                 if v.is_nan() {
                     "Double.NaN".into()
                 } else if v.is_infinite() {
-                    if *v > 0.0 { "Double.POSITIVE_INFINITY".into() }
-                    else { "Double.NEGATIVE_INFINITY".into() }
+                    if *v > 0.0 {
+                        "Double.POSITIVE_INFINITY".into()
+                    } else {
+                        "Double.NEGATIVE_INFINITY".into()
+                    }
                 } else {
                     format!("{}d", v)
                 }
@@ -711,9 +778,11 @@ impl JavaRenderer {
             Expr::StringLiteral(s) => format!("\"{}\"", escape_java_string(s)),
             Expr::ClassLiteral(name) => format!("{}.class", descriptor::simple_class_name(name)),
             Expr::NullLiteral => "null".into(),
-            Expr::LocalLoad(var) => {
-                var.name.as_deref().unwrap_or(&format!("var{}", var.index)).to_string()
-            }
+            Expr::LocalLoad(var) => var
+                .name
+                .as_deref()
+                .unwrap_or(&format!("var{}", var.index))
+                .to_string(),
             Expr::This => "this".into(),
             Expr::BinaryOp { op, left, right } => {
                 let op_str = match op {
@@ -729,7 +798,12 @@ impl JavaRenderer {
                     BinOp::Or => "|",
                     BinOp::Xor => "^",
                 };
-                format!("{} {} {}", self.render_expr_parens(left, op), op_str, self.render_expr_parens(right, op))
+                format!(
+                    "{} {} {}",
+                    self.render_expr_parens(left, op),
+                    op_str,
+                    self.render_expr_parens(right, op)
+                )
             }
             Expr::UnaryOp { op, operand } => {
                 let op_str = match op {
@@ -738,24 +812,57 @@ impl JavaRenderer {
                 };
                 format!("{}{}", op_str, self.render_expr(operand))
             }
-            Expr::Cast { target_type, operand } => {
-                format!("({}){}", target_type.simple_name(), self.render_expr(operand))
+            Expr::Cast {
+                target_type,
+                operand,
+            } => {
+                format!(
+                    "({}){}",
+                    target_type.simple_name(),
+                    self.render_expr(operand)
+                )
             }
-            Expr::Instanceof { operand, check_type } => {
-                format!("{} instanceof {}", self.render_expr(operand), descriptor::simple_class_name(check_type))
+            Expr::Instanceof {
+                operand,
+                check_type,
+            } => {
+                format!(
+                    "{} instanceof {}",
+                    self.render_expr(operand),
+                    descriptor::simple_class_name(check_type)
+                )
             }
-            Expr::FieldGet { object, class_name, field_name, .. } => {
-                match object {
-                    Some(obj) => format!("{}.{}", self.render_expr(obj), field_name),
-                    None => format!("{}.{}", descriptor::simple_class_name(class_name), field_name),
-                }
-            }
-            Expr::MethodCall { object, class_name, method_name, args, kind, .. } => {
+            Expr::FieldGet {
+                object,
+                class_name,
+                field_name,
+                ..
+            } => match object {
+                Some(obj) => format!("{}.{}", self.render_expr(obj), field_name),
+                None => format!(
+                    "{}.{}",
+                    descriptor::simple_class_name(class_name),
+                    field_name
+                ),
+            },
+            Expr::MethodCall {
+                object,
+                class_name,
+                method_name,
+                args,
+                kind,
+                ..
+            } => {
                 let args_str: Vec<String> = args.iter().map(|a| self.render_expr(a)).collect();
                 let args_joined = args_str.join(", ");
                 match kind {
                     InvokeKind::Static => {
-                        format!("{}.{}({})", descriptor::simple_class_name(class_name), method_name, args_joined)
+                        format!(
+                            "{}.{}({})",
+                            descriptor::simple_class_name(class_name),
+                            method_name,
+                            args_joined
+                        )
                     }
                     _ => {
                         let receiver = object
@@ -770,15 +877,34 @@ impl JavaRenderer {
                     }
                 }
             }
-            Expr::New { class_name, args, .. } => {
+            Expr::New {
+                class_name, args, ..
+            } => {
                 let args_str: Vec<String> = args.iter().map(|a| self.render_expr(a)).collect();
-                format!("new {}({})", descriptor::simple_class_name(class_name), args_str.join(", "))
+                format!(
+                    "new {}({})",
+                    descriptor::simple_class_name(class_name),
+                    args_str.join(", ")
+                )
             }
-            Expr::NewArray { element_type, length } => {
-                format!("new {}[{}]", element_type.simple_name(), self.render_expr(length))
+            Expr::NewArray {
+                element_type,
+                length,
+            } => {
+                format!(
+                    "new {}[{}]",
+                    element_type.simple_name(),
+                    self.render_expr(length)
+                )
             }
-            Expr::NewMultiArray { element_type, dimensions } => {
-                let dims: Vec<String> = dimensions.iter().map(|d| format!("[{}]", self.render_expr(d))).collect();
+            Expr::NewMultiArray {
+                element_type,
+                dimensions,
+            } => {
+                let dims: Vec<String> = dimensions
+                    .iter()
+                    .map(|d| format!("[{}]", self.render_expr(d)))
+                    .collect();
                 format!("new {}{}", element_type.simple_name(), dims.join(""))
             }
             Expr::ArrayLength { array } => {
@@ -788,13 +914,26 @@ impl JavaRenderer {
                 format!("{}[{}]", self.render_expr(array), self.render_expr(index))
             }
             Expr::Compare { op, left, right } => {
-                format!("{} {} {}", self.render_expr(left), op.as_str(), self.render_expr(right))
+                format!(
+                    "{} {} {}",
+                    self.render_expr(left),
+                    op.as_str(),
+                    self.render_expr(right)
+                )
             }
             Expr::CmpResult { left, right, .. } => {
                 // This should be folded into a Compare during structuring
-                format!("/* cmp */ {} <=> {}", self.render_expr(left), self.render_expr(right))
+                format!(
+                    "/* cmp */ {} <=> {}",
+                    self.render_expr(left),
+                    self.render_expr(right)
+                )
             }
-            Expr::InvokeDynamic { method_name, captures, .. } => {
+            Expr::InvokeDynamic {
+                method_name,
+                captures,
+                ..
+            } => {
                 if captures.is_empty() {
                     format!("/* lambda */ {}()", method_name)
                 } else {
@@ -802,7 +941,11 @@ impl JavaRenderer {
                     format!("/* lambda */ {}({})", method_name, caps.join(", "))
                 }
             }
-            Expr::Ternary { condition, then_expr, else_expr } => {
+            Expr::Ternary {
+                condition,
+                then_expr,
+                else_expr,
+            } => {
                 format!(
                     "{} ? {} : {}",
                     self.render_expr(condition),
@@ -812,7 +955,10 @@ impl JavaRenderer {
             }
             Expr::Unresolved(msg) => msg.clone(),
             Expr::Dup(inner) => self.render_expr(inner),
-            Expr::UninitNew { class_name } => format!("/* uninit */ new {}", descriptor::simple_class_name(class_name)),
+            Expr::UninitNew { class_name } => format!(
+                "/* uninit */ new {}",
+                descriptor::simple_class_name(class_name)
+            ),
         }
     }
 
@@ -829,12 +975,12 @@ impl JavaRenderer {
             StructuredStmt::Simple(s) => match s {
                 Stmt::LocalStore { var, value } => {
                     let default_name = format!("var{}", var.index);
-                let var_name = var.name.as_deref().unwrap_or(&default_name);
+                    let var_name = var.name.as_deref().unwrap_or(&default_name);
                     format!("{} = {}", var_name, self.render_expr(value))
                 }
                 Stmt::Iinc { var, amount } => {
                     let default_name = format!("var{}", var.index);
-                let var_name = var.name.as_deref().unwrap_or(&default_name);
+                    let var_name = var.name.as_deref().unwrap_or(&default_name);
                     if *amount == 1 {
                         format!("{}++", var_name)
                     } else {
@@ -888,11 +1034,16 @@ impl JavaRenderer {
             AnnotationValue::LongLiteral(v) => write!(out, "{}L", v).unwrap(),
             AnnotationValue::FloatLiteral(v) => write!(out, "{}f", v).unwrap(),
             AnnotationValue::DoubleLiteral(v) => write!(out, "{}d", v).unwrap(),
-            AnnotationValue::StringLiteral(s) => write!(out, "\"{}\"", escape_java_string(s)).unwrap(),
+            AnnotationValue::StringLiteral(s) => {
+                write!(out, "\"{}\"", escape_java_string(s)).unwrap()
+            }
             AnnotationValue::BooleanLiteral(b) => write!(out, "{}", b).unwrap(),
             AnnotationValue::CharLiteral(c) => write!(out, "'{}'", c).unwrap(),
             AnnotationValue::ClassLiteral(c) => write!(out, "{}.class", c).unwrap(),
-            AnnotationValue::EnumConstant { type_name, const_name } => {
+            AnnotationValue::EnumConstant {
+                type_name,
+                const_name,
+            } => {
                 write!(out, "{}.{}", type_name, const_name).unwrap();
             }
             AnnotationValue::AnnotationLiteral(ann) => {
@@ -935,10 +1086,8 @@ impl JavaRenderer {
             return false;
         }
         // Skip auto-generated enum methods
-        if *class_kind == ClassKind::Enum {
-            if method.name == "values" || method.name == "valueOf" {
-                return false;
-            }
+        if *class_kind == ClassKind::Enum && (method.name == "values" || method.name == "valueOf") {
+            return false;
         }
         true
     }
@@ -970,11 +1119,15 @@ impl JavaRenderer {
 
     fn collect_type_import(&mut self, ty: &JavaType) {
         match ty {
-            JavaType::ClassType { package, name, type_args } => {
-                if let Some(pkg) = package {
-                    if pkg != "java.lang" {
-                        self.imports.insert(format!("{}.{}", pkg, name));
-                    }
+            JavaType::ClassType {
+                package,
+                name,
+                type_args,
+            } => {
+                if let Some(pkg) = package
+                    && pkg != "java.lang"
+                {
+                    self.imports.insert(format!("{}.{}", pkg, name));
                 }
                 for arg in type_args {
                     self.collect_type_import(arg);

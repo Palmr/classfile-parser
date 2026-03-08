@@ -47,7 +47,10 @@ fn stack_delta(instr: &Instruction) -> i32 {
 
         // Long/Double constants: push 2 (but treated as 1 category-2 value conceptually)
         // JVM spec: long/double use 2 stack slots
-        Instruction::Lconst0 | Instruction::Lconst1 | Instruction::Dconst0 | Instruction::Dconst1 => 2,
+        Instruction::Lconst0
+        | Instruction::Lconst1
+        | Instruction::Dconst0
+        | Instruction::Dconst1 => 2,
         Instruction::Ldc2W(_) => 2,
 
         // Loads: push 1 (or 2 for long/double)
@@ -193,7 +196,11 @@ fn stack_delta(instr: &Instruction) -> i32 {
         // Conversions: same stack effect as source and target sizes
         Instruction::I2l | Instruction::I2d | Instruction::F2l | Instruction::F2d => 1, // push extra slot
         Instruction::L2i | Instruction::L2f | Instruction::D2i | Instruction::D2f => -1, // lose a slot
-        Instruction::I2f | Instruction::I2b | Instruction::I2c | Instruction::I2s | Instruction::F2i => 0,
+        Instruction::I2f
+        | Instruction::I2b
+        | Instruction::I2c
+        | Instruction::I2s
+        | Instruction::F2i => 0,
         Instruction::L2d | Instruction::D2l => 0, // 2 -> 2
 
         // Comparisons
@@ -228,10 +235,10 @@ fn stack_delta(instr: &Instruction) -> i32 {
         Instruction::Lreturn | Instruction::Dreturn => -2,
 
         // Field access
-        Instruction::Getstatic(_) => 1, // push value
+        Instruction::Getstatic(_) => 1,  // push value
         Instruction::Putstatic(_) => -1, // pop value
-        Instruction::Getfield(_) => 0, // pop objectref, push value
-        Instruction::Putfield(_) => -2, // pop objectref + value
+        Instruction::Getfield(_) => 0,   // pop objectref, push value
+        Instruction::Putfield(_) => -2,  // pop objectref + value
 
         // Method invocations: complex, approximate conservatively
         // For MVP, assume methods consume args and push at most 1

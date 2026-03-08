@@ -4,12 +4,12 @@ use std::fs;
 use std::io::Cursor;
 
 use binrw::prelude::*;
+use classfile_parser::ClassFile;
 use classfile_parser::decompile::cfg;
 use classfile_parser::decompile::descriptor;
 use classfile_parser::decompile::stack_sim;
 use classfile_parser::decompile::structuring;
 use classfile_parser::decompile::{self, DecompileOptions, Decompiler, RenderConfig};
-use classfile_parser::ClassFile;
 
 fn load_class(name: &str) -> ClassFile {
     let path = format!("java-assets/compiled-classes/{}", name);

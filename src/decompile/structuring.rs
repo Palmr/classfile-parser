@@ -10,8 +10,7 @@ pub fn structure_method(
     simulated: &[SimulatedBlock],
     const_pool: &[crate::constant_info::ConstantInfo],
 ) -> StructuredBody {
-    let sim_map: BTreeMap<BlockId, &SimulatedBlock> =
-        simulated.iter().map(|b| (b.id, b)).collect();
+    let sim_map: BTreeMap<BlockId, &SimulatedBlock> = simulated.iter().map(|b| (b.id, b)).collect();
 
     if cfg.blocks.is_empty() {
         return StructuredBody::new(vec![]);
@@ -79,13 +78,11 @@ impl<'a> StructuringContext<'a> {
                     // Statements already include the Return/Throw
                 }
                 Terminator::FallThrough { target } => {
-                    if !self.visited.contains(target) {
-                        if self.loop_headers.contains(target) {
-                            // Back-edge to a loop header — emit continue
-                            result.push(StructuredStmt::Continue { label: None });
-                        }
-                        // Otherwise the next block in order will handle it
+                    if !self.visited.contains(target) && self.loop_headers.contains(target) {
+                        // Back-edge to a loop header — emit continue
+                        result.push(StructuredStmt::Continue { label: None });
                     }
+                    // Otherwise the next block in order will handle it
                 }
                 Terminator::Goto { target } => {
                     if self.visited.contains(target) {
@@ -97,10 +94,15 @@ impl<'a> StructuringContext<'a> {
                     }
                     // Forward goto is handled by visiting the target later
                 }
-                Terminator::ConditionalBranch { condition: _, if_true, if_false } => {
-                    let cond_expr = sim.branch_condition.clone().unwrap_or_else(|| {
-                        Expr::Unresolved("/* condition */".into())
-                    });
+                Terminator::ConditionalBranch {
+                    condition: _,
+                    if_true,
+                    if_false,
+                } => {
+                    let cond_expr = sim
+                        .branch_condition
+                        .clone()
+                        .unwrap_or_else(|| Expr::Unresolved("/* condition */".into()));
 
                     let if_true = *if_true;
                     let if_false = *if_false;
@@ -111,14 +113,17 @@ impl<'a> StructuringContext<'a> {
                         let exit = if_false;
 
                         // Check which branch goes back (is the loop body)
-                        let (body_start, loop_exit, negate) =
-                            if self.dominates(block_id, if_true) && !self.visited.contains(&if_true) {
-                                (if_true, if_false, false)
-                            } else if self.dominates(block_id, if_false) && !self.visited.contains(&if_false) {
-                                (if_false, if_true, true)
-                            } else {
-                                (body_entry, exit, false)
-                            };
+                        let (body_start, loop_exit, negate) = if self.dominates(block_id, if_true)
+                            && !self.visited.contains(&if_true)
+                        {
+                            (if_true, if_false, false)
+                        } else if self.dominates(block_id, if_false)
+                            && !self.visited.contains(&if_false)
+                        {
+                            (if_false, if_true, true)
+                        } else {
+                            (body_entry, exit, false)
+                        };
 
                         let condition = if negate {
                             negate_expr(cond_expr)
@@ -178,18 +183,25 @@ impl<'a> StructuringContext<'a> {
                         });
 
                         // Continue with the join point
-                        if let Some(jp) = join_point {
-                            if !self.visited.contains(&jp) {
-                                let jp_stmts = self.structure_region(&[jp]);
-                                result.extend(jp_stmts);
-                            }
+                        if let Some(jp) = join_point
+                            && !self.visited.contains(&jp)
+                        {
+                            let jp_stmts = self.structure_region(&[jp]);
+                            result.extend(jp_stmts);
                         }
                     }
                 }
-                Terminator::TableSwitch { default, low, high: _, targets } => {
-                    let switch_expr = sim.exit_stack.last().cloned().unwrap_or(
-                        Expr::Unresolved("/* switch expr */".into())
-                    );
+                Terminator::TableSwitch {
+                    default,
+                    low,
+                    high: _,
+                    targets,
+                } => {
+                    let switch_expr = sim
+                        .exit_stack
+                        .last()
+                        .cloned()
+                        .unwrap_or(Expr::Unresolved("/* switch expr */".into()));
 
                     let mut cases = Vec::new();
                     for (i, &target) in targets.iter().enumerate() {
@@ -197,7 +209,10 @@ impl<'a> StructuringContext<'a> {
                         if !self.visited.contains(&target) {
                             self.visited.insert(target);
                             let body_stmts = if let Some(s) = self.sim_map.get(&target) {
-                                s.statements.iter().map(|st| StructuredStmt::Simple(st.clone())).collect()
+                                s.statements
+                                    .iter()
+                                    .map(|st| StructuredStmt::Simple(st.clone()))
+                                    .collect()
                             } else {
                                 vec![]
                             };
@@ -211,13 +226,14 @@ impl<'a> StructuringContext<'a> {
 
                     let default_body = if !self.visited.contains(default) {
                         self.visited.insert(*default);
-                        if let Some(s) = self.sim_map.get(default) {
-                            Some(Box::new(StructuredStmt::Block(
-                                s.statements.iter().map(|st| StructuredStmt::Simple(st.clone())).collect()
-                            )))
-                        } else {
-                            None
-                        }
+                        self.sim_map.get(default).map(|s| {
+                            Box::new(StructuredStmt::Block(
+                                s.statements
+                                    .iter()
+                                    .map(|st| StructuredStmt::Simple(st.clone()))
+                                    .collect(),
+                            ))
+                        })
                     } else {
                         None
                     };
@@ -229,16 +245,21 @@ impl<'a> StructuringContext<'a> {
                     });
                 }
                 Terminator::LookupSwitch { default, pairs } => {
-                    let switch_expr = sim.exit_stack.last().cloned().unwrap_or(
-                        Expr::Unresolved("/* switch expr */".into())
-                    );
+                    let switch_expr = sim
+                        .exit_stack
+                        .last()
+                        .cloned()
+                        .unwrap_or(Expr::Unresolved("/* switch expr */".into()));
 
                     let mut cases = Vec::new();
                     for (key, target) in pairs {
                         if !self.visited.contains(target) {
                             self.visited.insert(*target);
                             let body_stmts = if let Some(s) = self.sim_map.get(target) {
-                                s.statements.iter().map(|st| StructuredStmt::Simple(st.clone())).collect()
+                                s.statements
+                                    .iter()
+                                    .map(|st| StructuredStmt::Simple(st.clone()))
+                                    .collect()
                             } else {
                                 vec![]
                             };
@@ -252,13 +273,14 @@ impl<'a> StructuringContext<'a> {
 
                     let default_body = if !self.visited.contains(default) {
                         self.visited.insert(*default);
-                        if let Some(s) = self.sim_map.get(default) {
-                            Some(Box::new(StructuredStmt::Block(
-                                s.statements.iter().map(|st| StructuredStmt::Simple(st.clone())).collect()
-                            )))
-                        } else {
-                            None
-                        }
+                        self.sim_map.get(default).map(|s| {
+                            Box::new(StructuredStmt::Block(
+                                s.statements
+                                    .iter()
+                                    .map(|st| StructuredStmt::Simple(st.clone()))
+                                    .collect(),
+                            ))
+                        })
                     } else {
                         None
                     };
@@ -331,10 +353,10 @@ impl<'a> StructuringContext<'a> {
         let mut seen = HashSet::new();
 
         while let Some(bid) = worklist.pop() {
-            if let Some(stop_id) = stop {
-                if bid == stop_id {
-                    continue;
-                }
+            if let Some(stop_id) = stop
+                && bid == stop_id
+            {
+                continue;
             }
             if !seen.insert(bid) {
                 continue;
@@ -362,7 +384,10 @@ pub fn negate_expr(expr: Expr) -> Expr {
             left,
             right,
         },
-        Expr::UnaryOp { op: UnaryOp::Not, operand } => *operand,
+        Expr::UnaryOp {
+            op: UnaryOp::Not,
+            operand,
+        } => *operand,
         other => Expr::UnaryOp {
             op: UnaryOp::Not,
             operand: Box::new(other),
@@ -371,10 +396,7 @@ pub fn negate_expr(expr: Expr) -> Expr {
 }
 
 /// Compute immediate dominators using a simple iterative algorithm.
-fn compute_dominators(
-    cfg: &ControlFlowGraph,
-    rpo: &[BlockId],
-) -> HashMap<BlockId, BlockId> {
+fn compute_dominators(cfg: &ControlFlowGraph, rpo: &[BlockId]) -> HashMap<BlockId, BlockId> {
     let mut doms: HashMap<BlockId, BlockId> = HashMap::new();
     let entry = cfg.entry;
     doms.insert(entry, entry);
@@ -399,11 +421,11 @@ fn compute_dominators(
                     Some(current) => intersect(&doms, &rpo_index, current, *p),
                 });
             }
-            if let Some(idom) = new_idom {
-                if doms.get(&b) != Some(&idom) {
-                    doms.insert(b, idom);
-                    changed = true;
-                }
+            if let Some(idom) = new_idom
+                && doms.get(&b) != Some(&idom)
+            {
+                doms.insert(b, idom);
+                changed = true;
             }
         }
     }
@@ -430,10 +452,7 @@ fn intersect(
 }
 
 /// Compute post-dominators (dominators of the reverse CFG).
-fn compute_post_dominators(
-    cfg: &ControlFlowGraph,
-    _rpo: &[BlockId],
-) -> HashMap<BlockId, BlockId> {
+fn compute_post_dominators(cfg: &ControlFlowGraph, _rpo: &[BlockId]) -> HashMap<BlockId, BlockId> {
     // Find exit blocks (Return/Throw terminators)
     let _exit_blocks: Vec<BlockId> = cfg
         .blocks
@@ -447,7 +466,10 @@ fn compute_post_dominators(
     let mut post_doms = HashMap::new();
 
     for (&block_id, block) in &cfg.blocks {
-        if let Terminator::ConditionalBranch { if_true, if_false, .. } = &block.terminator {
+        if let Terminator::ConditionalBranch {
+            if_true, if_false, ..
+        } = &block.terminator
+        {
             // Find the first block reachable from both branches
             let reachable_true = reachable_set(cfg, *if_true);
             let reachable_false = reachable_set(cfg, *if_false);
@@ -487,7 +509,7 @@ fn find_loop_headers(
     dominators: &HashMap<BlockId, BlockId>,
 ) -> HashSet<BlockId> {
     let mut headers = HashSet::new();
-    for (&block_id, _) in &cfg.blocks {
+    for &block_id in cfg.blocks.keys() {
         for succ in cfg.successors(block_id) {
             // A back-edge is an edge where the target dominates the source
             let mut current = block_id;

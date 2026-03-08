@@ -1,4 +1,4 @@
-use binrw::{binrw, BinResult};
+use binrw::{BinResult, binrw};
 use std::fmt::Debug;
 
 #[derive(Clone, Debug)]

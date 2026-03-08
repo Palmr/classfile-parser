@@ -46,7 +46,9 @@ impl JavaType {
                 PrimitiveType::Float => "float".into(),
                 PrimitiveType::Double => "double".into(),
             },
-            JavaType::ClassType { name, type_args, .. } => {
+            JavaType::ClassType {
+                name, type_args, ..
+            } => {
                 if type_args.is_empty() {
                     name.clone()
                 } else {
@@ -113,7 +115,10 @@ pub struct JavaAnnotation {
 #[derive(Clone, Debug)]
 pub enum AnnotationArgument {
     /// Named argument: `@Foo(name = value)`
-    Named { name: String, value: AnnotationValue },
+    Named {
+        name: String,
+        value: AnnotationValue,
+    },
     /// Unnamed (single-element): `@Foo(value)`
     Unnamed(AnnotationValue),
 }
@@ -129,7 +134,10 @@ pub enum AnnotationValue {
     BooleanLiteral(bool),
     CharLiteral(char),
     ClassLiteral(String),
-    EnumConstant { type_name: String, const_name: String },
+    EnumConstant {
+        type_name: String,
+        const_name: String,
+    },
     AnnotationLiteral(JavaAnnotation),
     ArrayLiteral(Vec<AnnotationValue>),
 }

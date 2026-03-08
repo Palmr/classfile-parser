@@ -82,7 +82,10 @@ pub fn parse_type_at(desc: &str, pos: usize) -> Option<(JvmType, usize)> {
         b'L' => {
             let semi = desc[pos + 1..].find(';')?;
             let class_name = &desc[pos + 1..pos + 1 + semi];
-            Some((JvmType::Reference(class_name.to_string()), pos + 1 + semi + 1))
+            Some((
+                JvmType::Reference(class_name.to_string()),
+                pos + 1 + semi + 1,
+            ))
         }
         b'[' => {
             let (inner, next) = parse_type_at(desc, pos + 1)?;
@@ -193,7 +196,10 @@ mod tests {
         assert_eq!(ret, JvmType::Void);
 
         let (params, ret) = parse_method_descriptor("(Ljava/lang/String;I)[B").unwrap();
-        assert_eq!(params, vec![JvmType::Reference("java/lang/String".into()), JvmType::Int]);
+        assert_eq!(
+            params,
+            vec![JvmType::Reference("java/lang/String".into()), JvmType::Int]
+        );
         assert_eq!(ret, JvmType::Array(Box::new(JvmType::Byte)));
 
         let (params, ret) = parse_method_descriptor("()V").unwrap();
@@ -203,7 +209,10 @@ mod tests {
 
     #[test]
     fn test_internal_to_source() {
-        assert_eq!(internal_to_source_name("java/lang/String"), "java.lang.String");
+        assert_eq!(
+            internal_to_source_name("java/lang/String"),
+            "java.lang.String"
+        );
         assert_eq!(simple_class_name("java/lang/String"), "String");
         assert_eq!(package_name("java/lang/String"), Some("java/lang"));
         assert_eq!(package_name("NoPackage"), None);

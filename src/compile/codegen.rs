@@ -1,15 +1,15 @@
+use crate::ClassFile;
 use crate::attribute_info::{
     AttributeInfo, AttributeInfoVariant, BootstrapMethod, BootstrapMethodsAttribute, CodeAttribute,
 };
 use crate::code_attribute::Instruction;
-use crate::decompile::descriptor::{parse_method_descriptor, JvmType};
+use crate::decompile::descriptor::{JvmType, parse_method_descriptor};
 use crate::decompile::util::instruction_byte_size;
 use crate::method_info::{MethodAccessFlags, MethodInfo};
-use crate::ClassFile;
 
+use super::CompileError;
 use super::ast::*;
 use super::stackmap::{FrameTracker, VType};
-use super::CompileError;
 
 /// Tracks local variable allocation.
 struct LocalAllocator {
@@ -19,7 +19,12 @@ struct LocalAllocator {
 }
 
 impl LocalAllocator {
-    fn new(is_static: bool, method_descriptor: &str, class_file: &mut ClassFile, param_names: &[Option<String>]) -> Result<Self, CompileError> {
+    fn new(
+        is_static: bool,
+        method_descriptor: &str,
+        class_file: &mut ClassFile,
+        param_names: &[Option<String>],
+    ) -> Result<Self, CompileError> {
         let mut next_slot: u16 = 0;
         let mut locals = Vec::new();
 
@@ -44,10 +49,10 @@ impl LocalAllocator {
             let positional = format!("arg{}", i);
             locals.push((positional.clone(), ty.clone(), slot, vtype.clone()));
             // If a debug name is available and differs from the positional name, register as alias
-            if let Some(Some(debug_name)) = param_names.get(i) {
-                if debug_name != &positional {
-                    locals.push((debug_name.clone(), ty, slot, vtype));
-                }
+            if let Some(Some(debug_name)) = param_names.get(i)
+                && debug_name != &positional
+            {
+                locals.push((debug_name.clone(), ty, slot, vtype));
             }
             next_slot += if param.is_wide() { 2 } else { 1 };
         }
@@ -63,7 +68,8 @@ impl LocalAllocator {
     fn allocate_with_vtype(&mut self, name: &str, ty: &TypeName, vtype: VType) -> u16 {
         let slot = self.next_slot;
         let width = type_slot_width(ty);
-        self.locals.push((name.to_string(), ty.clone(), slot, vtype));
+        self.locals
+            .push((name.to_string(), ty.clone(), slot, vtype));
         self.next_slot += width;
         slot
     }
@@ -159,8 +165,8 @@ pub struct CodeGenerator<'a> {
     class_file: &'a mut ClassFile,
     instructions: Vec<Instruction>,
     locals: LocalAllocator,
-    labels: Vec<Option<usize>>,     // label_id → instruction index (None = unresolved)
-    patches: Vec<(usize, usize)>,   // (instruction_index, target_label_id)
+    labels: Vec<Option<usize>>, // label_id → instruction index (None = unresolved)
+    patches: Vec<(usize, usize)>, // (instruction_index, target_label_id)
     switch_patches: Vec<SwitchPatch>,
     breakable_stack: Vec<BreakableContext>,
     pending_exceptions: Vec<PendingExceptionEntry>,
@@ -264,7 +270,8 @@ impl<'a> CodeGenerator<'a> {
                     .iter()
                     .find(|(lid, _)| *lid == label_id)
                     .map(|(_, locals)| locals.clone());
-                let locals = overridden_locals.unwrap_or_else(|| self.locals.current_locals_vtypes());
+                let locals =
+                    overridden_locals.unwrap_or_else(|| self.locals.current_locals_vtypes());
                 // Check for explicit stack override (e.g., expression-level merge points)
                 let stack = self
                     .label_stack_override
@@ -305,10 +312,14 @@ impl<'a> CodeGenerator<'a> {
     /// a StackMapTable frame the JVM verifier would complain about.
     fn last_is_unconditional_transfer(&self) -> bool {
         match self.instructions.last() {
-            Some(Instruction::Goto(_)) | Some(Instruction::GotoW(_))
-            | Some(Instruction::Return) | Some(Instruction::Ireturn)
-            | Some(Instruction::Lreturn) | Some(Instruction::Freturn)
-            | Some(Instruction::Dreturn) | Some(Instruction::Areturn)
+            Some(Instruction::Goto(_))
+            | Some(Instruction::GotoW(_))
+            | Some(Instruction::Return)
+            | Some(Instruction::Ireturn)
+            | Some(Instruction::Lreturn)
+            | Some(Instruction::Freturn)
+            | Some(Instruction::Dreturn)
+            | Some(Instruction::Areturn)
             | Some(Instruction::Athrow) => true,
             _ => false,
         }
@@ -333,18 +344,27 @@ impl<'a> CodeGenerator<'a> {
             let offset = target_addr - source_addr;
             let offset16 = offset as i16;
 
-            self.instructions[instr_idx] = patch_branch_offset(&self.instructions[instr_idx], offset16)?;
+            self.instructions[instr_idx] =
+                patch_branch_offset(&self.instructions[instr_idx], offset16)?;
         }
 
         // Resolve switch patches
         for patch in &self.switch_patches {
             let source_addr = addresses[patch.instr_idx] as i32;
             match &patch.kind {
-                SwitchPatchKind::Table { low, high, case_labels, default_label } => {
-                    let default_offset = resolve_label_addr(*default_label, &self.labels, &addresses, end_addr)? - source_addr;
+                SwitchPatchKind::Table {
+                    low,
+                    high,
+                    case_labels,
+                    default_label,
+                } => {
+                    let default_offset =
+                        resolve_label_addr(*default_label, &self.labels, &addresses, end_addr)?
+                            - source_addr;
                     let mut offsets = Vec::new();
                     for label_id in case_labels {
-                        let addr = resolve_label_addr(*label_id, &self.labels, &addresses, end_addr)?;
+                        let addr =
+                            resolve_label_addr(*label_id, &self.labels, &addresses, end_addr)?;
                         offsets.push(addr - source_addr);
                     }
                     self.instructions[patch.instr_idx] = Instruction::Tableswitch {
@@ -354,11 +374,17 @@ impl<'a> CodeGenerator<'a> {
                         offsets,
                     };
                 }
-                SwitchPatchKind::Lookup { pairs, default_label } => {
-                    let default_offset = resolve_label_addr(*default_label, &self.labels, &addresses, end_addr)? - source_addr;
+                SwitchPatchKind::Lookup {
+                    pairs,
+                    default_label,
+                } => {
+                    let default_offset =
+                        resolve_label_addr(*default_label, &self.labels, &addresses, end_addr)?
+                            - source_addr;
                     let mut resolved_pairs = Vec::new();
                     for (value, label_id) in pairs {
-                        let addr = resolve_label_addr(*label_id, &self.labels, &addresses, end_addr)?;
+                        let addr =
+                            resolve_label_addr(*label_id, &self.labels, &addresses, end_addr)?;
                         resolved_pairs.push((*value, addr - source_addr));
                     }
                     self.instructions[patch.instr_idx] = Instruction::Lookupswitch {
@@ -383,10 +409,7 @@ impl<'a> CodeGenerator<'a> {
         // when the last emitted instruction isn't already a return/throw,
         // OR when there are labels that point to the end of instructions.
         if self.return_type == JvmType::Void {
-            let has_label_at_end = self
-                .labels
-                .iter()
-                .any(|l| *l == Some(self.instructions.len()));
+            let has_label_at_end = self.labels.contains(&Some(self.instructions.len()));
             let needs_return = self.instructions.is_empty()
                 || has_label_at_end
                 || !matches!(
@@ -421,7 +444,9 @@ impl<'a> CodeGenerator<'a> {
         })
     }
 
-    fn build_exception_table(&self) -> Result<Vec<crate::attribute_info::ExceptionEntry>, CompileError> {
+    fn build_exception_table(
+        &self,
+    ) -> Result<Vec<crate::attribute_info::ExceptionEntry>, CompileError> {
         use crate::attribute_info::ExceptionEntry;
         let addresses = compute_byte_addresses(&self.instructions);
         let end_addr = {
@@ -436,15 +461,18 @@ impl<'a> CodeGenerator<'a> {
 
         let mut entries = Vec::new();
         for pending in &self.pending_exceptions {
-            let start_instr = self.labels[pending.start_label].ok_or_else(|| CompileError::CodegenError {
-                message: "unresolved exception start label".into(),
-            })?;
-            let end_instr = self.labels[pending.end_label].ok_or_else(|| CompileError::CodegenError {
-                message: "unresolved exception end label".into(),
-            })?;
-            let handler_instr = self.labels[pending.handler_label].ok_or_else(|| CompileError::CodegenError {
-                message: "unresolved exception handler label".into(),
-            })?;
+            let start_instr =
+                self.labels[pending.start_label].ok_or_else(|| CompileError::CodegenError {
+                    message: "unresolved exception start label".into(),
+                })?;
+            let end_instr =
+                self.labels[pending.end_label].ok_or_else(|| CompileError::CodegenError {
+                    message: "unresolved exception end label".into(),
+                })?;
+            let handler_instr =
+                self.labels[pending.handler_label].ok_or_else(|| CompileError::CodegenError {
+                    message: "unresolved exception handler label".into(),
+                })?;
 
             let start_pc = if start_instr < addresses.len() {
                 addresses[start_instr] as u16
@@ -483,7 +511,7 @@ impl<'a> CodeGenerator<'a> {
                         None => {
                             return Err(CompileError::CodegenError {
                                 message: "'var' requires an initializer".into(),
-                            })
+                            });
                         }
                     }
                 } else {
@@ -527,13 +555,17 @@ impl<'a> CodeGenerator<'a> {
             CStmt::Return(Some(expr)) => {
                 self.gen_expr(expr)?;
                 let ret_instr = match &self.return_type {
-                    JvmType::Int | JvmType::Boolean | JvmType::Byte | JvmType::Char | JvmType::Short => {
-                        Instruction::Ireturn
-                    }
+                    JvmType::Int
+                    | JvmType::Boolean
+                    | JvmType::Byte
+                    | JvmType::Char
+                    | JvmType::Short => Instruction::Ireturn,
                     JvmType::Long => Instruction::Lreturn,
                     JvmType::Float => Instruction::Freturn,
                     JvmType::Double => Instruction::Dreturn,
-                    JvmType::Reference(_) | JvmType::Array(_) | JvmType::Null => Instruction::Areturn,
+                    JvmType::Reference(_) | JvmType::Array(_) | JvmType::Null => {
+                        Instruction::Areturn
+                    }
                     JvmType::Void => Instruction::Return,
                     JvmType::Unknown => Instruction::Areturn,
                 };
@@ -547,7 +579,8 @@ impl<'a> CodeGenerator<'a> {
             } => {
                 let false_label = self.new_label();
                 let pre_branch_locals = self.locals.current_locals_vtypes();
-                self.label_locals_override.push((false_label, pre_branch_locals.clone()));
+                self.label_locals_override
+                    .push((false_label, pre_branch_locals.clone()));
                 self.gen_condition(condition, false_label, false)?;
                 let saved = self.locals.save();
                 for s in then_body {
@@ -555,7 +588,8 @@ impl<'a> CodeGenerator<'a> {
                 }
                 if let Some(else_stmts) = else_body {
                     let end_label = self.new_label();
-                    self.label_locals_override.push((end_label, pre_branch_locals));
+                    self.label_locals_override
+                        .push((end_label, pre_branch_locals));
                     self.emit_goto(end_label);
                     self.locals.restore(saved.clone());
                     self.bind_label(false_label);
@@ -574,7 +608,8 @@ impl<'a> CodeGenerator<'a> {
                 let top_label = self.new_label();
                 let end_label = self.new_label();
                 let pre_body_locals = self.locals.current_locals_vtypes();
-                self.label_locals_override.push((end_label, pre_body_locals));
+                self.label_locals_override
+                    .push((end_label, pre_body_locals));
                 self.breakable_stack.push(BreakableContext {
                     break_label: end_label,
                     is_loop: true,
@@ -605,8 +640,10 @@ impl<'a> CodeGenerator<'a> {
                 let update_label = self.new_label();
                 let end_label = self.new_label();
                 let pre_body_locals = self.locals.current_locals_vtypes();
-                self.label_locals_override.push((end_label, pre_body_locals.clone()));
-                self.label_locals_override.push((update_label, pre_body_locals));
+                self.label_locals_override
+                    .push((end_label, pre_body_locals.clone()));
+                self.label_locals_override
+                    .push((update_label, pre_body_locals));
                 self.breakable_stack.push(BreakableContext {
                     break_label: end_label,
                     is_loop: true,
@@ -668,11 +705,19 @@ impl<'a> CodeGenerator<'a> {
                 self.emit_goto(label);
                 Ok(())
             }
-            CStmt::Switch { expr, cases, default_body } => {
+            CStmt::Switch {
+                expr,
+                cases,
+                default_body,
+            } => {
                 self.gen_switch(expr, cases, default_body.as_deref())?;
                 Ok(())
             }
-            CStmt::TryCatch { try_body, catches, finally_body } => {
+            CStmt::TryCatch {
+                try_body,
+                catches,
+                finally_body,
+            } => {
                 self.gen_try_catch(try_body, catches, finally_body.as_deref())?;
                 Ok(())
             }
@@ -734,11 +779,12 @@ impl<'a> CodeGenerator<'a> {
                 Ok(())
             }
             CExpr::Ident(name) => {
-                let (slot, ty) = self.locals.find(name).ok_or_else(|| {
-                    CompileError::CodegenError {
-                        message: format!("undefined variable: {}", name),
-                    }
-                })?;
+                let (slot, ty) =
+                    self.locals
+                        .find(name)
+                        .ok_or_else(|| CompileError::CodegenError {
+                            message: format!("undefined variable: {}", name),
+                        })?;
                 let ty = ty.clone();
                 self.emit_load(&ty, slot);
                 Ok(())
@@ -813,7 +859,8 @@ impl<'a> CodeGenerator<'a> {
                 let true_label = self.new_label();
                 let end_label = self.new_label();
                 // end_label has Integer on stack (result of iconst_0 or iconst_1)
-                self.label_stack_override.push((end_label, vec![VType::Integer]));
+                self.label_stack_override
+                    .push((end_label, vec![VType::Integer]));
                 if is_reference_type(&promoted) {
                     // Reference equality: use if_acmpeq / if_acmpne
                     let branch = match op {
@@ -822,7 +869,7 @@ impl<'a> CodeGenerator<'a> {
                         _ => {
                             return Err(CompileError::CodegenError {
                                 message: "cannot use relational operator on reference types".into(),
-                            })
+                            });
                         }
                     };
                     self.emit_branch(branch, true_label);
@@ -860,7 +907,8 @@ impl<'a> CodeGenerator<'a> {
                 let false_label = self.new_label();
                 let end_label = self.new_label();
                 // end_label has Integer on stack (result of iconst_0 or iconst_1)
-                self.label_stack_override.push((end_label, vec![VType::Integer]));
+                self.label_stack_override
+                    .push((end_label, vec![VType::Integer]));
                 self.gen_condition(left, false_label, false)?;
                 self.gen_condition(right, false_label, false)?;
                 self.emit(Instruction::Iconst1);
@@ -875,7 +923,8 @@ impl<'a> CodeGenerator<'a> {
                 let false_label = self.new_label();
                 let end_label = self.new_label();
                 // end_label has Integer on stack (result of iconst_0 or iconst_1)
-                self.label_stack_override.push((end_label, vec![VType::Integer]));
+                self.label_stack_override
+                    .push((end_label, vec![VType::Integer]));
                 self.gen_condition(left, true_label, true)?;
                 self.gen_condition(right, false_label, false)?;
                 self.bind_label(true_label);
@@ -890,7 +939,8 @@ impl<'a> CodeGenerator<'a> {
                 let true_label = self.new_label();
                 let end_label = self.new_label();
                 // end_label has Integer on stack (result of iconst_0 or iconst_1)
-                self.label_stack_override.push((end_label, vec![VType::Integer]));
+                self.label_stack_override
+                    .push((end_label, vec![VType::Integer]));
                 self.gen_condition(operand, true_label, true)?;
                 // Condition was false, so !cond is true
                 self.emit(Instruction::Iconst1);
@@ -960,11 +1010,12 @@ impl<'a> CodeGenerator<'a> {
             }
             CExpr::PreIncrement(operand) => {
                 if let CExpr::Ident(name) = operand.as_ref() {
-                    let (slot, ty) = self.locals.find(name).ok_or_else(|| {
-                        CompileError::CodegenError {
-                            message: format!("undefined variable: {}", name),
-                        }
-                    })?;
+                    let (slot, ty) =
+                        self.locals
+                            .find(name)
+                            .ok_or_else(|| CompileError::CodegenError {
+                                message: format!("undefined variable: {}", name),
+                            })?;
                     let ty = ty.clone();
                     let slot = slot;
                     if is_int_type(&ty) && slot <= 255 {
@@ -993,11 +1044,12 @@ impl<'a> CodeGenerator<'a> {
             }
             CExpr::PreDecrement(operand) => {
                 if let CExpr::Ident(name) = operand.as_ref() {
-                    let (slot, ty) = self.locals.find(name).ok_or_else(|| {
-                        CompileError::CodegenError {
-                            message: format!("undefined variable: {}", name),
-                        }
-                    })?;
+                    let (slot, ty) =
+                        self.locals
+                            .find(name)
+                            .ok_or_else(|| CompileError::CodegenError {
+                                message: format!("undefined variable: {}", name),
+                            })?;
                     let ty = ty.clone();
                     let slot = slot;
                     if is_int_type(&ty) && slot <= 255 {
@@ -1026,11 +1078,12 @@ impl<'a> CodeGenerator<'a> {
             }
             CExpr::PostIncrement(operand) => {
                 if let CExpr::Ident(name) = operand.as_ref() {
-                    let (slot, ty) = self.locals.find(name).ok_or_else(|| {
-                        CompileError::CodegenError {
-                            message: format!("undefined variable: {}", name),
-                        }
-                    })?;
+                    let (slot, ty) =
+                        self.locals
+                            .find(name)
+                            .ok_or_else(|| CompileError::CodegenError {
+                                message: format!("undefined variable: {}", name),
+                            })?;
                     let ty = ty.clone();
                     let slot = slot;
                     self.emit_load(&ty, slot);
@@ -1058,11 +1111,12 @@ impl<'a> CodeGenerator<'a> {
             }
             CExpr::PostDecrement(operand) => {
                 if let CExpr::Ident(name) = operand.as_ref() {
-                    let (slot, ty) = self.locals.find(name).ok_or_else(|| {
-                        CompileError::CodegenError {
-                            message: format!("undefined variable: {}", name),
-                        }
-                    })?;
+                    let (slot, ty) =
+                        self.locals
+                            .find(name)
+                            .ok_or_else(|| CompileError::CodegenError {
+                                message: format!("undefined variable: {}", name),
+                            })?;
                     let ty = ty.clone();
                     let slot = slot;
                     self.emit_load(&ty, slot);
@@ -1132,7 +1186,7 @@ impl<'a> CodeGenerator<'a> {
                             PrimitiveKind::Void => {
                                 return Err(CompileError::CodegenError {
                                     message: "cannot create array of void".into(),
-                                })
+                                });
                             }
                         };
                         self.emit(Instruction::Newarray(atype));
@@ -1145,8 +1199,7 @@ impl<'a> CodeGenerator<'a> {
                     TypeName::Array(_) => {
                         // Multi-dimensional: create array of arrays
                         let descriptor = type_name_to_descriptor(element_type);
-                        let class_idx =
-                            self.class_file.get_or_add_class(&descriptor);
+                        let class_idx = self.class_file.get_or_add_class(&descriptor);
                         self.emit(Instruction::Anewarray(class_idx));
                     }
                 }
@@ -1184,45 +1237,102 @@ impl<'a> CodeGenerator<'a> {
                 match ty {
                     TypeName::Primitive(kind) => {
                         let src_rank = numeric_rank(&src_ty);
-                        let dst_rank = numeric_rank(ty);
+                        let _dst_rank = numeric_rank(ty);
                         // Same rank or both int-like: may still need narrowing
                         match (src_rank, kind) {
                             // Source is int-like
-                            (0, PrimitiveKind::Long) => { self.emit(Instruction::I2l); }
-                            (0, PrimitiveKind::Float) => { self.emit(Instruction::I2f); }
-                            (0, PrimitiveKind::Double) => { self.emit(Instruction::I2d); }
-                            (0, PrimitiveKind::Byte) => { self.emit(Instruction::I2b); }
-                            (0, PrimitiveKind::Char) => { self.emit(Instruction::I2c); }
-                            (0, PrimitiveKind::Short) => { self.emit(Instruction::I2s); }
+                            (0, PrimitiveKind::Long) => {
+                                self.emit(Instruction::I2l);
+                            }
+                            (0, PrimitiveKind::Float) => {
+                                self.emit(Instruction::I2f);
+                            }
+                            (0, PrimitiveKind::Double) => {
+                                self.emit(Instruction::I2d);
+                            }
+                            (0, PrimitiveKind::Byte) => {
+                                self.emit(Instruction::I2b);
+                            }
+                            (0, PrimitiveKind::Char) => {
+                                self.emit(Instruction::I2c);
+                            }
+                            (0, PrimitiveKind::Short) => {
+                                self.emit(Instruction::I2s);
+                            }
                             (0, PrimitiveKind::Int) | (0, PrimitiveKind::Boolean) => {}
                             // Source is long
-                            (1, PrimitiveKind::Int) => { self.emit(Instruction::L2i); }
-                            (1, PrimitiveKind::Float) => { self.emit(Instruction::L2f); }
-                            (1, PrimitiveKind::Double) => { self.emit(Instruction::L2d); }
-                            (1, PrimitiveKind::Byte) => { self.emit(Instruction::L2i); self.emit(Instruction::I2b); }
-                            (1, PrimitiveKind::Char) => { self.emit(Instruction::L2i); self.emit(Instruction::I2c); }
-                            (1, PrimitiveKind::Short) => { self.emit(Instruction::L2i); self.emit(Instruction::I2s); }
+                            (1, PrimitiveKind::Int) => {
+                                self.emit(Instruction::L2i);
+                            }
+                            (1, PrimitiveKind::Float) => {
+                                self.emit(Instruction::L2f);
+                            }
+                            (1, PrimitiveKind::Double) => {
+                                self.emit(Instruction::L2d);
+                            }
+                            (1, PrimitiveKind::Byte) => {
+                                self.emit(Instruction::L2i);
+                                self.emit(Instruction::I2b);
+                            }
+                            (1, PrimitiveKind::Char) => {
+                                self.emit(Instruction::L2i);
+                                self.emit(Instruction::I2c);
+                            }
+                            (1, PrimitiveKind::Short) => {
+                                self.emit(Instruction::L2i);
+                                self.emit(Instruction::I2s);
+                            }
                             (1, PrimitiveKind::Long) => {}
                             // Source is float
-                            (2, PrimitiveKind::Int) => { self.emit(Instruction::F2i); }
-                            (2, PrimitiveKind::Long) => { self.emit(Instruction::F2l); }
-                            (2, PrimitiveKind::Double) => { self.emit(Instruction::F2d); }
-                            (2, PrimitiveKind::Byte) => { self.emit(Instruction::F2i); self.emit(Instruction::I2b); }
-                            (2, PrimitiveKind::Char) => { self.emit(Instruction::F2i); self.emit(Instruction::I2c); }
-                            (2, PrimitiveKind::Short) => { self.emit(Instruction::F2i); self.emit(Instruction::I2s); }
+                            (2, PrimitiveKind::Int) => {
+                                self.emit(Instruction::F2i);
+                            }
+                            (2, PrimitiveKind::Long) => {
+                                self.emit(Instruction::F2l);
+                            }
+                            (2, PrimitiveKind::Double) => {
+                                self.emit(Instruction::F2d);
+                            }
+                            (2, PrimitiveKind::Byte) => {
+                                self.emit(Instruction::F2i);
+                                self.emit(Instruction::I2b);
+                            }
+                            (2, PrimitiveKind::Char) => {
+                                self.emit(Instruction::F2i);
+                                self.emit(Instruction::I2c);
+                            }
+                            (2, PrimitiveKind::Short) => {
+                                self.emit(Instruction::F2i);
+                                self.emit(Instruction::I2s);
+                            }
                             (2, PrimitiveKind::Float) => {}
                             // Source is double
-                            (3, PrimitiveKind::Int) => { self.emit(Instruction::D2i); }
-                            (3, PrimitiveKind::Long) => { self.emit(Instruction::D2l); }
-                            (3, PrimitiveKind::Float) => { self.emit(Instruction::D2f); }
-                            (3, PrimitiveKind::Byte) => { self.emit(Instruction::D2i); self.emit(Instruction::I2b); }
-                            (3, PrimitiveKind::Char) => { self.emit(Instruction::D2i); self.emit(Instruction::I2c); }
-                            (3, PrimitiveKind::Short) => { self.emit(Instruction::D2i); self.emit(Instruction::I2s); }
+                            (3, PrimitiveKind::Int) => {
+                                self.emit(Instruction::D2i);
+                            }
+                            (3, PrimitiveKind::Long) => {
+                                self.emit(Instruction::D2l);
+                            }
+                            (3, PrimitiveKind::Float) => {
+                                self.emit(Instruction::D2f);
+                            }
+                            (3, PrimitiveKind::Byte) => {
+                                self.emit(Instruction::D2i);
+                                self.emit(Instruction::I2b);
+                            }
+                            (3, PrimitiveKind::Char) => {
+                                self.emit(Instruction::D2i);
+                                self.emit(Instruction::I2c);
+                            }
+                            (3, PrimitiveKind::Short) => {
+                                self.emit(Instruction::D2i);
+                                self.emit(Instruction::I2s);
+                            }
                             (3, PrimitiveKind::Double) => {}
                             (_, PrimitiveKind::Void) => {
                                 return Err(CompileError::CodegenError {
                                     message: "cannot cast to void".into(),
-                                })
+                                });
                             }
                             _ => {} // same type, no-op
                         }
@@ -1258,7 +1368,7 @@ impl<'a> CodeGenerator<'a> {
                     _ => {
                         return Err(CompileError::CodegenError {
                             message: "instanceof requires class or array type".into(),
-                        })
+                        });
                     }
                 }
                 Ok(())
@@ -1271,7 +1381,8 @@ impl<'a> CodeGenerator<'a> {
                 let false_label = self.new_label();
                 let end_label = self.new_label();
                 // Both branches push a result value before reaching end_label
-                let result_vtype = type_name_to_vtype_resolved(&self.infer_expr_type(then_expr), self.class_file);
+                let result_vtype =
+                    type_name_to_vtype_resolved(&self.infer_expr_type(then_expr), self.class_file);
                 let result_stack = vec![result_vtype];
                 self.label_stack_override.push((false_label, Vec::new()));
                 self.label_stack_override.push((end_label, result_stack));
@@ -1318,7 +1429,7 @@ impl<'a> CodeGenerator<'a> {
                             _ => {
                                 return Err(CompileError::CodegenError {
                                     message: "cannot compare null with relational operator".into(),
-                                })
+                                });
                             }
                         }
                     } else {
@@ -1328,7 +1439,7 @@ impl<'a> CodeGenerator<'a> {
                             _ => {
                                 return Err(CompileError::CodegenError {
                                     message: "cannot compare null with relational operator".into(),
-                                })
+                                });
                             }
                         }
                     };
@@ -1344,7 +1455,7 @@ impl<'a> CodeGenerator<'a> {
                             _ => {
                                 return Err(CompileError::CodegenError {
                                     message: "cannot compare null with relational operator".into(),
-                                })
+                                });
                             }
                         }
                     } else {
@@ -1354,7 +1465,7 @@ impl<'a> CodeGenerator<'a> {
                             _ => {
                                 return Err(CompileError::CodegenError {
                                     message: "cannot compare null with relational operator".into(),
-                                })
+                                });
                             }
                         }
                     };
@@ -1382,7 +1493,7 @@ impl<'a> CodeGenerator<'a> {
                         _ => {
                             return Err(CompileError::CodegenError {
                                 message: "cannot use relational operator on reference types".into(),
-                            })
+                            });
                         }
                     };
                     self.emit_branch(branch, target_label);
@@ -1461,9 +1572,7 @@ impl<'a> CodeGenerator<'a> {
                 }
                 Ok(())
             }
-            CExpr::LogicalNot(operand) => {
-                self.gen_condition(operand, target_label, !jump_on_true)
-            }
+            CExpr::LogicalNot(operand) => self.gen_condition(operand, target_label, !jump_on_true),
             CExpr::BoolLiteral(true) => {
                 if jump_on_true {
                     self.emit_goto(target_label);
@@ -1518,10 +1627,13 @@ impl<'a> CodeGenerator<'a> {
         // Override all branch-target labels with pre-switch locals
         let pre_case_locals = self.locals.current_locals_vtypes();
         for &label in &case_labels {
-            self.label_locals_override.push((label, pre_case_locals.clone()));
+            self.label_locals_override
+                .push((label, pre_case_locals.clone()));
         }
-        self.label_locals_override.push((default_label, pre_case_locals.clone()));
-        self.label_locals_override.push((end_label, pre_case_locals));
+        self.label_locals_override
+            .push((default_label, pre_case_locals.clone()));
+        self.label_locals_override
+            .push((end_label, pre_case_locals));
 
         // Decide tableswitch vs lookupswitch
         let use_table = if value_to_case.is_empty() {
@@ -1641,14 +1753,19 @@ impl<'a> CodeGenerator<'a> {
         // Override all branch-target labels with pre-switch locals
         let pre_case_locals = self.locals.current_locals_vtypes();
         for &label in &case_labels {
-            self.label_locals_override.push((label, pre_case_locals.clone()));
+            self.label_locals_override
+                .push((label, pre_case_locals.clone()));
         }
-        self.label_locals_override.push((default_label, pre_case_locals.clone()));
-        self.label_locals_override.push((end_label, pre_case_locals));
+        self.label_locals_override
+            .push((default_label, pre_case_locals.clone()));
+        self.label_locals_override
+            .push((end_label, pre_case_locals));
 
         // end_label has the switch result on the stack
-        let result_vtype = type_name_to_vtype_resolved(&self.infer_expr_type(&cases[0].expr), self.class_file);
-        self.label_stack_override.push((end_label, vec![result_vtype]));
+        let result_vtype =
+            type_name_to_vtype_resolved(&self.infer_expr_type(&cases[0].expr), self.class_file);
+        self.label_stack_override
+            .push((end_label, vec![result_vtype]));
 
         // Decide tableswitch vs lookupswitch
         let use_table = if value_to_case.is_empty() {
@@ -1758,11 +1875,7 @@ impl<'a> CodeGenerator<'a> {
             LambdaBody::Block(_) => "V".to_string(), // Block lambdas default to void
         };
 
-        let lambda_descriptor = format!(
-            "({}){}",
-            param_descs.join(""),
-            return_desc
-        );
+        let lambda_descriptor = format!("({}){}", param_descs.join(""), return_desc);
 
         // Build the SAM method descriptor (functional interface method type)
         // This is the same as the lambda descriptor for simple cases
@@ -1810,9 +1923,11 @@ impl<'a> CodeGenerator<'a> {
             info: vec![],
             info_parsed: Some(AttributeInfoVariant::Code(code_attr)),
         };
-        attr_info.sync_from_parsed().map_err(|e| CompileError::CodegenError {
-            message: format!("sync_from_parsed for lambda Code failed: {}", e),
-        })?;
+        attr_info
+            .sync_from_parsed()
+            .map_err(|e| CompileError::CodegenError {
+                message: format!("sync_from_parsed for lambda Code failed: {}", e),
+            })?;
 
         // Create the MethodInfo for the synthetic method
         let name_idx = self.class_file.get_or_add_utf8(&lambda_name);
@@ -1845,11 +1960,9 @@ impl<'a> CodeGenerator<'a> {
             _ => "apply",
         };
         let invoke_desc = format!("()L{};", fi_class);
-        let indy_idx = self.class_file.get_or_add_invoke_dynamic(
-            bootstrap_idx,
-            invoke_name,
-            &invoke_desc,
-        );
+        let indy_idx =
+            self.class_file
+                .get_or_add_invoke_dynamic(bootstrap_idx, invoke_name, &invoke_desc);
 
         // Add bootstrap method arguments:
         // 1. MethodType: SAM method type (e.g., "()V" for Runnable.run)
@@ -1869,7 +1982,10 @@ impl<'a> CodeGenerator<'a> {
         let instantiated_method_type = self.class_file.get_or_add_method_type(&sam_descriptor);
 
         // Update the bootstrap method entry with the arguments
-        self.update_bootstrap_args(bootstrap_idx, &[sam_method_type, impl_handle, instantiated_method_type])?;
+        self.update_bootstrap_args(
+            bootstrap_idx,
+            &[sam_method_type, impl_handle, instantiated_method_type],
+        )?;
 
         // Emit the invokedynamic instruction
         self.emit(Instruction::Invokedynamic {
@@ -1880,23 +1996,22 @@ impl<'a> CodeGenerator<'a> {
         Ok(())
     }
 
-    fn gen_method_ref(
-        &mut self,
-        class_name: &str,
-        method_name: &str,
-    ) -> Result<(), CompileError> {
+    fn gen_method_ref(&mut self, class_name: &str, method_name: &str) -> Result<(), CompileError> {
         let internal_class = resolve_class_name(class_name);
 
         // Resolve the method descriptor from the constant pool or well-known methods
         let impl_descriptor = self.find_method_ref_descriptor(&internal_class, method_name)?;
         let (params, ret) = parse_method_descriptor(&impl_descriptor).ok_or_else(|| {
             CompileError::CodegenError {
-                message: format!("invalid method descriptor for {}::{}: {}", class_name, method_name, impl_descriptor),
+                message: format!(
+                    "invalid method descriptor for {}::{}: {}",
+                    class_name, method_name, impl_descriptor
+                ),
             }
         })?;
 
         // Build erased SAM descriptor: all reference params → Object, primitives stay
-        let erased_params: Vec<String> = params.iter().map(|p| erase_to_object(p)).collect();
+        let erased_params: Vec<String> = params.iter().map(erase_to_object).collect();
         let erased_ret = erase_to_object(&ret);
         let sam_desc = format!("({}){}", erased_params.join(""), erased_ret);
 
@@ -1917,17 +2032,13 @@ impl<'a> CodeGenerator<'a> {
 
         let bootstrap_idx = self.get_or_add_lambda_bootstrap()?;
 
-        let indy_idx = self.class_file.get_or_add_invoke_dynamic(
-            bootstrap_idx,
-            sam_name,
-            &indy_desc,
-        );
+        let indy_idx =
+            self.class_file
+                .get_or_add_invoke_dynamic(bootstrap_idx, sam_name, &indy_desc);
 
-        let method_ref = self.class_file.get_or_add_method_ref(
-            &internal_class,
-            method_name,
-            &impl_descriptor,
-        );
+        let method_ref =
+            self.class_file
+                .get_or_add_method_ref(&internal_class, method_name, &impl_descriptor);
         let impl_handle = self.class_file.get_or_add_method_handle(6, method_ref);
         let sam_type = self.class_file.get_or_add_method_type(&sam_desc);
         let inst_type = self.class_file.get_or_add_method_type(&impl_descriptor);
@@ -1960,22 +2071,19 @@ impl<'a> CodeGenerator<'a> {
                 _ => continue,
             };
             // Check class name matches
-            if let Some(ConstantInfo::Class(cls)) = pool.get((class_idx - 1) as usize) {
-                if let Some(cls_name) = self.class_file.get_utf8(cls.name_index) {
-                    if cls_name != internal_class {
-                        continue;
-                    }
-                }
+            if let Some(ConstantInfo::Class(cls)) = pool.get((class_idx - 1) as usize)
+                && let Some(cls_name) = self.class_file.get_utf8(cls.name_index)
+                && cls_name != internal_class
+            {
+                continue;
             }
             // Check method name and get descriptor
-            if let Some(ConstantInfo::NameAndType(nat)) = pool.get((nat_idx - 1) as usize) {
-                if let Some(name) = self.class_file.get_utf8(nat.name_index) {
-                    if name == method_name {
-                        if let Some(desc) = self.class_file.get_utf8(nat.descriptor_index) {
-                            return Ok(desc.to_string());
-                        }
-                    }
-                }
+            if let Some(ConstantInfo::NameAndType(nat)) = pool.get((nat_idx - 1) as usize)
+                && let Some(name) = self.class_file.get_utf8(nat.name_index)
+                && name == method_name
+                && let Some(desc) = self.class_file.get_utf8(nat.descriptor_index)
+            {
+                return Ok(desc.to_string());
             }
         }
 
@@ -2028,7 +2136,10 @@ impl<'a> CodeGenerator<'a> {
 
         // Find existing BootstrapMethods attribute on the class, or create one
         let bsm_attr_idx = self.class_file.attributes.iter().position(|a| {
-            matches!(&a.info_parsed, Some(AttributeInfoVariant::BootstrapMethods(_)))
+            matches!(
+                &a.info_parsed,
+                Some(AttributeInfoVariant::BootstrapMethods(_))
+            )
         });
 
         if let Some(idx) = bsm_attr_idx {
@@ -2068,9 +2179,11 @@ impl<'a> CodeGenerator<'a> {
                 info: vec![],
                 info_parsed: Some(AttributeInfoVariant::BootstrapMethods(bsm_attr)),
             };
-            attr_info.sync_from_parsed().map_err(|e| CompileError::CodegenError {
-                message: format!("sync_from_parsed for BootstrapMethods failed: {}", e),
-            })?;
+            attr_info
+                .sync_from_parsed()
+                .map_err(|e| CompileError::CodegenError {
+                    message: format!("sync_from_parsed for BootstrapMethods failed: {}", e),
+                })?;
             self.class_file.attributes.push(attr_info);
             self.class_file.sync_counts();
             Ok(0)
@@ -2083,11 +2196,19 @@ impl<'a> CodeGenerator<'a> {
         bootstrap_idx: u16,
         args: &[u16],
     ) -> Result<(), CompileError> {
-        let bsm_attr_idx = self.class_file.attributes.iter().position(|a| {
-            matches!(&a.info_parsed, Some(AttributeInfoVariant::BootstrapMethods(_)))
-        }).ok_or_else(|| CompileError::CodegenError {
-            message: "BootstrapMethods attribute not found".into(),
-        })?;
+        let bsm_attr_idx = self
+            .class_file
+            .attributes
+            .iter()
+            .position(|a| {
+                matches!(
+                    &a.info_parsed,
+                    Some(AttributeInfoVariant::BootstrapMethods(_))
+                )
+            })
+            .ok_or_else(|| CompileError::CodegenError {
+                message: "BootstrapMethods attribute not found".into(),
+            })?;
 
         if let Some(AttributeInfoVariant::BootstrapMethods(bsm)) =
             &mut self.class_file.attributes[bsm_attr_idx].info_parsed
@@ -2141,9 +2262,15 @@ impl<'a> CodeGenerator<'a> {
         // Allocate temp slots (but NOT the loop variable yet — it must come after
         // the loop-top label so the stack map frame doesn't include it on the first entry)
         let arr_vtype = type_name_to_vtype_resolved(&array_ty, self.class_file);
-        let arr_slot = self.locals.allocate_with_vtype("__foreach_arr", &array_ty, arr_vtype);
-        let len_slot = self.locals.allocate("__foreach_len", &TypeName::Primitive(PrimitiveKind::Int));
-        let idx_slot = self.locals.allocate("__foreach_idx", &TypeName::Primitive(PrimitiveKind::Int));
+        let arr_slot = self
+            .locals
+            .allocate_with_vtype("__foreach_arr", &array_ty, arr_vtype);
+        let len_slot = self
+            .locals
+            .allocate("__foreach_len", &TypeName::Primitive(PrimitiveKind::Int));
+        let idx_slot = self
+            .locals
+            .allocate("__foreach_idx", &TypeName::Primitive(PrimitiveKind::Int));
 
         // Evaluate iterable, store array ref
         self.gen_expr(iterable)?;
@@ -2182,7 +2309,9 @@ impl<'a> CodeGenerator<'a> {
 
         // Allocate loop variable AFTER the loop-top frame is recorded
         let elem_vtype = type_name_to_vtype_resolved(element_type, self.class_file);
-        let var_slot = self.locals.allocate_with_vtype(var_name, element_type, elem_vtype);
+        let var_slot = self
+            .locals
+            .allocate_with_vtype(var_name, element_type, elem_vtype);
 
         // var = arr[i]
         self.emit_load(&array_ty, arr_slot);
@@ -2229,7 +2358,9 @@ impl<'a> CodeGenerator<'a> {
 
         let iter_ty = TypeName::Class("java/util/Iterator".into());
         let iter_vtype = type_name_to_vtype_resolved(&iter_ty, self.class_file);
-        let iter_slot = self.locals.allocate_with_vtype("__foreach_iter", &iter_ty, iter_vtype);
+        let iter_slot = self
+            .locals
+            .allocate_with_vtype("__foreach_iter", &iter_ty, iter_vtype);
 
         // iterable.iterator() → iter_slot
         self.gen_expr(iterable)?;
@@ -2262,11 +2393,9 @@ impl<'a> CodeGenerator<'a> {
         // top: if (!iter.hasNext()) goto end
         self.bind_label(top_label);
         self.emit_load(&iter_ty, iter_slot);
-        let has_next_idx = self.class_file.get_or_add_interface_method_ref(
-            "java/util/Iterator",
-            "hasNext",
-            "()Z",
-        );
+        let has_next_idx =
+            self.class_file
+                .get_or_add_interface_method_ref("java/util/Iterator", "hasNext", "()Z");
         self.emit(Instruction::Invokeinterface {
             index: has_next_idx,
             count: 1,
@@ -2276,7 +2405,9 @@ impl<'a> CodeGenerator<'a> {
 
         // Allocate loop variable AFTER the loop-top frame is recorded
         let elem_vtype = type_name_to_vtype_resolved(element_type, self.class_file);
-        let var_slot = self.locals.allocate_with_vtype(var_name, element_type, elem_vtype);
+        let var_slot = self
+            .locals
+            .allocate_with_vtype(var_name, element_type, elem_vtype);
 
         // var = (ElementType) iter.next()
         self.emit_load(&iter_ty, iter_slot);
@@ -2291,12 +2422,14 @@ impl<'a> CodeGenerator<'a> {
             filler: 0,
         });
         // Checkcast if element type is not Object
-        if let TypeName::Class(name) = element_type {
-            if name != "Object" && name != "java/lang/Object" && name != "java.lang.Object" {
-                let internal = resolve_class_name(name);
-                let class_idx = self.class_file.get_or_add_class(&internal);
-                self.emit(Instruction::Checkcast(class_idx));
-            }
+        if let TypeName::Class(name) = element_type
+            && name != "Object"
+            && name != "java/lang/Object"
+            && name != "java.lang.Object"
+        {
+            let internal = resolve_class_name(name);
+            let class_idx = self.class_file.get_or_add_class(&internal);
+            self.emit(Instruction::Checkcast(class_idx));
         }
         self.emit_store(element_type, var_slot);
 
@@ -2373,8 +2506,11 @@ impl<'a> CodeGenerator<'a> {
             };
             let internal = resolve_class_name(frame_class_name);
             let ex_class_idx = self.class_file.get_or_add_class(&internal);
-            self.exception_handler_labels
-                .push((handler_label, VType::Object(ex_class_idx), locals_at_try_start.clone()));
+            self.exception_handler_labels.push((
+                handler_label,
+                VType::Object(ex_class_idx),
+                locals_at_try_start.clone(),
+            ));
             self.bind_label(handler_label);
 
             // astore exception to a local.
@@ -2391,7 +2527,9 @@ impl<'a> CodeGenerator<'a> {
                 let vtype = type_name_to_vtype_resolved(first_type, self.class_file);
                 (first_type.clone(), vtype)
             };
-            let ex_slot = self.locals.allocate_with_vtype(&catch.var_name, &local_type, ex_vtype);
+            let ex_slot = self
+                .locals
+                .allocate_with_vtype(&catch.var_name, &local_type, ex_vtype);
             self.emit_store(&local_type, ex_slot);
 
             // Emit catch body, tracking whether it ends with an unconditional transfer.
@@ -2399,8 +2537,8 @@ impl<'a> CodeGenerator<'a> {
             for s in &catch.body {
                 self.gen_stmt(s)?;
             }
-            let body_ends_with_transfer = self.instructions.len() > before_body
-                && self.last_is_unconditional_transfer();
+            let body_ends_with_transfer =
+                self.instructions.len() > before_body && self.last_is_unconditional_transfer();
 
             // Inline finally (if present)
             if let Some(fin_body) = finally_body {
@@ -2423,12 +2561,17 @@ impl<'a> CodeGenerator<'a> {
             let label = self.new_label();
             // Register as exception handler for frame tracking
             let throwable_idx = self.class_file.get_or_add_class("java/lang/Throwable");
-            self.exception_handler_labels
-                .push((label, VType::Object(throwable_idx), locals_at_try_start.clone()));
+            self.exception_handler_labels.push((
+                label,
+                VType::Object(throwable_idx),
+                locals_at_try_start.clone(),
+            ));
             self.bind_label(label);
             let ex_ty = TypeName::Class("java/lang/Throwable".into());
             let ex_vtype = type_name_to_vtype_resolved(&ex_ty, self.class_file);
-            let ex_slot = self.locals.allocate_with_vtype("__finally_ex", &ex_ty, ex_vtype);
+            let ex_slot = self
+                .locals
+                .allocate_with_vtype("__finally_ex", &ex_ty, ex_vtype);
             self.emit_store(&ex_ty, ex_slot);
             if let Some(fin_body) = finally_body {
                 for s in fin_body {
@@ -2479,14 +2622,12 @@ impl<'a> CodeGenerator<'a> {
 
     // --- Synchronized codegen ---
 
-    fn gen_synchronized(
-        &mut self,
-        lock_expr: &CExpr,
-        body: &[CStmt],
-    ) -> Result<(), CompileError> {
+    fn gen_synchronized(&mut self, lock_expr: &CExpr, body: &[CStmt]) -> Result<(), CompileError> {
         let lock_ty = TypeName::Class("java/lang/Object".into());
         let lock_vtype = type_name_to_vtype_resolved(&lock_ty, self.class_file);
-        let lock_slot = self.locals.allocate_with_vtype("__sync_lock", &lock_ty, lock_vtype);
+        let lock_slot = self
+            .locals
+            .allocate_with_vtype("__sync_lock", &lock_ty, lock_vtype);
 
         // Evaluate lock expression, dup, store to temp, monitorenter
         self.gen_expr(lock_expr)?;
@@ -2521,13 +2662,18 @@ impl<'a> CodeGenerator<'a> {
 
         // Catch-all handler: store exception, monitorexit, rethrow
         let throwable_idx = self.class_file.get_or_add_class("java/lang/Throwable");
-        self.exception_handler_labels
-            .push((catch_handler, VType::Object(throwable_idx), locals_at_try_start));
+        self.exception_handler_labels.push((
+            catch_handler,
+            VType::Object(throwable_idx),
+            locals_at_try_start,
+        ));
         self.bind_label(catch_handler);
 
         let ex_ty = TypeName::Class("java/lang/Throwable".into());
         let sync_ex_vtype = type_name_to_vtype_resolved(&ex_ty, self.class_file);
-        let ex_slot = self.locals.allocate_with_vtype("__sync_ex", &ex_ty, sync_ex_vtype);
+        let ex_slot = self
+            .locals
+            .allocate_with_vtype("__sync_ex", &ex_ty, sync_ex_vtype);
         self.emit_store(&ex_ty, ex_slot);
         self.emit_load(&lock_ty, lock_slot);
         self.emit(Instruction::Monitorexit);
@@ -2563,23 +2709,16 @@ impl<'a> CodeGenerator<'a> {
                 // Check for string concatenation: "something" + ... results in StringBuilder pattern
                 // But first, check if this is a chain like System.out.println
                 // Try to resolve as chain: detect Class.field.method pattern
-                if let Some((class_name, field_chain, is_static_root)) =
-                    self.resolve_dot_chain(obj)
+                if let Some((class_name, field_chain, is_static_root)) = self.resolve_dot_chain(obj)
+                    && is_static_root
                 {
-                    if is_static_root {
-                        if field_chain.is_empty() {
-                            // Direct static method call: ClassName.method(args)
-                            return self.gen_static_method_call(&class_name, name, args);
-                        }
-                        // Static field access chain, e.g. System.out.println
-                        self.gen_static_chain_method_call(
-                            &class_name,
-                            &field_chain,
-                            name,
-                            args,
-                        )?;
-                        return Ok(());
+                    if field_chain.is_empty() {
+                        // Direct static method call: ClassName.method(args)
+                        return self.gen_static_method_call(&class_name, name, args);
                     }
+                    // Static field access chain, e.g. System.out.println
+                    self.gen_static_chain_method_call(&class_name, &field_chain, name, args)?;
+                    return Ok(());
                 }
 
                 // Regular instance method call
@@ -2592,7 +2731,9 @@ impl<'a> CodeGenerator<'a> {
                 let class_name = self.infer_receiver_class(obj)?;
                 if self.is_interface_method(&class_name, name) {
                     let method_idx = self.class_file.get_or_add_interface_method_ref(
-                        &class_name, name, &descriptor,
+                        &class_name,
+                        name,
+                        &descriptor,
                     );
                     let count = compute_invokeinterface_count(&descriptor);
                     self.emit(Instruction::Invokeinterface {
@@ -2655,7 +2796,10 @@ impl<'a> CodeGenerator<'a> {
             // Check constant pool for a FieldRef with this class name
             let resolved = resolve_class_name(ident_name);
             if self.has_field_ref_for_class(&resolved, name)
-                || ident_name.chars().next().is_some_and(|c| c.is_ascii_uppercase())
+                || ident_name
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_uppercase())
             {
                 return self.gen_static_field_access(ident_name, name);
             }
@@ -2672,9 +2816,9 @@ impl<'a> CodeGenerator<'a> {
         self.gen_expr(object)?;
         let class_name = self.infer_receiver_class(object)?;
         let descriptor = self.find_field_descriptor_in_pool(&class_name, name)?;
-        let field_idx =
-            self.class_file
-                .get_or_add_field_ref(&class_name, name, &descriptor);
+        let field_idx = self
+            .class_file
+            .get_or_add_field_ref(&class_name, name, &descriptor);
         self.emit(Instruction::Getfield(field_idx));
         Ok(())
     }
@@ -2686,9 +2830,9 @@ impl<'a> CodeGenerator<'a> {
     ) -> Result<(), CompileError> {
         let internal = resolve_class_name(class_name);
         let descriptor = self.find_field_descriptor_in_pool(&internal, name)?;
-        let field_idx =
-            self.class_file
-                .get_or_add_field_ref(&internal, name, &descriptor);
+        let field_idx = self
+            .class_file
+            .get_or_add_field_ref(&internal, name, &descriptor);
         self.emit(Instruction::Getstatic(field_idx));
         Ok(())
     }
@@ -2707,9 +2851,9 @@ impl<'a> CodeGenerator<'a> {
         // Start with the static field access
         let first_field = &field_chain[0];
         let field_desc = self.find_field_descriptor_in_pool(&internal, first_field)?;
-        let field_idx =
-            self.class_file
-                .get_or_add_field_ref(&internal, first_field, &field_desc);
+        let field_idx = self
+            .class_file
+            .get_or_add_field_ref(&internal, first_field, &field_desc);
         self.emit(Instruction::Getstatic(field_idx));
 
         // For subsequent fields in the chain, use getfield
@@ -2731,11 +2875,9 @@ impl<'a> CodeGenerator<'a> {
 
         let receiver_class = descriptor_to_internal(&current_type_desc)?;
         let method_desc = self.find_method_descriptor_in_pool(method_name, args)?;
-        let method_idx = self.class_file.get_or_add_method_ref(
-            &receiver_class,
-            method_name,
-            &method_desc,
-        );
+        let method_idx =
+            self.class_file
+                .get_or_add_method_ref(&receiver_class, method_name, &method_desc);
         self.emit(Instruction::Invokevirtual(method_idx));
         Ok(())
     }
@@ -2769,11 +2911,12 @@ impl<'a> CodeGenerator<'a> {
     fn gen_store_target(&mut self, target: &CExpr) -> Result<(), CompileError> {
         match target {
             CExpr::Ident(name) => {
-                let (slot, ty) = self.locals.find(name).ok_or_else(|| {
-                    CompileError::CodegenError {
-                        message: format!("undefined variable: {}", name),
-                    }
-                })?;
+                let (slot, ty) =
+                    self.locals
+                        .find(name)
+                        .ok_or_else(|| CompileError::CodegenError {
+                            message: format!("undefined variable: {}", name),
+                        })?;
                 let ty = ty.clone();
                 self.emit_store(&ty, slot);
                 Ok(())
@@ -2791,7 +2934,9 @@ impl<'a> CodeGenerator<'a> {
                     // Category-2 value (long/double): Swap won't work.
                     // Store value to temp, push objectref, reload value.
                     let tmp_vtype = type_name_to_vtype_resolved(&value_ty, self.class_file);
-                    let temp = self.locals.allocate_with_vtype("__field_tmp", &value_ty, tmp_vtype);
+                    let temp = self
+                        .locals
+                        .allocate_with_vtype("__field_tmp", &value_ty, tmp_vtype);
                     self.emit_store(&value_ty, temp);
                     self.gen_expr(object)?;
                     self.emit_load(&value_ty, temp);
@@ -2812,7 +2957,9 @@ impl<'a> CodeGenerator<'a> {
                     _ => TypeName::Primitive(PrimitiveKind::Int),
                 };
                 let arr_tmp_vtype = type_name_to_vtype_resolved(&elem_ty, self.class_file);
-                let temp = self.locals.allocate_with_vtype("__arr_store_tmp", &elem_ty, arr_tmp_vtype);
+                let temp =
+                    self.locals
+                        .allocate_with_vtype("__arr_store_tmp", &elem_ty, arr_tmp_vtype);
                 self.emit_store(&elem_ty, temp);
                 self.gen_expr(array)?;
                 self.gen_expr(index)?;
@@ -2837,32 +2984,34 @@ impl<'a> CodeGenerator<'a> {
             CExpr::CompoundAssign { .. } => true,
             CExpr::PostIncrement(_) | CExpr::PostDecrement(_) => true,
             CExpr::PreIncrement(_) | CExpr::PreDecrement(_) => true,
-            CExpr::MethodCall { object, name, args, .. } => {
+            CExpr::MethodCall {
+                object, name, args, ..
+            } => {
                 // Check if the method returns void by looking up in pool
                 // For simplicity, assume non-void unless we can determine otherwise
                 // Well-known void methods:
                 if name == "println" || name == "print" || name == "close" || name == "flush" {
                     // These are commonly void but we still need to check
                     // For now, check if the call is on a PrintStream-like object
-                    if let Some(obj) = object {
-                        if self.is_print_stream_chain(obj) {
-                            return false;
-                        }
+                    if let Some(obj) = object
+                        && self.is_print_stream_chain(obj)
+                    {
+                        return false;
                     }
                 }
                 // Try to find method descriptor to check return type
-                if let Ok(desc) = self.find_method_descriptor_in_pool(name, args) {
-                    if desc.ends_with(")V") {
-                        return false;
-                    }
+                if let Ok(desc) = self.find_method_descriptor_in_pool(name, args)
+                    && desc.ends_with(")V")
+                {
+                    return false;
                 }
                 true
             }
             CExpr::StaticMethodCall { name, args, .. } => {
-                if let Ok(desc) = self.find_method_descriptor_in_pool(name, args) {
-                    if desc.ends_with(")V") {
-                        return false;
-                    }
+                if let Ok(desc) = self.find_method_descriptor_in_pool(name, args)
+                    && desc.ends_with(")V")
+                {
+                    return false;
                 }
                 true
             }
@@ -2873,12 +3022,11 @@ impl<'a> CodeGenerator<'a> {
     fn is_print_stream_chain(&self, expr: &CExpr) -> bool {
         // Detect System.out pattern
         if let CExpr::FieldAccess { object, name } = expr {
-            if name == "out" || name == "err" {
-                if let CExpr::Ident(class_name) = object.as_ref() {
-                    if class_name == "System" {
-                        return true;
-                    }
-                }
+            if (name == "out" || name == "err")
+                && let CExpr::Ident(class_name) = object.as_ref()
+                && class_name == "System"
+            {
+                return true;
             }
         }
         false
@@ -2888,15 +3036,33 @@ impl<'a> CodeGenerator<'a> {
 
     fn emit_int_const(&mut self, value: i64) {
         match value {
-            -1 => { self.emit(Instruction::Iconstm1); }
-            0 => { self.emit(Instruction::Iconst0); }
-            1 => { self.emit(Instruction::Iconst1); }
-            2 => { self.emit(Instruction::Iconst2); }
-            3 => { self.emit(Instruction::Iconst3); }
-            4 => { self.emit(Instruction::Iconst4); }
-            5 => { self.emit(Instruction::Iconst5); }
-            v if v >= -128 && v <= 127 => { self.emit(Instruction::Bipush(v as i8)); }
-            v if v >= -32768 && v <= 32767 => { self.emit(Instruction::Sipush(v as i16)); }
+            -1 => {
+                self.emit(Instruction::Iconstm1);
+            }
+            0 => {
+                self.emit(Instruction::Iconst0);
+            }
+            1 => {
+                self.emit(Instruction::Iconst1);
+            }
+            2 => {
+                self.emit(Instruction::Iconst2);
+            }
+            3 => {
+                self.emit(Instruction::Iconst3);
+            }
+            4 => {
+                self.emit(Instruction::Iconst4);
+            }
+            5 => {
+                self.emit(Instruction::Iconst5);
+            }
+            v if (-128..=127).contains(&v) => {
+                self.emit(Instruction::Bipush(v as i8));
+            }
+            v if (-32768..=32767).contains(&v) => {
+                self.emit(Instruction::Sipush(v as i16));
+            }
             v => {
                 let cp_idx = self.class_file.get_or_add_integer(v as i32);
                 self.emit_ldc(cp_idx);
@@ -2906,8 +3072,12 @@ impl<'a> CodeGenerator<'a> {
 
     fn emit_long_const(&mut self, value: i64) {
         match value {
-            0 => { self.emit(Instruction::Lconst0); }
-            1 => { self.emit(Instruction::Lconst1); }
+            0 => {
+                self.emit(Instruction::Lconst0);
+            }
+            1 => {
+                self.emit(Instruction::Lconst1);
+            }
             _ => {
                 let cp_idx = self.class_file.get_or_add_long(value);
                 self.emit(Instruction::Ldc2W(cp_idx));
@@ -2925,8 +3095,7 @@ impl<'a> CodeGenerator<'a> {
         } else {
             let cp_idx = self.class_file.get_or_add_float(value);
             self.emit_ldc(cp_idx);
-            return;
-        };
+        }
     }
 
     fn emit_double_const(&mut self, value: f64) {
@@ -2937,8 +3106,7 @@ impl<'a> CodeGenerator<'a> {
         } else {
             let cp_idx = self.class_file.get_or_add_double(value);
             self.emit(Instruction::Ldc2W(cp_idx));
-            return;
-        };
+        }
     }
 
     fn emit_ldc(&mut self, cp_idx: u16) {
@@ -3076,7 +3244,7 @@ impl<'a> CodeGenerator<'a> {
                 _ => {
                     return Err(CompileError::CodegenError {
                         message: format!("bitwise/shift operator {:?} is not valid on float", op),
-                    })
+                    });
                 }
             };
             self.emit(instr);
@@ -3090,7 +3258,7 @@ impl<'a> CodeGenerator<'a> {
                 _ => {
                     return Err(CompileError::CodegenError {
                         message: format!("bitwise/shift operator {:?} is not valid on double", op),
-                    })
+                    });
                 }
             };
             self.emit(instr);
@@ -3139,10 +3307,16 @@ impl<'a> CodeGenerator<'a> {
 
     /// Check if a BinaryOp::Add expression involves string concatenation.
     fn is_string_concat(&self, expr: &CExpr) -> bool {
-        if let CExpr::BinaryOp { op: BinOp::Add, left, right } = expr {
+        if let CExpr::BinaryOp {
+            op: BinOp::Add,
+            left,
+            right,
+        } = expr
+        {
             let lt = self.infer_expr_type(left);
             let rt = self.infer_expr_type(right);
-            is_string_type(&lt) || is_string_type(&rt)
+            is_string_type(&lt)
+                || is_string_type(&rt)
                 || self.is_string_concat(left)
                 || self.is_string_concat(right)
         } else {
@@ -3152,12 +3326,16 @@ impl<'a> CodeGenerator<'a> {
 
     /// Flatten a chain of BinaryOp::Add nodes into a list of parts for StringBuilder.
     fn flatten_string_concat<'b>(&self, expr: &'b CExpr, parts: &mut Vec<&'b CExpr>) {
-        if let CExpr::BinaryOp { op: BinOp::Add, left, right } = expr {
-            if self.is_string_concat(expr) {
-                self.flatten_string_concat(left, parts);
-                self.flatten_string_concat(right, parts);
-                return;
-            }
+        if let CExpr::BinaryOp {
+            op: BinOp::Add,
+            left,
+            right,
+        } = expr
+            && self.is_string_concat(expr)
+        {
+            self.flatten_string_concat(left, parts);
+            self.flatten_string_concat(right, parts);
+            return;
         }
         parts.push(expr);
     }
@@ -3171,22 +3349,18 @@ impl<'a> CodeGenerator<'a> {
         let sb_class = self.class_file.get_or_add_class("java/lang/StringBuilder");
         self.emit(Instruction::New(sb_class));
         self.emit(Instruction::Dup);
-        let init_idx = self.class_file.get_or_add_method_ref(
-            "java/lang/StringBuilder",
-            "<init>",
-            "()V",
-        );
+        let init_idx =
+            self.class_file
+                .get_or_add_method_ref("java/lang/StringBuilder", "<init>", "()V");
         self.emit(Instruction::Invokespecial(init_idx));
 
         // .append(part) for each part
         for part in &parts {
             let desc = self.infer_append_descriptor(part);
             self.gen_expr(part)?;
-            let append_idx = self.class_file.get_or_add_method_ref(
-                "java/lang/StringBuilder",
-                "append",
-                &desc,
-            );
+            let append_idx =
+                self.class_file
+                    .get_or_add_method_ref("java/lang/StringBuilder", "append", &desc);
             self.emit(Instruction::Invokevirtual(append_idx));
         }
 
@@ -3239,8 +3413,10 @@ impl<'a> CodeGenerator<'a> {
             CExpr::Cast { ty, .. } => ty.clone(),
             CExpr::Assign { value, .. } => self.infer_expr_type(value),
             CExpr::CompoundAssign { target, .. } => self.infer_expr_type(target),
-            CExpr::PreIncrement(e) | CExpr::PreDecrement(e)
-            | CExpr::PostIncrement(e) | CExpr::PostDecrement(e) => self.infer_expr_type(e),
+            CExpr::PreIncrement(e)
+            | CExpr::PreDecrement(e)
+            | CExpr::PostIncrement(e)
+            | CExpr::PostDecrement(e) => self.infer_expr_type(e),
             CExpr::NewObject { class_name, .. } => TypeName::Class(class_name.clone()),
             CExpr::NewArray { element_type, .. } => TypeName::Array(Box::new(element_type.clone())),
             CExpr::NewMultiArray {
@@ -3264,9 +3440,7 @@ impl<'a> CodeGenerator<'a> {
                     self.infer_expr_type(default_expr)
                 }
             }
-            CExpr::Lambda { .. } | CExpr::MethodRef { .. } => {
-                TypeName::Class("Object".into())
-            }
+            CExpr::Lambda { .. } | CExpr::MethodRef { .. } => TypeName::Class("Object".into()),
             CExpr::ArrayAccess { array, .. } => {
                 match self.infer_expr_type(array) {
                     TypeName::Array(inner) => *inner,
@@ -3276,11 +3450,11 @@ impl<'a> CodeGenerator<'a> {
             CExpr::Ternary { then_expr, .. } => self.infer_expr_type(then_expr),
             CExpr::MethodCall { name, args, .. } | CExpr::StaticMethodCall { name, args, .. } => {
                 // Try to infer return type from method descriptor
-                if let Ok(desc) = self.find_method_descriptor_in_pool(name, args) {
-                    if let Some(ret_start) = desc.rfind(')') {
-                        let ret_desc = &desc[ret_start + 1..];
-                        return descriptor_to_type(ret_desc);
-                    }
+                if let Ok(desc) = self.find_method_descriptor_in_pool(name, args)
+                    && let Some(ret_start) = desc.rfind(')')
+                {
+                    let ret_desc = &desc[ret_start + 1..];
+                    return descriptor_to_type(ret_desc);
                 }
                 TypeName::Class("Object".into())
             }
@@ -3294,9 +3468,7 @@ impl<'a> CodeGenerator<'a> {
                 }
                 TypeName::Class("Object".into())
             }
-            CExpr::StaticFieldAccess { .. } => {
-                TypeName::Class("Object".into())
-            }
+            CExpr::StaticFieldAccess { .. } => TypeName::Class("Object".into()),
         }
     }
 
@@ -3306,12 +3478,24 @@ impl<'a> CodeGenerator<'a> {
             return;
         }
         match (numeric_rank(from), numeric_rank(to)) {
-            (0, 1) => { self.emit(Instruction::I2l); }  // int → long
-            (0, 2) => { self.emit(Instruction::I2f); }  // int → float
-            (0, 3) => { self.emit(Instruction::I2d); }  // int → double
-            (1, 2) => { self.emit(Instruction::L2f); }  // long → float
-            (1, 3) => { self.emit(Instruction::L2d); }  // long → double
-            (2, 3) => { self.emit(Instruction::F2d); }  // float → double
+            (0, 1) => {
+                self.emit(Instruction::I2l);
+            } // int → long
+            (0, 2) => {
+                self.emit(Instruction::I2f);
+            } // int → float
+            (0, 3) => {
+                self.emit(Instruction::I2d);
+            } // int → double
+            (1, 2) => {
+                self.emit(Instruction::L2f);
+            } // long → float
+            (1, 3) => {
+                self.emit(Instruction::L2d);
+            } // long → double
+            (2, 3) => {
+                self.emit(Instruction::F2d);
+            } // float → double
             _ => {}
         }
     }
@@ -3320,16 +3504,34 @@ impl<'a> CodeGenerator<'a> {
     fn emit_array_load(&mut self, array_ty: &TypeName) {
         match array_ty {
             TypeName::Array(inner) => match inner.as_ref() {
-                TypeName::Primitive(PrimitiveKind::Int) => { self.emit(Instruction::Iaload); }
-                TypeName::Primitive(PrimitiveKind::Long) => { self.emit(Instruction::Laload); }
-                TypeName::Primitive(PrimitiveKind::Float) => { self.emit(Instruction::Faload); }
-                TypeName::Primitive(PrimitiveKind::Double) => { self.emit(Instruction::Daload); }
-                TypeName::Primitive(PrimitiveKind::Byte | PrimitiveKind::Boolean) => { self.emit(Instruction::Baload); }
-                TypeName::Primitive(PrimitiveKind::Char) => { self.emit(Instruction::Caload); }
-                TypeName::Primitive(PrimitiveKind::Short) => { self.emit(Instruction::Saload); }
-                _ => { self.emit(Instruction::Aaload); }
+                TypeName::Primitive(PrimitiveKind::Int) => {
+                    self.emit(Instruction::Iaload);
+                }
+                TypeName::Primitive(PrimitiveKind::Long) => {
+                    self.emit(Instruction::Laload);
+                }
+                TypeName::Primitive(PrimitiveKind::Float) => {
+                    self.emit(Instruction::Faload);
+                }
+                TypeName::Primitive(PrimitiveKind::Double) => {
+                    self.emit(Instruction::Daload);
+                }
+                TypeName::Primitive(PrimitiveKind::Byte | PrimitiveKind::Boolean) => {
+                    self.emit(Instruction::Baload);
+                }
+                TypeName::Primitive(PrimitiveKind::Char) => {
+                    self.emit(Instruction::Caload);
+                }
+                TypeName::Primitive(PrimitiveKind::Short) => {
+                    self.emit(Instruction::Saload);
+                }
+                _ => {
+                    self.emit(Instruction::Aaload);
+                }
             },
-            _ => { self.emit(Instruction::Aaload); }
+            _ => {
+                self.emit(Instruction::Aaload);
+            }
         }
     }
 
@@ -3337,16 +3539,34 @@ impl<'a> CodeGenerator<'a> {
     fn emit_array_store(&mut self, array_ty: &TypeName) {
         match array_ty {
             TypeName::Array(inner) => match inner.as_ref() {
-                TypeName::Primitive(PrimitiveKind::Int) => { self.emit(Instruction::Iastore); }
-                TypeName::Primitive(PrimitiveKind::Long) => { self.emit(Instruction::Lastore); }
-                TypeName::Primitive(PrimitiveKind::Float) => { self.emit(Instruction::Fastore); }
-                TypeName::Primitive(PrimitiveKind::Double) => { self.emit(Instruction::Dastore); }
-                TypeName::Primitive(PrimitiveKind::Byte | PrimitiveKind::Boolean) => { self.emit(Instruction::Bastore); }
-                TypeName::Primitive(PrimitiveKind::Char) => { self.emit(Instruction::Castore); }
-                TypeName::Primitive(PrimitiveKind::Short) => { self.emit(Instruction::Sastore); }
-                _ => { self.emit(Instruction::Aastore); }
+                TypeName::Primitive(PrimitiveKind::Int) => {
+                    self.emit(Instruction::Iastore);
+                }
+                TypeName::Primitive(PrimitiveKind::Long) => {
+                    self.emit(Instruction::Lastore);
+                }
+                TypeName::Primitive(PrimitiveKind::Float) => {
+                    self.emit(Instruction::Fastore);
+                }
+                TypeName::Primitive(PrimitiveKind::Double) => {
+                    self.emit(Instruction::Dastore);
+                }
+                TypeName::Primitive(PrimitiveKind::Byte | PrimitiveKind::Boolean) => {
+                    self.emit(Instruction::Bastore);
+                }
+                TypeName::Primitive(PrimitiveKind::Char) => {
+                    self.emit(Instruction::Castore);
+                }
+                TypeName::Primitive(PrimitiveKind::Short) => {
+                    self.emit(Instruction::Sastore);
+                }
+                _ => {
+                    self.emit(Instruction::Aastore);
+                }
             },
-            _ => { self.emit(Instruction::Aastore); }
+            _ => {
+                self.emit(Instruction::Aastore);
+            }
         }
     }
 
@@ -3371,12 +3591,24 @@ impl<'a> CodeGenerator<'a> {
             return;
         }
         match (from_rank, to_rank) {
-            (3, 2) => { self.emit(Instruction::D2f); }
-            (3, 1) => { self.emit(Instruction::D2l); }
-            (3, 0) => { self.emit(Instruction::D2i); }
-            (2, 1) => { self.emit(Instruction::F2l); }
-            (2, 0) => { self.emit(Instruction::F2i); }
-            (1, 0) => { self.emit(Instruction::L2i); }
+            (3, 2) => {
+                self.emit(Instruction::D2f);
+            }
+            (3, 1) => {
+                self.emit(Instruction::D2l);
+            }
+            (3, 0) => {
+                self.emit(Instruction::D2i);
+            }
+            (2, 1) => {
+                self.emit(Instruction::F2l);
+            }
+            (2, 0) => {
+                self.emit(Instruction::F2i);
+            }
+            (1, 0) => {
+                self.emit(Instruction::L2i);
+            }
             _ => {}
         }
     }
@@ -3387,13 +3619,13 @@ impl<'a> CodeGenerator<'a> {
         use crate::constant_info::ConstantInfo;
         let this_class = self.class_file.this_class;
         match &self.class_file.const_pool[(this_class - 1) as usize] {
-            ConstantInfo::Class(c) => {
-                self.class_file.get_utf8(c.name_index).map(|s| s.to_string()).ok_or_else(|| {
-                    CompileError::CodegenError {
-                        message: "could not resolve this class name".into(),
-                    }
-                })
-            }
+            ConstantInfo::Class(c) => self
+                .class_file
+                .get_utf8(c.name_index)
+                .map(|s| s.to_string())
+                .ok_or_else(|| CompileError::CodegenError {
+                    message: "could not resolve this class name".into(),
+                }),
             _ => Err(CompileError::CodegenError {
                 message: "this_class does not point to a Class constant".into(),
             }),
@@ -3405,10 +3637,10 @@ impl<'a> CodeGenerator<'a> {
             CExpr::This => self.get_this_class_name(),
             CExpr::Ident(name) => {
                 // Check local variable type
-                if let Some((_, ty)) = self.locals.find(name) {
-                    if let TypeName::Class(class_name) = ty {
-                        return Ok(resolve_class_name(class_name));
-                    }
+                if let Some((_, ty)) = self.locals.find(name)
+                    && let TypeName::Class(class_name) = ty
+                {
+                    return Ok(resolve_class_name(class_name));
                 }
                 // Might be a class name for static access
                 if name.chars().next().is_some_and(|c| c.is_ascii_uppercase()) {
@@ -3418,31 +3650,34 @@ impl<'a> CodeGenerator<'a> {
                     message: format!("cannot infer class for receiver '{}'", name),
                 })
             }
-            CExpr::FieldAccess { object, name: field_name } => {
+            CExpr::FieldAccess {
+                object,
+                name: field_name,
+            } => {
                 // Try to find the field's type in the constant pool
-                if let Ok(class_name) = self.infer_receiver_class(object) {
-                    if let Ok(desc) = self.find_field_descriptor_in_pool(&class_name, field_name) {
-                        if let Ok(internal) = descriptor_to_internal(&desc) {
-                            return Ok(internal);
-                        }
-                    }
+                if let Ok(class_name) = self.infer_receiver_class(object)
+                    && let Ok(desc) = self.find_field_descriptor_in_pool(&class_name, field_name)
+                    && let Ok(internal) = descriptor_to_internal(&desc)
+                {
+                    return Ok(internal);
                 }
                 Err(CompileError::CodegenError {
                     message: format!("cannot infer class for field access '{}'", field_name),
                 })
             }
-            CExpr::MethodCall { object, name, args, .. } => {
+            CExpr::MethodCall {
+                object, name, args, ..
+            } => {
                 // Try to infer from method return type in pool
-                if let Some(obj) = object {
-                    if let Ok(owner_class) = self.infer_receiver_class(obj) {
-                        if let Ok(desc) = self.find_method_descriptor_in_pool(name, args) {
-                            // Extract return type from descriptor (everything after ')')
-                            if let Some(ret_desc) = desc.rsplit(')').next() {
-                                if let Ok(internal) = descriptor_to_internal(ret_desc) {
-                                    return Ok(internal);
-                                }
-                            }
-                        }
+                if let Some(obj) = object
+                    && let Ok(_owner_class) = self.infer_receiver_class(obj)
+                    && let Ok(desc) = self.find_method_descriptor_in_pool(name, args)
+                {
+                    // Extract return type from descriptor (everything after ')')
+                    if let Some(ret_desc) = desc.rsplit(')').next()
+                        && let Ok(internal) = descriptor_to_internal(ret_desc)
+                    {
+                        return Ok(internal);
                     }
                 }
                 Err(CompileError::CodegenError {
@@ -3467,15 +3702,19 @@ impl<'a> CodeGenerator<'a> {
         // Well-known overloaded methods — infer from arg types first to avoid
         // picking the wrong overload from the pool
         match method_name {
-            "println" => return match args.len() {
-                0 => Ok("()V".into()),
-                1 => Ok(self.infer_println_descriptor(&args[0])),
-                _ => Ok("(Ljava/lang/String;)V".into()),
-            },
-            "print" => return match args.len() {
-                1 => Ok(self.infer_println_descriptor(&args[0])),
-                _ => Ok("(Ljava/lang/String;)V".into()),
-            },
+            "println" => {
+                return match args.len() {
+                    0 => Ok("()V".into()),
+                    1 => Ok(self.infer_println_descriptor(&args[0])),
+                    _ => Ok("(Ljava/lang/String;)V".into()),
+                };
+            }
+            "print" => {
+                return match args.len() {
+                    1 => Ok(self.infer_println_descriptor(&args[0])),
+                    _ => Ok("(Ljava/lang/String;)V".into()),
+                };
+            }
             "append" if args.len() == 1 => return Ok(self.infer_append_descriptor(&args[0])),
             "toString" if args.is_empty() => return Ok("()Ljava/lang/String;".into()),
             "equals" if args.len() == 1 => return Ok("(Ljava/lang/Object;)Z".into()),
@@ -3484,7 +3723,9 @@ impl<'a> CodeGenerator<'a> {
             "charAt" if args.len() == 1 => return Ok("(I)C".into()),
             "substring" if args.len() == 1 => return Ok("(I)Ljava/lang/String;".into()),
             "substring" if args.len() == 2 => return Ok("(II)Ljava/lang/String;".into()),
-            "valueOf" if args.len() == 1 => return Ok("(Ljava/lang/Object;)Ljava/lang/String;".into()),
+            "valueOf" if args.len() == 1 => {
+                return Ok("(Ljava/lang/Object;)Ljava/lang/String;".into());
+            }
             "parseInt" if args.len() == 1 => return Ok("(Ljava/lang/String;)I".into()),
             "getClass" if args.is_empty() => return Ok("()Ljava/lang/Class;".into()),
             "getName" if args.is_empty() => return Ok("()Ljava/lang/String;".into()),
@@ -3492,7 +3733,9 @@ impl<'a> CodeGenerator<'a> {
             "getCanonicalName" if args.is_empty() => return Ok("()Ljava/lang/String;".into()),
             "getMessage" if args.is_empty() => return Ok("()Ljava/lang/String;".into()),
             "getCause" if args.is_empty() => return Ok("()Ljava/lang/Throwable;".into()),
-            "getStackTrace" if args.is_empty() => return Ok("()[Ljava/lang/StackTraceElement;".into()),
+            "getStackTrace" if args.is_empty() => {
+                return Ok("()[Ljava/lang/StackTraceElement;".into());
+            }
             "trim" if args.is_empty() => return Ok("()Ljava/lang/String;".into()),
             "toUpperCase" if args.is_empty() => return Ok("()Ljava/lang/String;".into()),
             "toLowerCase" if args.is_empty() => return Ok("()Ljava/lang/String;".into()),
@@ -3501,10 +3744,18 @@ impl<'a> CodeGenerator<'a> {
             "startsWith" if args.len() == 1 => return Ok("(Ljava/lang/String;)Z".into()),
             "endsWith" if args.len() == 1 => return Ok("(Ljava/lang/String;)Z".into()),
             "contains" if args.len() == 1 => return Ok("(Ljava/lang/CharSequence;)Z".into()),
-            "replace" if args.len() == 2 => return Ok("(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;".into()),
-            "split" if args.len() == 1 => return Ok("(Ljava/lang/String;)[Ljava/lang/String;".into()),
+            "replace" if args.len() == 2 => {
+                return Ok(
+                    "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;".into(),
+                );
+            }
+            "split" if args.len() == 1 => {
+                return Ok("(Ljava/lang/String;)[Ljava/lang/String;".into());
+            }
             "toCharArray" if args.is_empty() => return Ok("()[C".into()),
-            "format" if !args.is_empty() => return Ok(format!("(Ljava/lang/String;{}V", "[Ljava/lang/Object;)").into()),
+            "format" if !args.is_empty() => {
+                return Ok(format!("(Ljava/lang/String;{}V", "[Ljava/lang/Object;)"));
+            }
             _ => {}
         }
 
@@ -3518,18 +3769,14 @@ impl<'a> CodeGenerator<'a> {
                 ConstantInfo::InterfaceMethodRef(r) => r.name_and_type_index,
                 _ => continue,
             };
-            if let ConstantInfo::NameAndType(nat) = &pool[(nat_index - 1) as usize] {
-                if let Some(name) = self.class_file.get_utf8(nat.name_index) {
-                    if name == method_name {
-                        if let Some(desc) = self.class_file.get_utf8(nat.descriptor_index) {
-                            if let Some((params, _)) = parse_method_descriptor(desc) {
-                                if params.len() == args.len() {
-                                    return Ok(desc.to_string());
-                                }
-                            }
-                        }
-                    }
-                }
+            if let ConstantInfo::NameAndType(nat) = &pool[(nat_index - 1) as usize]
+                && let Some(name) = self.class_file.get_utf8(nat.name_index)
+                && name == method_name
+                && let Some(desc) = self.class_file.get_utf8(nat.descriptor_index)
+                && let Some((params, _)) = parse_method_descriptor(desc)
+                && params.len() == args.len()
+            {
+                return Ok(desc.to_string());
             }
         }
 
@@ -3558,7 +3805,7 @@ impl<'a> CodeGenerator<'a> {
                         TypeName::Primitive(PrimitiveKind::Boolean) => return "(Z)V".into(),
                         TypeName::Primitive(PrimitiveKind::Char) => return "(C)V".into(),
                         TypeName::Class(name) if name == "String" || name == "java.lang.String" => {
-                            return "(Ljava/lang/String;)V".into()
+                            return "(Ljava/lang/String;)V".into();
                         }
                         _ => {}
                     }
@@ -3602,9 +3849,7 @@ impl<'a> CodeGenerator<'a> {
             TypeName::Primitive(PrimitiveKind::Boolean) => "(Z)Ljava/lang/StringBuilder;".into(),
             TypeName::Primitive(PrimitiveKind::Char) => "(C)Ljava/lang/StringBuilder;".into(),
             TypeName::Class(name)
-                if name == "String"
-                    || name == "java.lang.String"
-                    || name == "java/lang/String" =>
+                if name == "String" || name == "java.lang.String" || name == "java/lang/String" =>
             {
                 "(Ljava/lang/String;)Ljava/lang/StringBuilder;".into()
             }
@@ -3612,10 +3857,7 @@ impl<'a> CodeGenerator<'a> {
         }
     }
 
-    fn infer_constructor_descriptor(
-        &self,
-        args: &[CExpr],
-    ) -> Result<String, CompileError> {
+    fn infer_constructor_descriptor(&self, args: &[CExpr]) -> Result<String, CompileError> {
         if args.is_empty() {
             return Ok("()V".into());
         }
@@ -3680,10 +3922,10 @@ impl<'a> CodeGenerator<'a> {
 
         // Heuristic return type based on well-known method names
         let ret = match method_name {
-            "size" | "length" | "indexOf" | "lastIndexOf" | "compareTo"
-            | "read" | "intValue" | "ordinal" | "hashCode" => "I",
-            "isEmpty" | "contains" | "containsKey" | "containsValue"
-            | "hasNext" | "hasPrevious" => "Z",
+            "size" | "length" | "indexOf" | "lastIndexOf" | "compareTo" | "read" | "intValue"
+            | "ordinal" | "hashCode" => "I",
+            "isEmpty" | "contains" | "containsKey" | "containsValue" | "hasNext"
+            | "hasPrevious" => "Z",
             "longValue" => "J",
             "floatValue" => "F",
             "doubleValue" => "D",
@@ -3699,22 +3941,15 @@ impl<'a> CodeGenerator<'a> {
         use crate::constant_info::ConstantInfo;
         let pool = &self.class_file.const_pool;
         for entry in pool.iter() {
-            if let ConstantInfo::FieldRef(r) = entry {
-                if let ConstantInfo::Class(c) = &pool[(r.class_index - 1) as usize] {
-                    if let Some(cn) = self.class_file.get_utf8(c.name_index) {
-                        if cn == class_name {
-                            if let ConstantInfo::NameAndType(nat) =
-                                &pool[(r.name_and_type_index - 1) as usize]
-                            {
-                                if let Some(name) = self.class_file.get_utf8(nat.name_index) {
-                                    if name == field_name {
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            if let ConstantInfo::FieldRef(r) = entry
+                && let ConstantInfo::Class(c) = &pool[(r.class_index - 1) as usize]
+                && let Some(cn) = self.class_file.get_utf8(c.name_index)
+                && cn == class_name
+                && let ConstantInfo::NameAndType(nat) = &pool[(r.name_and_type_index - 1) as usize]
+                && let Some(name) = self.class_file.get_utf8(nat.name_index)
+                && name == field_name
+            {
+                return true;
             }
         }
         false
@@ -3724,16 +3959,33 @@ impl<'a> CodeGenerator<'a> {
     fn is_interface_method(&self, class_name: &str, method_name: &str) -> bool {
         // Well-known JDK interfaces
         const KNOWN_INTERFACES: &[&str] = &[
-            "java/util/List", "java/util/Map", "java/util/Set",
-            "java/util/Collection", "java/util/Iterator", "java/util/Iterable",
-            "java/util/Enumeration", "java/util/Comparator", "java/util/Deque",
-            "java/util/Queue", "java/util/SortedMap", "java/util/SortedSet",
-            "java/util/NavigableMap", "java/util/NavigableSet",
-            "java/util/concurrent/Callable", "java/util/concurrent/Future",
-            "java/util/concurrent/BlockingQueue", "java/util/concurrent/BlockingDeque",
-            "java/lang/Runnable", "java/lang/Comparable", "java/lang/CharSequence",
-            "java/lang/Appendable", "java/lang/AutoCloseable", "java/lang/Closeable",
-            "java/io/Closeable", "java/io/Serializable", "java/io/Flushable",
+            "java/util/List",
+            "java/util/Map",
+            "java/util/Set",
+            "java/util/Collection",
+            "java/util/Iterator",
+            "java/util/Iterable",
+            "java/util/Enumeration",
+            "java/util/Comparator",
+            "java/util/Deque",
+            "java/util/Queue",
+            "java/util/SortedMap",
+            "java/util/SortedSet",
+            "java/util/NavigableMap",
+            "java/util/NavigableSet",
+            "java/util/concurrent/Callable",
+            "java/util/concurrent/Future",
+            "java/util/concurrent/BlockingQueue",
+            "java/util/concurrent/BlockingDeque",
+            "java/lang/Runnable",
+            "java/lang/Comparable",
+            "java/lang/CharSequence",
+            "java/lang/Appendable",
+            "java/lang/AutoCloseable",
+            "java/lang/Closeable",
+            "java/io/Closeable",
+            "java/io/Serializable",
+            "java/io/Flushable",
         ];
         if KNOWN_INTERFACES.contains(&class_name) {
             return true;
@@ -3743,22 +3995,15 @@ impl<'a> CodeGenerator<'a> {
         use crate::constant_info::ConstantInfo;
         let pool = &self.class_file.const_pool;
         for entry in pool.iter() {
-            if let ConstantInfo::InterfaceMethodRef(r) = entry {
-                if let ConstantInfo::Class(c) = &pool[(r.class_index - 1) as usize] {
-                    if let Some(cn) = self.class_file.get_utf8(c.name_index) {
-                        if cn == class_name {
-                            if let ConstantInfo::NameAndType(nat) =
-                                &pool[(r.name_and_type_index - 1) as usize]
-                            {
-                                if let Some(name) = self.class_file.get_utf8(nat.name_index) {
-                                    if name == method_name {
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+            if let ConstantInfo::InterfaceMethodRef(r) = entry
+                && let ConstantInfo::Class(c) = &pool[(r.class_index - 1) as usize]
+                && let Some(cn) = self.class_file.get_utf8(c.name_index)
+                && cn == class_name
+                && let ConstantInfo::NameAndType(nat) = &pool[(r.name_and_type_index - 1) as usize]
+                && let Some(name) = self.class_file.get_utf8(nat.name_index)
+                && name == method_name
+            {
+                return true;
             }
         }
         false
@@ -3775,24 +4020,16 @@ impl<'a> CodeGenerator<'a> {
         for entry in pool.iter() {
             if let ConstantInfo::FieldRef(r) = entry {
                 // Check class
-                if let ConstantInfo::Class(c) = &pool[(r.class_index - 1) as usize] {
-                    if let Some(cn) = self.class_file.get_utf8(c.name_index) {
-                        if cn == class_name {
-                            if let ConstantInfo::NameAndType(nat) =
-                                &pool[(r.name_and_type_index - 1) as usize]
-                            {
-                                if let Some(name) = self.class_file.get_utf8(nat.name_index) {
-                                    if name == field_name {
-                                        if let Some(desc) =
-                                            self.class_file.get_utf8(nat.descriptor_index)
-                                        {
-                                            return Ok(desc.to_string());
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                if let ConstantInfo::Class(c) = &pool[(r.class_index - 1) as usize]
+                    && let Some(cn) = self.class_file.get_utf8(c.name_index)
+                    && cn == class_name
+                    && let ConstantInfo::NameAndType(nat) =
+                        &pool[(r.name_and_type_index - 1) as usize]
+                    && let Some(name) = self.class_file.get_utf8(nat.name_index)
+                    && name == field_name
+                    && let Some(desc) = self.class_file.get_utf8(nat.descriptor_index)
+                {
+                    return Ok(desc.to_string());
                 }
             }
         }
@@ -3876,7 +4113,7 @@ fn patch_branch_offset(instr: &Instruction, offset: i16) -> Result<Instruction, 
         _ => {
             return Err(CompileError::CodegenError {
                 message: format!("cannot patch branch offset on {:?}", instr),
-            })
+            });
         }
     })
 }
@@ -3917,9 +4154,7 @@ pub fn resolve_class_name(name: &str) -> String {
         "NullPointerException" => return "java/lang/NullPointerException".into(),
         "IllegalArgumentException" => return "java/lang/IllegalArgumentException".into(),
         "IllegalStateException" => return "java/lang/IllegalStateException".into(),
-        "UnsupportedOperationException" => {
-            return "java/lang/UnsupportedOperationException".into()
-        }
+        "UnsupportedOperationException" => return "java/lang/UnsupportedOperationException".into(),
         "IndexOutOfBoundsException" => return "java/lang/IndexOutOfBoundsException".into(),
         "ArrayList" => return "java/util/ArrayList".into(),
         "HashMap" => return "java/util/HashMap".into(),
@@ -3963,7 +4198,10 @@ fn descriptor_to_internal(desc: &str) -> Result<String, CompileError> {
         Ok(desc[1..desc.len() - 1].to_string())
     } else {
         Err(CompileError::CodegenError {
-            message: format!("cannot convert descriptor '{}' to internal class name", desc),
+            message: format!(
+                "cannot convert descriptor '{}' to internal class name",
+                desc
+            ),
         })
     }
 }
@@ -3983,9 +4221,7 @@ fn descriptor_to_type(desc: &str) -> TypeName {
         _ if desc.starts_with('L') && desc.ends_with(';') => {
             TypeName::Class(desc[1..desc.len() - 1].to_string())
         }
-        _ if desc.starts_with('[') => {
-            TypeName::Array(Box::new(descriptor_to_type(&desc[1..])))
-        }
+        _ if desc.starts_with('[') => TypeName::Array(Box::new(descriptor_to_type(&desc[1..]))),
         _ => TypeName::Class("java/lang/Object".into()),
     }
 }
@@ -4046,8 +4282,11 @@ fn type_slot_width(ty: &TypeName) -> u16 {
 fn type_name_to_vtype(ty: &TypeName) -> VType {
     match ty {
         TypeName::Primitive(kind) => match kind {
-            PrimitiveKind::Int | PrimitiveKind::Boolean | PrimitiveKind::Byte
-            | PrimitiveKind::Char | PrimitiveKind::Short => VType::Integer,
+            PrimitiveKind::Int
+            | PrimitiveKind::Boolean
+            | PrimitiveKind::Byte
+            | PrimitiveKind::Char
+            | PrimitiveKind::Short => VType::Integer,
             PrimitiveKind::Long => VType::Long,
             PrimitiveKind::Float => VType::Float,
             PrimitiveKind::Double => VType::Double,
@@ -4065,8 +4304,11 @@ fn type_name_to_vtype(ty: &TypeName) -> VType {
 fn type_name_to_vtype_resolved(ty: &TypeName, class_file: &mut ClassFile) -> VType {
     match ty {
         TypeName::Primitive(kind) => match kind {
-            PrimitiveKind::Int | PrimitiveKind::Boolean | PrimitiveKind::Byte
-            | PrimitiveKind::Char | PrimitiveKind::Short => VType::Integer,
+            PrimitiveKind::Int
+            | PrimitiveKind::Boolean
+            | PrimitiveKind::Byte
+            | PrimitiveKind::Char
+            | PrimitiveKind::Short => VType::Integer,
             PrimitiveKind::Long => VType::Long,
             PrimitiveKind::Float => VType::Float,
             PrimitiveKind::Double => VType::Double,

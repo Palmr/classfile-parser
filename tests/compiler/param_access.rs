@@ -30,7 +30,8 @@ fn compile_and_load_debug(
         .expect("failed to open compiled class")
         .read_to_end(&mut class_bytes)
         .unwrap();
-    let class_file = ClassFile::read(&mut Cursor::new(&class_bytes)).expect("failed to parse class");
+    let class_file =
+        ClassFile::read(&mut Cursor::new(&class_bytes)).expect("failed to parse class");
 
     (tmp_dir, class_path, class_file)
 }
@@ -41,8 +42,11 @@ fn test_param_access_positional_arg0() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("param_positional", "java-assets/src/ParamAccess.java", "ParamAccess");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "param_positional",
+        "java-assets/src/ParamAccess.java",
+        "ParamAccess",
+    );
 
     // main(String[] args): arg0 is args (String[])
     // Use arg0.length to verify array param access works
@@ -65,8 +69,11 @@ fn test_param_access_debug_name() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load_debug("param_debug", "java-assets/src/ParamAccess.java", "ParamAccess");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load_debug(
+        "param_debug",
+        "java-assets/src/ParamAccess.java",
+        "ParamAccess",
+    );
 
     // With -g, the original parameter name "args" is available via LocalVariableTable
     compile_method_body(
@@ -88,8 +95,11 @@ fn test_param_access_wide_types() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("param_wide", "java-assets/src/ParamAccess.java", "ParamAccess");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "param_wide",
+        "java-assets/src/ParamAccess.java",
+        "ParamAccess",
+    );
 
     // wideParams(int a, long b, String c)
     // arg0 = int (slot 0, 1 wide), arg1 = long (slot 1, 2 wide), arg2 = String (slot 3)
@@ -123,8 +133,11 @@ fn test_param_access_instance_method() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("param_instance", "java-assets/src/ParamAccess.java", "ParamAccess");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "param_instance",
+        "java-assets/src/ParamAccess.java",
+        "ParamAccess",
+    );
 
     // instanceMethod(String name): this = slot 0, arg0 = name (slot 1)
     compile_method_body(

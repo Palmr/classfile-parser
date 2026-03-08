@@ -9,8 +9,8 @@ use classfile_parser::spring_utils::{
     ClasspathIndex, LayersIndex, SpringBootFormat, SpringBootJar,
 };
 
-use zip::write::SimpleFileOptions;
 use zip::CompressionMethod;
+use zip::write::SimpleFileOptions;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -42,8 +42,7 @@ fn build_inner_jar(entries: &[(&str, &[u8])]) -> Vec<u8> {
     let mut buf = Cursor::new(Vec::new());
     {
         let mut writer = zip::ZipWriter::new(&mut buf);
-        let options =
-            SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
         for (name, data) in entries {
             writer.start_file(*name, options).unwrap();
             writer.write_all(data).unwrap();
@@ -113,8 +112,7 @@ fn build_spring_jar(
     let mut buf = Cursor::new(Vec::new());
     {
         let mut writer = zip::ZipWriter::new(&mut buf);
-        let options =
-            SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
         for (name, data) in &entries {
             writer.start_file(name, options).unwrap();
             writer.write_all(data).unwrap();
@@ -166,7 +164,10 @@ fn test_detect_war_format() {
 fn test_detect_spring_boot_3_2_launcher() {
     // Use the Spring Boot 3.2+ launcher class name
     let mut m = JarManifest::default_manifest();
-    m.set_main_attr("Main-Class", "org.springframework.boot.loader.launch.JarLauncher");
+    m.set_main_attr(
+        "Main-Class",
+        "org.springframework.boot.loader.launch.JarLauncher",
+    );
     m.set_main_attr("Start-Class", "com.example.App");
     let manifest_bytes = m.to_bytes();
 
@@ -280,9 +281,11 @@ fn test_app_class_names() {
 
     let class_names: Vec<&str> = spring.app_class_names().collect();
     assert_eq!(class_names.len(), 2);
-    assert!(class_names
-        .iter()
-        .all(|n| n.starts_with("BOOT-INF/classes/") && n.ends_with(".class")));
+    assert!(
+        class_names
+            .iter()
+            .all(|n| n.starts_with("BOOT-INF/classes/") && n.ends_with(".class"))
+    );
 }
 
 #[test]
@@ -324,9 +327,11 @@ fn test_loader_class_names() {
 
     let loaders: Vec<&str> = spring.loader_class_names().collect();
     assert_eq!(loaders.len(), 2);
-    assert!(loaders
-        .iter()
-        .all(|n| n.starts_with("org/springframework/boot/loader/")));
+    assert!(
+        loaders
+            .iter()
+            .all(|n| n.starts_with("org/springframework/boot/loader/"))
+    );
 }
 
 #[test]
@@ -347,9 +352,11 @@ fn test_nested_jar_names() {
 
     let nested: Vec<&str> = spring.nested_jar_names().collect();
     assert_eq!(nested.len(), 2);
-    assert!(nested
-        .iter()
-        .all(|n| n.starts_with("BOOT-INF/lib/") && n.ends_with(".jar")));
+    assert!(
+        nested
+            .iter()
+            .all(|n| n.starts_with("BOOT-INF/lib/") && n.ends_with(".jar"))
+    );
 }
 
 // ===========================================================================
@@ -432,11 +439,7 @@ fn test_open_all_nested_jars() {
         "com.example.App",
         &[],
         &[],
-        &[
-            ("a.jar", &inner1),
-            ("b.jar", &inner2),
-            ("c.jar", &inner3),
-        ],
+        &[("a.jar", &inner1), ("b.jar", &inner2), ("c.jar", &inner3)],
         &[],
         None,
         None,

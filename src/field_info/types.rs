@@ -1,4 +1,4 @@
-use crate::{attribute_info::AttributeInfo, InterpretInner};
+use crate::{InterpretInner, attribute_info::AttributeInfo};
 use binrw::binrw;
 
 #[derive(Clone, Debug)]

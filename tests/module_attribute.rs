@@ -1,9 +1,9 @@
 use std::io::Cursor;
 
 use binrw::prelude::*;
+use classfile_parser::ClassFile;
 use classfile_parser::attribute_info::AttributeInfoVariant;
 use classfile_parser::constant_info::ConstantInfo;
-use classfile_parser::ClassFile;
 
 fn lookup_string(c: &ClassFile, index: u16) -> Option<String> {
     let con = &c.const_pool[(index - 1) as usize];

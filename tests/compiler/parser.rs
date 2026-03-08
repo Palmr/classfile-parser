@@ -124,10 +124,9 @@ fn test_parse_switch() {
 
 #[test]
 fn test_parse_try_catch() {
-    let stmts = parse_method_body(
-        "{ try { foo(); } catch (Exception e) { bar(); } finally { baz(); } }",
-    )
-    .unwrap();
+    let stmts =
+        parse_method_body("{ try { foo(); } catch (Exception e) { bar(); } finally { baz(); } }")
+            .unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
         classfile_parser::compile::ast::CStmt::TryCatch {
@@ -238,7 +237,10 @@ fn test_parse_synchronized() {
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
         classfile_parser::compile::ast::CStmt::Synchronized { lock_expr, body } => {
-            assert!(matches!(lock_expr, classfile_parser::compile::ast::CExpr::This));
+            assert!(matches!(
+                lock_expr,
+                classfile_parser::compile::ast::CExpr::This
+            ));
             assert_eq!(body.len(), 1);
         }
         other => panic!("expected Synchronized, got {:?}", other),
@@ -251,7 +253,10 @@ fn test_parse_synchronized_with_expr() {
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
         classfile_parser::compile::ast::CStmt::Synchronized { lock_expr, body } => {
-            assert!(matches!(lock_expr, classfile_parser::compile::ast::CExpr::Ident(_)));
+            assert!(matches!(
+                lock_expr,
+                classfile_parser::compile::ast::CExpr::Ident(_)
+            ));
             assert_eq!(body.len(), 2);
         }
         other => panic!("expected Synchronized, got {:?}", other),
@@ -269,7 +274,10 @@ fn test_parse_var_decl() {
         classfile_parser::compile::ast::CStmt::LocalDecl { ty, name, init } => {
             assert_eq!(name, "x");
             assert!(init.is_some());
-            assert_eq!(*ty, classfile_parser::compile::ast::TypeName::Class("__var__".into()));
+            assert_eq!(
+                *ty,
+                classfile_parser::compile::ast::TypeName::Class("__var__".into())
+            );
         }
         other => panic!("expected LocalDecl, got {:?}", other),
     }
@@ -296,17 +304,23 @@ fn test_parse_multi_dim_array() {
     let stmts = parse_method_body("{ int[][] arr = new int[3][4]; }").unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
-        classfile_parser::compile::ast::CStmt::LocalDecl { init: Some(expr), .. } => {
-            match expr {
-                classfile_parser::compile::ast::CExpr::NewMultiArray { element_type, dimensions } => {
-                    assert_eq!(*element_type, classfile_parser::compile::ast::TypeName::Primitive(
+        classfile_parser::compile::ast::CStmt::LocalDecl {
+            init: Some(expr), ..
+        } => match expr {
+            classfile_parser::compile::ast::CExpr::NewMultiArray {
+                element_type,
+                dimensions,
+            } => {
+                assert_eq!(
+                    *element_type,
+                    classfile_parser::compile::ast::TypeName::Primitive(
                         classfile_parser::compile::ast::PrimitiveKind::Int
-                    ));
-                    assert_eq!(dimensions.len(), 2);
-                }
-                other => panic!("expected NewMultiArray, got {:?}", other),
+                    )
+                );
+                assert_eq!(dimensions.len(), 2);
             }
-        }
+            other => panic!("expected NewMultiArray, got {:?}", other),
+        },
         other => panic!("expected LocalDecl with init, got {:?}", other),
     }
 }
@@ -318,7 +332,7 @@ fn test_parse_generic_method() {
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
         classfile_parser::compile::ast::CStmt::ExprStmt(
-            classfile_parser::compile::ast::CExpr::MethodCall { name, .. }
+            classfile_parser::compile::ast::CExpr::MethodCall { name, .. },
         ) => {
             assert_eq!(name, "method");
         }
@@ -328,48 +342,54 @@ fn test_parse_generic_method() {
 
 #[test]
 fn test_parse_switch_expr() {
-    let stmts = parse_method_body(r#"{
+    let stmts = parse_method_body(
+        r#"{
         int x = 1;
         int r = switch (x) {
             case 1 -> 10;
             case 2 -> 20;
             default -> 0;
         };
-    }"#).unwrap();
+    }"#,
+    )
+    .unwrap();
     assert_eq!(stmts.len(), 2);
     match &stmts[1] {
-        classfile_parser::compile::ast::CStmt::LocalDecl { init: Some(expr), .. } => {
-            match expr {
-                classfile_parser::compile::ast::CExpr::SwitchExpr { cases, .. } => {
-                    assert_eq!(cases.len(), 2);
-                }
-                other => panic!("expected SwitchExpr, got {:?}", other),
+        classfile_parser::compile::ast::CStmt::LocalDecl {
+            init: Some(expr), ..
+        } => match expr {
+            classfile_parser::compile::ast::CExpr::SwitchExpr { cases, .. } => {
+                assert_eq!(cases.len(), 2);
             }
-        }
+            other => panic!("expected SwitchExpr, got {:?}", other),
+        },
         other => panic!("expected LocalDecl, got {:?}", other),
     }
 }
 
 #[test]
 fn test_parse_switch_expr_multi_case() {
-    let stmts = parse_method_body(r#"{
+    let stmts = parse_method_body(
+        r#"{
         int r = switch (x) {
             case 1, 2 -> 10;
             case 3 -> 30;
             default -> 0;
         };
-    }"#).unwrap();
+    }"#,
+    )
+    .unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
-        classfile_parser::compile::ast::CStmt::LocalDecl { init: Some(expr), .. } => {
-            match expr {
-                classfile_parser::compile::ast::CExpr::SwitchExpr { cases, .. } => {
-                    assert_eq!(cases.len(), 2);
-                    assert_eq!(cases[0].values.len(), 2);
-                }
-                other => panic!("expected SwitchExpr, got {:?}", other),
+        classfile_parser::compile::ast::CStmt::LocalDecl {
+            init: Some(expr), ..
+        } => match expr {
+            classfile_parser::compile::ast::CExpr::SwitchExpr { cases, .. } => {
+                assert_eq!(cases.len(), 2);
+                assert_eq!(cases[0].values.len(), 2);
             }
-        }
+            other => panic!("expected SwitchExpr, got {:?}", other),
+        },
         other => panic!("expected LocalDecl, got {:?}", other),
     }
 }
@@ -379,14 +399,14 @@ fn test_parse_lambda_no_args() {
     let stmts = parse_method_body(r#"{ Runnable r = () -> System.out.println("hi"); }"#).unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
-        classfile_parser::compile::ast::CStmt::LocalDecl { init: Some(expr), .. } => {
-            match expr {
-                classfile_parser::compile::ast::CExpr::Lambda { params, .. } => {
-                    assert_eq!(params.len(), 0);
-                }
-                other => panic!("expected Lambda, got {:?}", other),
+        classfile_parser::compile::ast::CStmt::LocalDecl {
+            init: Some(expr), ..
+        } => match expr {
+            classfile_parser::compile::ast::CExpr::Lambda { params, .. } => {
+                assert_eq!(params.len(), 0);
             }
-        }
+            other => panic!("expected Lambda, got {:?}", other),
+        },
         other => panic!("expected LocalDecl, got {:?}", other),
     }
 }
@@ -396,17 +416,20 @@ fn test_parse_lambda_typed_param() {
     let stmts = parse_method_body(r#"{ var f = (int x) -> x + 1; }"#).unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
-        classfile_parser::compile::ast::CStmt::LocalDecl { init: Some(expr), .. } => {
-            match expr {
-                classfile_parser::compile::ast::CExpr::Lambda { params, body } => {
-                    assert_eq!(params.len(), 1);
-                    assert_eq!(params[0].name, "x");
-                    assert!(params[0].ty.is_some());
-                    assert!(matches!(body, classfile_parser::compile::ast::LambdaBody::Expr(_)));
-                }
-                other => panic!("expected Lambda, got {:?}", other),
+        classfile_parser::compile::ast::CStmt::LocalDecl {
+            init: Some(expr), ..
+        } => match expr {
+            classfile_parser::compile::ast::CExpr::Lambda { params, body } => {
+                assert_eq!(params.len(), 1);
+                assert_eq!(params[0].name, "x");
+                assert!(params[0].ty.is_some());
+                assert!(matches!(
+                    body,
+                    classfile_parser::compile::ast::LambdaBody::Expr(_)
+                ));
             }
-        }
+            other => panic!("expected Lambda, got {:?}", other),
+        },
         other => panic!("expected LocalDecl, got {:?}", other),
     }
 }
@@ -416,15 +439,18 @@ fn test_parse_lambda_block() {
     let stmts = parse_method_body(r#"{ var f = (int x) -> { return x + 1; }; }"#).unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
-        classfile_parser::compile::ast::CStmt::LocalDecl { init: Some(expr), .. } => {
-            match expr {
-                classfile_parser::compile::ast::CExpr::Lambda { params, body } => {
-                    assert_eq!(params.len(), 1);
-                    assert!(matches!(body, classfile_parser::compile::ast::LambdaBody::Block(_)));
-                }
-                other => panic!("expected Lambda, got {:?}", other),
+        classfile_parser::compile::ast::CStmt::LocalDecl {
+            init: Some(expr), ..
+        } => match expr {
+            classfile_parser::compile::ast::CExpr::Lambda { params, body } => {
+                assert_eq!(params.len(), 1);
+                assert!(matches!(
+                    body,
+                    classfile_parser::compile::ast::LambdaBody::Block(_)
+                ));
             }
-        }
+            other => panic!("expected Lambda, got {:?}", other),
+        },
         other => panic!("expected LocalDecl, got {:?}", other),
     }
 }
@@ -434,15 +460,18 @@ fn test_parse_method_ref() {
     let stmts = parse_method_body(r#"{ var f = String::valueOf; }"#).unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
-        classfile_parser::compile::ast::CStmt::LocalDecl { init: Some(expr), .. } => {
-            match expr {
-                classfile_parser::compile::ast::CExpr::MethodRef { class_name, method_name } => {
-                    assert_eq!(class_name, "String");
-                    assert_eq!(method_name, "valueOf");
-                }
-                other => panic!("expected MethodRef, got {:?}", other),
+        classfile_parser::compile::ast::CStmt::LocalDecl {
+            init: Some(expr), ..
+        } => match expr {
+            classfile_parser::compile::ast::CExpr::MethodRef {
+                class_name,
+                method_name,
+            } => {
+                assert_eq!(class_name, "String");
+                assert_eq!(method_name, "valueOf");
             }
-        }
+            other => panic!("expected MethodRef, got {:?}", other),
+        },
         other => panic!("expected LocalDecl, got {:?}", other),
     }
 }
@@ -450,12 +479,15 @@ fn test_parse_method_ref() {
 #[test]
 fn test_parse_arrow_token() {
     // Verify the arrow token works in switch expressions
-    let stmts = parse_method_body(r#"{
+    let stmts = parse_method_body(
+        r#"{
         int r = switch (1) {
             case 1 -> 42;
             default -> 0;
         };
-    }"#).unwrap();
+    }"#,
+    )
+    .unwrap();
     assert_eq!(stmts.len(), 1);
 }
 
@@ -464,10 +496,7 @@ fn test_parse_arrow_token() {
 /// Deeply nested expression parsing
 #[test]
 fn test_parse_stress_deeply_nested_expr() {
-    let stmts = parse_method_body(
-        "{ int x = ((((((1 + 2) * 3) - 4) / 5) % 6) + 7); }",
-    )
-    .unwrap();
+    let stmts = parse_method_body("{ int x = ((((((1 + 2) * 3) - 4) / 5) % 6) + 7); }").unwrap();
     assert_eq!(stmts.len(), 1);
 }
 
@@ -486,7 +515,8 @@ fn test_parse_stress_many_statements() {
 /// Complex type declarations
 #[test]
 fn test_parse_stress_type_decls() {
-    let stmts = parse_method_body(r#"{
+    let stmts = parse_method_body(
+        r#"{
         int a = 1;
         long b = 2L;
         float c = 3.0f;
@@ -497,7 +527,8 @@ fn test_parse_stress_type_decls() {
         int[] h = new int[5];
         int[][] i = new int[3][4];
         Object j = null;
-    }"#)
+    }"#,
+    )
     .unwrap();
     assert_eq!(stmts.len(), 10);
 }
@@ -517,7 +548,8 @@ fn test_parse_stress_switch_many_cases() {
 /// Nested switch expressions
 #[test]
 fn test_parse_stress_nested_switch_expr() {
-    let stmts = parse_method_body(r#"{
+    let stmts = parse_method_body(
+        r#"{
         int outer = switch (a) {
             case 1 -> switch (b) {
                 case 10 -> 100;
@@ -525,7 +557,8 @@ fn test_parse_stress_nested_switch_expr() {
             };
             default -> -1;
         };
-    }"#);
+    }"#,
+    );
     // This may or may not parse depending on implementation — record result
     match stmts {
         Ok(s) => assert_eq!(s.len(), 1),
@@ -536,10 +569,8 @@ fn test_parse_stress_nested_switch_expr() {
 /// For-each with dotted type
 #[test]
 fn test_parse_stress_foreach_dotted_type() {
-    let stmts = parse_method_body(
-        "{ for (java.lang.String s : list) { System.out.println(s); } }",
-    )
-    .unwrap();
+    let stmts = parse_method_body("{ for (java.lang.String s : list) { System.out.println(s); } }")
+        .unwrap();
     assert_eq!(stmts.len(), 1);
 }
 
@@ -556,30 +587,26 @@ fn test_parse_stress_all_binops() {
 /// Chained method calls
 #[test]
 fn test_parse_stress_chained_calls() {
-    let stmts = parse_method_body(
-        r#"{ String s = obj.method1().method2().method3().toString(); }"#,
-    )
-    .unwrap();
+    let stmts =
+        parse_method_body(r#"{ String s = obj.method1().method2().method3().toString(); }"#)
+            .unwrap();
     assert_eq!(stmts.len(), 1);
 }
 
 /// Lambda with multiple parameters
 #[test]
 fn test_parse_stress_lambda_multi_param() {
-    let stmts = parse_method_body(
-        r#"{ var f = (int a, int b, int c) -> a + b + c; }"#,
-    )
-    .unwrap();
+    let stmts = parse_method_body(r#"{ var f = (int a, int b, int c) -> a + b + c; }"#).unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
-        classfile_parser::compile::ast::CStmt::LocalDecl { init: Some(expr), .. } => {
-            match expr {
-                classfile_parser::compile::ast::CExpr::Lambda { params, .. } => {
-                    assert_eq!(params.len(), 3);
-                }
-                other => panic!("expected Lambda, got {:?}", other),
+        classfile_parser::compile::ast::CStmt::LocalDecl {
+            init: Some(expr), ..
+        } => match expr {
+            classfile_parser::compile::ast::CExpr::Lambda { params, .. } => {
+                assert_eq!(params.len(), 3);
             }
-        }
+            other => panic!("expected Lambda, got {:?}", other),
+        },
         other => panic!("expected LocalDecl, got {:?}", other),
     }
 }
@@ -599,7 +626,9 @@ fn test_parse_stress_lambda_complex_body() {
     .unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
-        classfile_parser::compile::ast::CStmt::LocalDecl { init: Some(expr), .. } => {
+        classfile_parser::compile::ast::CStmt::LocalDecl {
+            init: Some(expr), ..
+        } => {
             match expr {
                 classfile_parser::compile::ast::CExpr::Lambda { body, .. } => {
                     match body {
@@ -619,7 +648,8 @@ fn test_parse_stress_lambda_complex_body() {
 /// Multiple var declarations in sequence
 #[test]
 fn test_parse_stress_var_sequence() {
-    let stmts = parse_method_body(r#"{
+    let stmts = parse_method_body(
+        r#"{
         var a = 1;
         var b = 2L;
         var c = 3.0f;
@@ -629,7 +659,8 @@ fn test_parse_stress_var_sequence() {
         var g = 'x';
         var h = null;
         var i = new Object();
-    }"#)
+    }"#,
+    )
     .unwrap();
     assert_eq!(stmts.len(), 9);
 }
@@ -637,17 +668,17 @@ fn test_parse_stress_var_sequence() {
 /// Comprehensive expression in a single assignment
 #[test]
 fn test_parse_stress_complex_expr() {
-    let stmts = parse_method_body(
-        "{ int x = (a > 0 && b < 10) || !(c == d) ? (e + f) * g : h - i / j; }",
-    )
-    .unwrap();
+    let stmts =
+        parse_method_body("{ int x = (a > 0 && b < 10) || !(c == d) ? (e + f) * g : h - i / j; }")
+            .unwrap();
     assert_eq!(stmts.len(), 1);
 }
 
 /// Try-catch with multiple catch blocks and finally
 #[test]
 fn test_parse_stress_complex_try_catch() {
-    let stmts = parse_method_body(r#"{
+    let stmts = parse_method_body(
+        r#"{
         try {
             foo();
         } catch (IllegalArgumentException e) {
@@ -659,11 +690,16 @@ fn test_parse_stress_complex_try_catch() {
         } finally {
             cleanup();
         }
-    }"#)
+    }"#,
+    )
     .unwrap();
     assert_eq!(stmts.len(), 1);
     match &stmts[0] {
-        classfile_parser::compile::ast::CStmt::TryCatch { catches, finally_body, .. } => {
+        classfile_parser::compile::ast::CStmt::TryCatch {
+            catches,
+            finally_body,
+            ..
+        } => {
             assert_eq!(catches.len(), 3);
             assert_eq!(catches[1].exception_types.len(), 2); // multi-catch
             assert!(finally_body.is_some());
@@ -675,7 +711,8 @@ fn test_parse_stress_complex_try_catch() {
 /// Synchronized with complex expression
 #[test]
 fn test_parse_stress_synchronized_complex() {
-    let stmts = parse_method_body(r#"{
+    let stmts = parse_method_body(
+        r#"{
         synchronized (this) {
             int x = 1;
             for (int i = 0; i < 10; i++) {
@@ -685,7 +722,8 @@ fn test_parse_stress_synchronized_complex() {
                 throw new RuntimeException("too big");
             }
         }
-    }"#)
+    }"#,
+    )
     .unwrap();
     assert_eq!(stmts.len(), 1);
 }
@@ -693,10 +731,12 @@ fn test_parse_stress_synchronized_complex() {
 /// Generic type parameters in method calls
 #[test]
 fn test_parse_stress_generic_params() {
-    let stmts = parse_method_body(r#"{
+    let stmts = parse_method_body(
+        r#"{
         obj.<String>method1();
         obj.<Integer, String>method2();
-    }"#)
+    }"#,
+    )
     .unwrap();
     assert_eq!(stmts.len(), 2);
 }

@@ -8,8 +8,11 @@ fn test_prepend_println() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("prepend_println", "java-assets/src/PrependTest.java", "PrependTest");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "prepend_println",
+        "java-assets/src/PrependTest.java",
+        "PrependTest",
+    );
 
     // Replace main to just print "original", then prepend "before"
     compile_method_body(
@@ -40,8 +43,11 @@ fn test_prepend_with_param_access() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("prepend_param", "java-assets/src/PrependTest.java", "PrependTest");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "prepend_param",
+        "java-assets/src/PrependTest.java",
+        "PrependTest",
+    );
 
     // Prepend code that prints the parameter before original body runs
     prepend_method_body(
@@ -73,8 +79,11 @@ fn test_prepend_with_local_variable() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("prepend_local", "java-assets/src/PrependTest.java", "PrependTest");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "prepend_local",
+        "java-assets/src/PrependTest.java",
+        "PrependTest",
+    );
 
     // Prepend code that declares a local variable
     prepend_method_body(
@@ -106,8 +115,11 @@ fn test_prepend_to_method_with_try_catch() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("prepend_trycatch", "java-assets/src/PrependTest.java", "PrependTest");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "prepend_trycatch",
+        "java-assets/src/PrependTest.java",
+        "PrependTest",
+    );
 
     prepend_method_body(
         r#"{ System.out.println("before try"); }"#,
@@ -138,8 +150,11 @@ fn test_prepend_with_branches() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("prepend_branches", "java-assets/src/PrependTest.java", "PrependTest");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "prepend_branches",
+        "java-assets/src/PrependTest.java",
+        "PrependTest",
+    );
 
     // Prepend an if/else that has branch targets (requires StackMapTable merge)
     prepend_method_body(
@@ -171,8 +186,11 @@ fn test_prepend_macro() {
         eprintln!("SKIP: java/javac not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("prepend_macro", "java-assets/src/PrependTest.java", "PrependTest");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "prepend_macro",
+        "java-assets/src/PrependTest.java",
+        "PrependTest",
+    );
 
     // Replace main to just print "original", then prepend with macro
     compile_method_body(
@@ -205,8 +223,11 @@ fn test_wide_local_then_narrow_with_branch() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("wide_narrow_branch", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "wide_narrow_branch",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -237,8 +258,11 @@ fn test_stackmap_large_delta_extended_frame() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("smt_extended", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "smt_extended",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     // Generate enough bytecode before the branch to push the delta past 63.
     // Each println is ~8 bytes (getstatic 3 + ldc 2 + invokevirtual 3 = 8).
@@ -269,7 +293,11 @@ fn test_stackmap_large_delta_extended_frame() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert!(output.ends_with("yes"), "expected 'yes' at end, got: {}", output);
+    assert!(
+        output.ends_with("yes"),
+        "expected 'yes' at end, got: {}",
+        output
+    );
 }
 
 /// StackMapTable edge case: prepending code that pushes existing frames past the

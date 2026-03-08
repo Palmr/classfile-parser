@@ -1,8 +1,8 @@
 use std::io::{Read, Seek};
 use std::path::Path;
 
-use crate::jar_utils::{JarError, JarFile, JarResult};
 use crate::ClassFile;
+use crate::jar_utils::{JarError, JarFile, JarResult};
 
 use super::classpath_idx::ClasspathIndex;
 use super::layers_idx::LayersIndex;
@@ -233,9 +233,9 @@ impl SpringBootJar {
 
     /// Iterate over Spring Boot loader class paths.
     pub fn loader_class_names(&self) -> impl Iterator<Item = &str> {
-        self.jar.entry_names().filter(|n| {
-            n.starts_with("org/springframework/boot/loader/") && n.ends_with(".class")
-        })
+        self.jar
+            .entry_names()
+            .filter(|n| n.starts_with("org/springframework/boot/loader/") && n.ends_with(".class"))
     }
 
     // -- Nested JARs --
@@ -273,11 +273,7 @@ impl SpringBootJar {
     }
 
     /// Parse a `.class` file from inside a nested JAR.
-    pub fn parse_nested_class(
-        &self,
-        jar_path: &str,
-        class_path: &str,
-    ) -> JarResult<ClassFile> {
+    pub fn parse_nested_class(&self, jar_path: &str, class_path: &str) -> JarResult<ClassFile> {
         let nested = self.open_nested_jar(jar_path)?;
         nested.parse_class(class_path)
     }

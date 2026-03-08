@@ -58,7 +58,11 @@ impl FrameTracker {
     pub fn record_frame(&mut self, offset: u32, locals: Vec<VType>, stack: Vec<VType>) {
         // If a frame already exists at this offset, replace it — the last binding
         // at a given offset represents the most accurate state for subsequent code.
-        if let Some(existing) = self.snapshots.iter_mut().find(|s| s.bytecode_offset == offset) {
+        if let Some(existing) = self
+            .snapshots
+            .iter_mut()
+            .find(|s| s.bytecode_offset == offset)
+        {
             existing.locals = locals;
             existing.stack = stack;
             return;
@@ -149,8 +153,7 @@ fn encode_frame(
     // AppendFrame: 1-3 new locals added, empty stack, prefix matches previous
     if stack.is_empty() && locals.len() > prev_locals.len() {
         let extra = locals.len() - prev_locals.len();
-        if extra >= 1
-            && extra <= 3
+        if (1..=3).contains(&extra)
             && locals.len() >= prev_locals.len()
             && locals[..prev_locals.len()]
                 .iter()
@@ -174,12 +177,7 @@ fn encode_frame(
     // ChopFrame: 1-3 locals removed, empty stack, prefix matches previous
     if stack.is_empty() && locals.len() < prev_locals.len() {
         let chopped = prev_locals.len() - locals.len();
-        if chopped >= 1
-            && chopped <= 3
-            && locals
-                .iter()
-                .zip(prev_locals.iter())
-                .all(|(a, b)| a == b)
+        if (1..=3).contains(&chopped) && locals.iter().zip(prev_locals.iter()).all(|(a, b)| a == b)
         {
             return StackMapFrame {
                 frame_type: (251 - chopped) as u8,
@@ -189,10 +187,14 @@ fn encode_frame(
     }
 
     // FullFrame: complete specification
-    let local_vtypes: Vec<VerificationTypeInfo> =
-        locals.iter().map(|v| v.to_verification_type_info()).collect();
-    let stack_vtypes: Vec<VerificationTypeInfo> =
-        stack.iter().map(|v| v.to_verification_type_info()).collect();
+    let local_vtypes: Vec<VerificationTypeInfo> = locals
+        .iter()
+        .map(|v| v.to_verification_type_info())
+        .collect();
+    let stack_vtypes: Vec<VerificationTypeInfo> = stack
+        .iter()
+        .map(|v| v.to_verification_type_info())
+        .collect();
 
     StackMapFrame {
         frame_type: 255,

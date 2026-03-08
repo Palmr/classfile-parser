@@ -19,7 +19,10 @@ pub enum DecompileError {
     /// The class file has no methods to decompile.
     NoCode,
     /// A specific method failed to decompile.
-    MethodError { method_name: String, message: String },
+    MethodError {
+        method_name: String,
+        message: String,
+    },
     /// General error.
     General(String),
 }
@@ -28,8 +31,15 @@ impl fmt::Display for DecompileError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             DecompileError::NoCode => write!(f, "no code to decompile"),
-            DecompileError::MethodError { method_name, message } => {
-                write!(f, "failed to decompile method '{}': {}", method_name, message)
+            DecompileError::MethodError {
+                method_name,
+                message,
+            } => {
+                write!(
+                    f,
+                    "failed to decompile method '{}': {}",
+                    method_name, message
+                )
             }
             DecompileError::General(msg) => write!(f, "{}", msg),
         }
@@ -100,7 +110,9 @@ impl Decompiler {
             .methods
             .iter()
             .find(|m| m.name == method_name)
-            .ok_or_else(|| DecompileError::General(format!("method '{}' not found", method_name)))?;
+            .ok_or_else(|| {
+                DecompileError::General(format!("method '{}' not found", method_name))
+            })?;
 
         let mut config = self.options.render_config.clone();
         config.include_synthetic = self.options.include_synthetic;
@@ -146,8 +158,9 @@ impl Decompiler {
                 }
                 Err(e) => {
                     // Per-class error recovery: add a stub with a comment
-                    let name = util::get_class_name(&inner_class.const_pool, inner_class.this_class)
-                        .unwrap_or("Unknown");
+                    let name =
+                        util::get_class_name(&inner_class.const_pool, inner_class.this_class)
+                            .unwrap_or("Unknown");
                     let simple = name.rsplit('/').next().unwrap_or(name);
                     let simple = simple.rsplit('$').next().unwrap_or(simple);
                     java_class.inner_classes.push(JavaClass {
@@ -244,7 +257,10 @@ impl Decompiler {
                         error_msg.push_str(&format!("\n  {:04}: {:?}", addr, instr));
                     }
                     if addressed.len() > 20 {
-                        error_msg.push_str(&format!("\n  ... ({} more instructions)", addressed.len() - 20));
+                        error_msg.push_str(&format!(
+                            "\n  ... ({} more instructions)",
+                            addressed.len() - 20
+                        ));
                     }
                     java_class.methods[i].error = Some(error_msg);
                 }

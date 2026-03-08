@@ -59,9 +59,14 @@ public class HelloWorld {
     println!("Packed into JAR ({} entries)", jar.entry_names().count());
 
     // ── Step 3a: Patch a single method ───────────────────────────────────
-    patch_jar_method!(jar, "HelloWorld.class", "greet", r#"{
+    patch_jar_method!(
+        jar,
+        "HelloWorld.class",
+        "greet",
+        r#"{
         System.out.println("patched greet!");
-    }"#)
+    }"#
+    )
     .unwrap();
     println!("Patched greet()");
 

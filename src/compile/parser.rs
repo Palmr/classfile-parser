@@ -1,6 +1,6 @@
+use super::CompileError;
 use super::ast::*;
 use super::lexer::{SpannedToken, Token};
-use super::CompileError;
 
 pub struct Parser {
     tokens: Vec<SpannedToken>,
@@ -159,11 +159,22 @@ impl Parser {
             let mut depth: i32 = 1;
             while i < self.tokens.len() && depth > 0 {
                 match &self.tokens[i].token {
-                    Token::Lt => { depth += 1; i += 1; }
-                    Token::Gt => { depth -= 1; i += 1; }
-                    Token::GtGt => { depth -= 2; i += 1; }
+                    Token::Lt => {
+                        depth += 1;
+                        i += 1;
+                    }
+                    Token::Gt => {
+                        depth -= 1;
+                        i += 1;
+                    }
+                    Token::GtGt => {
+                        depth -= 2;
+                        i += 1;
+                    }
                     Token::Eof => break,
-                    _ => { i += 1; }
+                    _ => {
+                        i += 1;
+                    }
                 }
             }
         }
@@ -213,21 +224,20 @@ impl Parser {
         // Try for-each: for (Type name : expr)
         if self.is_type_start() {
             let saved_pos = self.pos;
-            if let Ok(ty) = self.parse_type_name() {
-                if let Ok(name) = self.expect_ident() {
-                    if self.at(&Token::Colon) {
-                        self.advance(); // consume ':'
-                        let iterable = self.parse_expression()?;
-                        self.expect(&Token::RParen)?;
-                        let body = self.parse_block_or_single()?;
-                        return Ok(CStmt::ForEach {
-                            element_type: ty,
-                            var_name: name,
-                            iterable,
-                            body,
-                        });
-                    }
-                }
+            if let Ok(ty) = self.parse_type_name()
+                && let Ok(name) = self.expect_ident()
+                && self.at(&Token::Colon)
+            {
+                self.advance(); // consume ':'
+                let iterable = self.parse_expression()?;
+                self.expect(&Token::RParen)?;
+                let body = self.parse_block_or_single()?;
+                return Ok(CStmt::ForEach {
+                    element_type: ty,
+                    var_name: name,
+                    iterable,
+                    body,
+                });
             }
             // Not a for-each, restore position and parse as traditional for
             self.pos = saved_pos;
@@ -375,7 +385,10 @@ impl Parser {
                 self.advance();
                 Ok(if negative { -v } else { v })
             }
-            _ => Err(self.error(format!("expected integer case value, got {:?}", self.peek()))),
+            _ => Err(self.error(format!(
+                "expected integer case value, got {:?}",
+                self.peek()
+            ))),
         }
     }
 
@@ -484,15 +497,42 @@ impl Parser {
 
     fn parse_type_name(&mut self) -> Result<TypeName, CompileError> {
         let base = match self.peek() {
-            Token::KwInt => { self.advance(); TypeName::Primitive(PrimitiveKind::Int) }
-            Token::KwLong => { self.advance(); TypeName::Primitive(PrimitiveKind::Long) }
-            Token::KwFloat => { self.advance(); TypeName::Primitive(PrimitiveKind::Float) }
-            Token::KwDouble => { self.advance(); TypeName::Primitive(PrimitiveKind::Double) }
-            Token::KwBoolean => { self.advance(); TypeName::Primitive(PrimitiveKind::Boolean) }
-            Token::KwByte => { self.advance(); TypeName::Primitive(PrimitiveKind::Byte) }
-            Token::KwChar => { self.advance(); TypeName::Primitive(PrimitiveKind::Char) }
-            Token::KwShort => { self.advance(); TypeName::Primitive(PrimitiveKind::Short) }
-            Token::KwVoid => { self.advance(); TypeName::Primitive(PrimitiveKind::Void) }
+            Token::KwInt => {
+                self.advance();
+                TypeName::Primitive(PrimitiveKind::Int)
+            }
+            Token::KwLong => {
+                self.advance();
+                TypeName::Primitive(PrimitiveKind::Long)
+            }
+            Token::KwFloat => {
+                self.advance();
+                TypeName::Primitive(PrimitiveKind::Float)
+            }
+            Token::KwDouble => {
+                self.advance();
+                TypeName::Primitive(PrimitiveKind::Double)
+            }
+            Token::KwBoolean => {
+                self.advance();
+                TypeName::Primitive(PrimitiveKind::Boolean)
+            }
+            Token::KwByte => {
+                self.advance();
+                TypeName::Primitive(PrimitiveKind::Byte)
+            }
+            Token::KwChar => {
+                self.advance();
+                TypeName::Primitive(PrimitiveKind::Char)
+            }
+            Token::KwShort => {
+                self.advance();
+                TypeName::Primitive(PrimitiveKind::Short)
+            }
+            Token::KwVoid => {
+                self.advance();
+                TypeName::Primitive(PrimitiveKind::Void)
+            }
             Token::Ident(_) => {
                 let mut name = self.expect_ident()?;
                 while self.at(&Token::Dot) {
@@ -518,7 +558,12 @@ impl Parser {
 
         // Handle array brackets
         let mut ty = base;
-        while self.at(&Token::LBracket) && self.tokens.get(self.pos + 1).is_some_and(|t| t.token == Token::RBracket) {
+        while self.at(&Token::LBracket)
+            && self
+                .tokens
+                .get(self.pos + 1)
+                .is_some_and(|t| t.token == Token::RBracket)
+        {
             self.advance(); // [
             self.advance(); // ]
             ty = TypeName::Array(Box::new(ty));
@@ -968,25 +1013,25 @@ impl Parser {
         }
         // Check for class type cast: (ClassName) expr
         // Only if the ident is likely a type (starts with uppercase) and is followed by )
-        if let Token::Ident(name) = &self.tokens[i].token {
-            if name.chars().next().is_some_and(|c| c.is_ascii_uppercase()) {
-                i += 1;
-                // Skip dotted name
-                while i + 1 < self.tokens.len()
-                    && self.tokens[i].token == Token::Dot
-                    && matches!(&self.tokens[i + 1].token, Token::Ident(_))
-                {
-                    i += 2;
-                }
-                // skip array brackets
-                while i + 1 < self.tokens.len()
-                    && self.tokens[i].token == Token::LBracket
-                    && self.tokens[i + 1].token == Token::RBracket
-                {
-                    i += 2;
-                }
-                return i < self.tokens.len() && self.tokens[i].token == Token::RParen;
+        if let Token::Ident(name) = &self.tokens[i].token
+            && name.chars().next().is_some_and(|c| c.is_ascii_uppercase())
+        {
+            i += 1;
+            // Skip dotted name
+            while i + 1 < self.tokens.len()
+                && self.tokens[i].token == Token::Dot
+                && matches!(&self.tokens[i + 1].token, Token::Ident(_))
+            {
+                i += 2;
             }
+            // skip array brackets
+            while i + 1 < self.tokens.len()
+                && self.tokens[i].token == Token::LBracket
+                && self.tokens[i + 1].token == Token::RBracket
+            {
+                i += 2;
+            }
+            return i < self.tokens.len() && self.tokens[i].token == Token::RParen;
         }
         false
     }
@@ -1047,11 +1092,7 @@ impl Parser {
                     // Extract class name from the expression
                     let class_name = match &expr {
                         CExpr::Ident(name) => name.clone(),
-                        _ => {
-                            return Err(
-                                self.error("method reference requires a class name"),
-                            )
-                        }
+                        _ => return Err(self.error("method reference requires a class name")),
                     };
                     expr = CExpr::MethodRef {
                         class_name,
@@ -1123,11 +1164,17 @@ impl Parser {
 
                     // Check for multi-dimensional: new Type[expr][expr]...
                     if self.at(&Token::LBracket)
-                        && self.tokens.get(self.pos + 1).is_some_and(|t| t.token != Token::RBracket)
+                        && self
+                            .tokens
+                            .get(self.pos + 1)
+                            .is_some_and(|t| t.token != Token::RBracket)
                     {
                         let mut dimensions = vec![first_size];
                         while self.at(&Token::LBracket)
-                            && self.tokens.get(self.pos + 1).is_some_and(|t| t.token != Token::RBracket)
+                            && self
+                                .tokens
+                                .get(self.pos + 1)
+                                .is_some_and(|t| t.token != Token::RBracket)
                         {
                             self.advance(); // [
                             dimensions.push(self.parse_expression()?);
@@ -1150,7 +1197,7 @@ impl Parser {
                         _ => {
                             return Err(
                                 self.error("cannot use 'new' with primitive type constructor")
-                            )
+                            );
                         }
                     };
                     let args = self.parse_args()?;
@@ -1254,9 +1301,8 @@ impl Parser {
         }
         self.expect(&Token::RBrace)?;
 
-        let default = default_expr.ok_or_else(|| {
-            self.error("switch expression requires a default case")
-        })?;
+        let default =
+            default_expr.ok_or_else(|| self.error("switch expression requires a default case"))?;
 
         Ok(CExpr::SwitchExpr {
             expr: Box::new(expr),
@@ -1310,10 +1356,7 @@ impl Parser {
                     if let Ok(ty) = self.parse_type_name() {
                         if let Token::Ident(_) = self.peek() {
                             let name = self.expect_ident()?;
-                            params.push(LambdaParam {
-                                ty: Some(ty),
-                                name,
-                            });
+                            params.push(LambdaParam { ty: Some(ty), name });
                         } else {
                             // Not Type name pattern, restore and try ident
                             self.pos = saved;
@@ -1398,7 +1441,13 @@ mod tests {
     #[test]
     fn test_if_else() {
         let stmts = parse("{ if (x > 0) { return 1; } else { return 0; } }");
-        assert!(matches!(&stmts[0], CStmt::If { else_body: Some(_), .. }));
+        assert!(matches!(
+            &stmts[0],
+            CStmt::If {
+                else_body: Some(_),
+                ..
+            }
+        ));
     }
 
     #[test]
@@ -1416,7 +1465,10 @@ mod tests {
     #[test]
     fn test_method_call() {
         let stmts = parse("{ System.out.println(\"hello\"); }");
-        assert!(matches!(&stmts[0], CStmt::ExprStmt(CExpr::MethodCall { .. })));
+        assert!(matches!(
+            &stmts[0],
+            CStmt::ExprStmt(CExpr::MethodCall { .. })
+        ));
     }
 
     #[test]
@@ -1435,8 +1487,15 @@ mod tests {
     fn test_arithmetic_precedence() {
         let stmts = parse("{ return a + b * c; }");
         match &stmts[0] {
-            CStmt::Return(Some(CExpr::BinaryOp { op: BinOp::Add, right, .. })) => {
-                assert!(matches!(right.as_ref(), CExpr::BinaryOp { op: BinOp::Mul, .. }));
+            CStmt::Return(Some(CExpr::BinaryOp {
+                op: BinOp::Add,
+                right,
+                ..
+            })) => {
+                assert!(matches!(
+                    right.as_ref(),
+                    CExpr::BinaryOp { op: BinOp::Mul, .. }
+                ));
             }
             other => panic!("unexpected: {:?}", other),
         }
@@ -1455,7 +1514,10 @@ mod tests {
     fn test_cast() {
         let stmts = parse("{ long x = (long) y; }");
         match &stmts[0] {
-            CStmt::LocalDecl { init: Some(CExpr::Cast { ty, .. }), .. } => {
+            CStmt::LocalDecl {
+                init: Some(CExpr::Cast { ty, .. }),
+                ..
+            } => {
                 assert_eq!(*ty, TypeName::Primitive(PrimitiveKind::Long));
             }
             other => panic!("unexpected: {:?}", other),
@@ -1488,9 +1550,7 @@ mod tests {
     fn test_compound_assign() {
         let stmts = parse("{ x += 1; }");
         match &stmts[0] {
-            CStmt::ExprStmt(CExpr::CompoundAssign {
-                op: BinOp::Add, ..
-            }) => {}
+            CStmt::ExprStmt(CExpr::CompoundAssign { op: BinOp::Add, .. }) => {}
             other => panic!("unexpected: {:?}", other),
         }
     }

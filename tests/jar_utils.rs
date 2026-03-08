@@ -4,12 +4,12 @@ extern crate classfile_parser;
 
 use std::io::{Cursor, Write};
 
-use classfile_parser::jar_utils::{JarFile, JarManifest};
 use classfile_parser::ClassFile;
+use classfile_parser::jar_utils::{JarFile, JarManifest};
 
 use binrw::BinRead;
-use zip::write::SimpleFileOptions;
 use zip::CompressionMethod;
+use zip::write::SimpleFileOptions;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -26,8 +26,7 @@ fn build_jar(entries: &[(&str, &[u8])]) -> Vec<u8> {
     let mut buf = Cursor::new(Vec::new());
     {
         let mut writer = zip::ZipWriter::new(&mut buf);
-        let options =
-            SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
         for (name, data) in entries {
             writer.start_file(*name, options).unwrap();
             writer.write_all(data).unwrap();
@@ -163,9 +162,7 @@ fn test_add_remove_entries() {
 #[test]
 fn test_open_and_save() {
     let class_bytes = read_class_bytes("BasicClass.class");
-    let jar_bytes = build_jar(&[
-        ("com/example/BasicClass.class", &class_bytes),
-    ]);
+    let jar_bytes = build_jar(&[("com/example/BasicClass.class", &class_bytes)]);
 
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("test.jar");

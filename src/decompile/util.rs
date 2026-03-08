@@ -7,8 +7,12 @@ pub fn instruction_byte_size(instr: &Instruction, address: u32) -> u32 {
     match instr {
         Instruction::Nop => 1,
         Instruction::Aconstnull => 1,
-        Instruction::Iconstm1 | Instruction::Iconst0 | Instruction::Iconst1
-        | Instruction::Iconst2 | Instruction::Iconst3 | Instruction::Iconst4
+        Instruction::Iconstm1
+        | Instruction::Iconst0
+        | Instruction::Iconst1
+        | Instruction::Iconst2
+        | Instruction::Iconst3
+        | Instruction::Iconst4
         | Instruction::Iconst5 => 1,
         Instruction::Lconst0 | Instruction::Lconst1 => 1,
         Instruction::Fconst0 | Instruction::Fconst1 | Instruction::Fconst2 => 1,
@@ -18,26 +22,57 @@ pub fn instruction_byte_size(instr: &Instruction, address: u32) -> u32 {
         Instruction::Ldc(_) => 2,
         Instruction::LdcW(_) => 3,
         Instruction::Ldc2W(_) => 3,
-        Instruction::Iload(_) | Instruction::Lload(_) | Instruction::Fload(_)
-        | Instruction::Dload(_) | Instruction::Aload(_) => 2,
+        Instruction::Iload(_)
+        | Instruction::Lload(_)
+        | Instruction::Fload(_)
+        | Instruction::Dload(_)
+        | Instruction::Aload(_) => 2,
         Instruction::Iload0 | Instruction::Iload1 | Instruction::Iload2 | Instruction::Iload3 => 1,
         Instruction::Lload0 | Instruction::Lload1 | Instruction::Lload2 | Instruction::Lload3 => 1,
         Instruction::Fload0 | Instruction::Fload1 | Instruction::Fload2 | Instruction::Fload3 => 1,
         Instruction::Dload0 | Instruction::Dload1 | Instruction::Dload2 | Instruction::Dload3 => 1,
         Instruction::Aload0 | Instruction::Aload1 | Instruction::Aload2 | Instruction::Aload3 => 1,
-        Instruction::Iaload | Instruction::Laload | Instruction::Faload
-        | Instruction::Daload | Instruction::Aaload | Instruction::Baload
-        | Instruction::Caload | Instruction::Saload => 1,
-        Instruction::Istore(_) | Instruction::Lstore(_) | Instruction::Fstore(_)
-        | Instruction::Dstore(_) | Instruction::Astore(_) => 2,
-        Instruction::Istore0 | Instruction::Istore1 | Instruction::Istore2 | Instruction::Istore3 => 1,
-        Instruction::Lstore0 | Instruction::Lstore1 | Instruction::Lstore2 | Instruction::Lstore3 => 1,
-        Instruction::Fstore0 | Instruction::Fstore1 | Instruction::Fstore2 | Instruction::Fstore3 => 1,
-        Instruction::Dstore0 | Instruction::Dstore1 | Instruction::Dstore2 | Instruction::Dstore3 => 1,
-        Instruction::Astore0 | Instruction::Astore1 | Instruction::Astore2 | Instruction::Astore3 => 1,
-        Instruction::Iastore | Instruction::Lastore | Instruction::Fastore
-        | Instruction::Dastore | Instruction::Aastore | Instruction::Bastore
-        | Instruction::Castore | Instruction::Sastore => 1,
+        Instruction::Iaload
+        | Instruction::Laload
+        | Instruction::Faload
+        | Instruction::Daload
+        | Instruction::Aaload
+        | Instruction::Baload
+        | Instruction::Caload
+        | Instruction::Saload => 1,
+        Instruction::Istore(_)
+        | Instruction::Lstore(_)
+        | Instruction::Fstore(_)
+        | Instruction::Dstore(_)
+        | Instruction::Astore(_) => 2,
+        Instruction::Istore0
+        | Instruction::Istore1
+        | Instruction::Istore2
+        | Instruction::Istore3 => 1,
+        Instruction::Lstore0
+        | Instruction::Lstore1
+        | Instruction::Lstore2
+        | Instruction::Lstore3 => 1,
+        Instruction::Fstore0
+        | Instruction::Fstore1
+        | Instruction::Fstore2
+        | Instruction::Fstore3 => 1,
+        Instruction::Dstore0
+        | Instruction::Dstore1
+        | Instruction::Dstore2
+        | Instruction::Dstore3 => 1,
+        Instruction::Astore0
+        | Instruction::Astore1
+        | Instruction::Astore2
+        | Instruction::Astore3 => 1,
+        Instruction::Iastore
+        | Instruction::Lastore
+        | Instruction::Fastore
+        | Instruction::Dastore
+        | Instruction::Aastore
+        | Instruction::Bastore
+        | Instruction::Castore
+        | Instruction::Sastore => 1,
         Instruction::Pop => 1,
         Instruction::Pop2 => 1,
         Instruction::Dup => 1,
@@ -68,10 +103,18 @@ pub fn instruction_byte_size(instr: &Instruction, address: u32) -> u32 {
         Instruction::Lcmp => 1,
         Instruction::Fcmpl | Instruction::Fcmpg => 1,
         Instruction::Dcmpl | Instruction::Dcmpg => 1,
-        Instruction::Ifeq(_) | Instruction::Ifne(_) | Instruction::Iflt(_)
-        | Instruction::Ifge(_) | Instruction::Ifgt(_) | Instruction::Ifle(_) => 3,
-        Instruction::IfIcmpeq(_) | Instruction::IfIcmpne(_) | Instruction::IfIcmplt(_)
-        | Instruction::IfIcmpge(_) | Instruction::IfIcmpgt(_) | Instruction::IfIcmple(_) => 3,
+        Instruction::Ifeq(_)
+        | Instruction::Ifne(_)
+        | Instruction::Iflt(_)
+        | Instruction::Ifge(_)
+        | Instruction::Ifgt(_)
+        | Instruction::Ifle(_) => 3,
+        Instruction::IfIcmpeq(_)
+        | Instruction::IfIcmpne(_)
+        | Instruction::IfIcmplt(_)
+        | Instruction::IfIcmpge(_)
+        | Instruction::IfIcmpgt(_)
+        | Instruction::IfIcmple(_) => 3,
         Instruction::IfAcmpeq(_) | Instruction::IfAcmpne(_) => 3,
         Instruction::Goto(_) => 3,
         Instruction::Jsr(_) => 3,
@@ -86,9 +129,12 @@ pub fn instruction_byte_size(instr: &Instruction, address: u32) -> u32 {
             // 1 (opcode) + padding + 4 (default) + 4 (npairs) + 8*npairs
             1 + padding + 4 + 4 + 8 * npairs
         }
-        Instruction::Getstatic(_) | Instruction::Putstatic(_)
-        | Instruction::Getfield(_) | Instruction::Putfield(_) => 3,
-        Instruction::Invokevirtual(_) | Instruction::Invokespecial(_)
+        Instruction::Getstatic(_)
+        | Instruction::Putstatic(_)
+        | Instruction::Getfield(_)
+        | Instruction::Putfield(_) => 3,
+        Instruction::Invokevirtual(_)
+        | Instruction::Invokespecial(_)
         | Instruction::Invokestatic(_) => 3,
         Instruction::Invokeinterface { .. } => 5,
         Instruction::Invokedynamic { .. } => 5,
@@ -104,13 +150,23 @@ pub fn instruction_byte_size(instr: &Instruction, address: u32) -> u32 {
         Instruction::Ifnull(_) | Instruction::Ifnonnull(_) => 3,
         Instruction::GotoW(_) => 5,
         Instruction::JsrW(_) => 5,
-        Instruction::Areturn | Instruction::Ireturn | Instruction::Lreturn
-        | Instruction::Freturn | Instruction::Dreturn | Instruction::Return => 1,
+        Instruction::Areturn
+        | Instruction::Ireturn
+        | Instruction::Lreturn
+        | Instruction::Freturn
+        | Instruction::Dreturn
+        | Instruction::Return => 1,
         // wide instructions: 2 bytes magic + 2 bytes index
-        Instruction::IloadWide(_) | Instruction::LloadWide(_) | Instruction::FloadWide(_)
-        | Instruction::DloadWide(_) | Instruction::AloadWide(_) => 4,
-        Instruction::IstoreWide(_) | Instruction::LstoreWide(_) | Instruction::FstoreWide(_)
-        | Instruction::DstoreWide(_) | Instruction::AstoreWide(_) => 4,
+        Instruction::IloadWide(_)
+        | Instruction::LloadWide(_)
+        | Instruction::FloadWide(_)
+        | Instruction::DloadWide(_)
+        | Instruction::AloadWide(_) => 4,
+        Instruction::IstoreWide(_)
+        | Instruction::LstoreWide(_)
+        | Instruction::FstoreWide(_)
+        | Instruction::DstoreWide(_)
+        | Instruction::AstoreWide(_) => 4,
         Instruction::RetWide(_) => 4,
         Instruction::IincWide { .. } => 6,
     }
@@ -129,7 +185,7 @@ pub fn compute_addresses(code: &[Instruction]) -> Vec<(u32, &Instruction)> {
 }
 
 /// Look up a UTF-8 constant pool entry by 1-based index.
-pub fn get_utf8<'a>(const_pool: &'a [ConstantInfo], index: u16) -> Option<&'a str> {
+pub fn get_utf8(const_pool: &[ConstantInfo], index: u16) -> Option<&str> {
     match const_pool.get((index as usize).checked_sub(1)?)? {
         ConstantInfo::Utf8(u) => Some(&u.utf8_string),
         _ => None,
@@ -137,7 +193,7 @@ pub fn get_utf8<'a>(const_pool: &'a [ConstantInfo], index: u16) -> Option<&'a st
 }
 
 /// Resolve a Class constant to its name string.
-pub fn get_class_name<'a>(const_pool: &'a [ConstantInfo], class_index: u16) -> Option<&'a str> {
+pub fn get_class_name(const_pool: &[ConstantInfo], class_index: u16) -> Option<&str> {
     match const_pool.get((class_index as usize).checked_sub(1)?)? {
         ConstantInfo::Class(c) => get_utf8(const_pool, c.name_index),
         _ => None,
@@ -145,10 +201,7 @@ pub fn get_class_name<'a>(const_pool: &'a [ConstantInfo], class_index: u16) -> O
 }
 
 /// Resolve a NameAndType constant to (name, descriptor).
-pub fn get_name_and_type<'a>(
-    const_pool: &'a [ConstantInfo],
-    nat_index: u16,
-) -> Option<(&'a str, &'a str)> {
+pub fn get_name_and_type(const_pool: &[ConstantInfo], nat_index: u16) -> Option<(&str, &str)> {
     match const_pool.get((nat_index as usize).checked_sub(1)?)? {
         ConstantInfo::NameAndType(nat) => {
             let name = get_utf8(const_pool, nat.name_index)?;
@@ -160,10 +213,7 @@ pub fn get_name_and_type<'a>(
 }
 
 /// Resolve a FieldRef, MethodRef, or InterfaceMethodRef to (class_name, method_name, descriptor).
-pub fn resolve_ref<'a>(
-    const_pool: &'a [ConstantInfo],
-    index: u16,
-) -> Option<(&'a str, &'a str, &'a str)> {
+pub fn resolve_ref(const_pool: &[ConstantInfo], index: u16) -> Option<(&str, &str, &str)> {
     let entry = const_pool.get((index as usize).checked_sub(1)?)?;
     let (class_index, nat_index) = match entry {
         ConstantInfo::FieldRef(r) => (r.class_index, r.name_and_type_index),

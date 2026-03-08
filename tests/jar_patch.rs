@@ -4,13 +4,13 @@ use std::fs;
 use std::io::Write;
 use std::process::Command;
 
+use classfile_parser::compile::CompileOptions;
 use classfile_parser::jar_patch::{self, JarPatchError};
 use classfile_parser::jar_utils::JarFile;
-use classfile_parser::compile::CompileOptions;
 // Macros are at crate root via #[macro_export]
-use classfile_parser::patch_jar_method;
-use classfile_parser::patch_jar_class;
 use classfile_parser::patch_jar;
+use classfile_parser::patch_jar_class;
+use classfile_parser::patch_jar_method;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -23,14 +23,13 @@ fn read_class_bytes(name: &str) -> Vec<u8> {
 
 fn build_jar(entries: &[(&str, &[u8])]) -> JarFile {
     use std::io::Cursor;
-    use zip::write::SimpleFileOptions;
     use zip::CompressionMethod;
+    use zip::write::SimpleFileOptions;
 
     let mut buf = Cursor::new(Vec::new());
     {
         let mut writer = zip::ZipWriter::new(&mut buf);
-        let options =
-            SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
         for (name, data) in entries {
             writer.start_file(*name, options).unwrap();
             writer.write_all(data).unwrap();
@@ -53,7 +52,11 @@ fn java_available() -> bool {
             .unwrap_or(false)
 }
 
-fn compile_java(test_name: &str, java_src: &str, class_name: &str) -> (std::path::PathBuf, Vec<u8>) {
+fn compile_java(
+    test_name: &str,
+    java_src: &str,
+    class_name: &str,
+) -> (std::path::PathBuf, Vec<u8>) {
     let tmp_dir = std::env::temp_dir().join(format!("classfile_jar_patch_{test_name}"));
     let _ = fs::remove_dir_all(&tmp_dir);
     fs::create_dir_all(&tmp_dir).unwrap();
@@ -133,7 +136,9 @@ fn test_patch_jar_method_method_not_found() {
     );
     assert!(result.is_err());
     match result.unwrap_err() {
-        JarPatchError::Compile(classfile_parser::compile::CompileError::MethodNotFound { name }) => {
+        JarPatchError::Compile(classfile_parser::compile::CompileError::MethodNotFound {
+            name,
+        }) => {
             assert_eq!(name, "doesNotExist");
         }
         other => panic!("expected MethodNotFound, got: {other:?}"),
@@ -161,7 +166,11 @@ fn test_patch_jar_method_basic() {
 
     // The class entry should be updated
     let updated_bytes = jar.get_entry("HelloWorld.class").unwrap();
-    assert_ne!(updated_bytes, &class_bytes[..], "class bytes should differ after patching");
+    assert_ne!(
+        updated_bytes,
+        &class_bytes[..],
+        "class bytes should differ after patching"
+    );
 }
 
 #[test]
@@ -266,15 +275,23 @@ fn test_e2e_patch_jar_hello_world() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("e2e_jar_hello", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "e2e_jar_hello",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
 
-    patch_jar_method!(jar, "HelloWorld.class", "main", r#"{
+    patch_jar_method!(
+        jar,
+        "HelloWorld.class",
+        "main",
+        r#"{
         System.out.println("jar-patched!");
-    }"#)
+    }"#
+    )
     .unwrap();
 
     let output = run_jar(&jar, "HelloWorld", "e2e_jar_hello");
@@ -287,8 +304,11 @@ fn test_e2e_patch_jar_multi_method() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("e2e_jar_multi", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "e2e_jar_multi",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
@@ -310,8 +330,11 @@ fn test_e2e_patch_jar_macro() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("e2e_jar_macro", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "e2e_jar_macro",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
@@ -335,15 +358,23 @@ fn test_e2e_patch_jar_save_and_load() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("e2e_jar_save", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "e2e_jar_save",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
 
-    patch_jar_method!(jar, "HelloWorld.class", "main", r#"{
+    patch_jar_method!(
+        jar,
+        "HelloWorld.class",
+        "main",
+        r#"{
         System.out.println("saved-and-loaded");
-    }"#)
+    }"#
+    )
     .unwrap();
 
     // Save to disk, re-open, verify contents survived round-trip
@@ -372,13 +403,20 @@ fn test_stress_jar_patch_complex_body() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("stress_jar_complex", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "stress_jar_complex",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
 
-    patch_jar_method!(jar, "HelloWorld.class", "main", r#"{
+    patch_jar_method!(
+        jar,
+        "HelloWorld.class",
+        "main",
+        r#"{
         int[] arr = new int[10];
         for (int i = 0; i < 10; i++) {
             arr[i] = i * i;
@@ -388,7 +426,8 @@ fn test_stress_jar_patch_complex_body() {
             sum = sum + x;
         }
         System.out.println("sum=" + sum);
-    }"#)
+    }"#
+    )
     .unwrap();
 
     let output = run_jar(&jar, "HelloWorld", "stress_jar_complex");
@@ -402,13 +441,20 @@ fn test_stress_jar_patch_try_catch() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("stress_jar_trycatch", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "stress_jar_trycatch",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
 
-    patch_jar_method!(jar, "HelloWorld.class", "main", r#"{
+    patch_jar_method!(
+        jar,
+        "HelloWorld.class",
+        "main",
+        r#"{
         try {
             System.out.println("before");
             throw new RuntimeException("test");
@@ -417,7 +463,8 @@ fn test_stress_jar_patch_try_catch() {
         } finally {
             System.out.println("finally");
         }
-    }"#)
+    }"#
+    )
     .unwrap();
 
     let output = run_jar(&jar, "HelloWorld", "stress_jar_trycatch");
@@ -431,13 +478,20 @@ fn test_stress_jar_patch_modern_java() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("stress_jar_modern", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "stress_jar_modern",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
 
-    patch_jar_method!(jar, "HelloWorld.class", "main", r#"{
+    patch_jar_method!(
+        jar,
+        "HelloWorld.class",
+        "main",
+        r#"{
         var x = 3;
         var result = switch (x) {
             case 1 -> "one";
@@ -446,7 +500,8 @@ fn test_stress_jar_patch_modern_java() {
             default -> "other";
         };
         System.out.println(result);
-    }"#)
+    }"#
+    )
     .unwrap();
 
     let output = run_jar(&jar, "HelloWorld", "stress_jar_modern");
@@ -460,13 +515,20 @@ fn test_stress_jar_patch_bubble_sort() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("stress_jar_sort", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "stress_jar_sort",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
 
-    patch_jar_method!(jar, "HelloWorld.class", "main", r#"{
+    patch_jar_method!(
+        jar,
+        "HelloWorld.class",
+        "main",
+        r#"{
         int[] arr = new int[5];
         arr[0] = 42;
         arr[1] = 17;
@@ -485,7 +547,8 @@ fn test_stress_jar_patch_bubble_sort() {
         for (int x : arr) {
             System.out.println(x);
         }
-    }"#)
+    }"#
+    )
     .unwrap();
 
     let output = run_jar(&jar, "HelloWorld", "stress_jar_sort");
@@ -499,13 +562,20 @@ fn test_stress_jar_patch_sync_trycatch() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("stress_jar_sync_try", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "stress_jar_sync_try",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
 
-    patch_jar_method!(jar, "HelloWorld.class", "main", r#"{
+    patch_jar_method!(
+        jar,
+        "HelloWorld.class",
+        "main",
+        r#"{
         Object lock = new Object();
         synchronized (lock) {
             try {
@@ -516,7 +586,8 @@ fn test_stress_jar_patch_sync_trycatch() {
                 System.out.println("in-sync-finally");
             }
         }
-    }"#)
+    }"#
+    )
     .unwrap();
 
     let output = run_jar(&jar, "HelloWorld", "stress_jar_sync_try");
@@ -530,13 +601,20 @@ fn test_stress_jar_patch_multi_dim() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_tmp, class_bytes) =
-        compile_java("stress_jar_multidim", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_tmp, class_bytes) = compile_java(
+        "stress_jar_multidim",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let mut jar = JarFile::new();
     jar.set_entry("HelloWorld.class", class_bytes);
 
-    patch_jar_method!(jar, "HelloWorld.class", "main", r#"{
+    patch_jar_method!(
+        jar,
+        "HelloWorld.class",
+        "main",
+        r#"{
         int[][] grid = new int[3][3];
         int v = 1;
         for (int i = 0; i < 3; i++) {
@@ -547,7 +625,8 @@ fn test_stress_jar_patch_multi_dim() {
         }
         int sum = grid[0][0] + grid[1][1] + grid[2][2];
         System.out.println(sum);
-    }"#)
+    }"#
+    )
     .unwrap();
 
     let output = run_jar(&jar, "HelloWorld", "stress_jar_multidim");

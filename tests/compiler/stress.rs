@@ -11,8 +11,11 @@ fn test_stress_nested_loop_break_continue() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_nested_break", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_nested_break",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -52,8 +55,11 @@ fn test_stress_fizzbuzz() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_fizzbuzz", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_fizzbuzz",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -88,8 +94,11 @@ fn test_stress_switch_lookup() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_switch_lookup", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_switch_lookup",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -129,8 +138,11 @@ fn test_stress_switch_table() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_switch_table", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_switch_table",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -173,8 +185,11 @@ fn test_stress_mixed_type_arithmetic() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_mixed_arith", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_mixed_arith",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -217,8 +232,11 @@ fn test_stress_compound_assign_types() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_compound_types", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_compound_types",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -257,8 +275,11 @@ fn test_stress_bitwise_ops() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_bitwise", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_bitwise",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -295,8 +316,11 @@ fn test_stress_cast_chain() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_cast_chain", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_cast_chain",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -336,8 +360,11 @@ fn test_stress_increment_decrement() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_incdec", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_incdec",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -379,8 +406,11 @@ fn test_stress_string_concat_all_types() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_str_all", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_str_all",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -411,8 +441,11 @@ fn test_stress_string_concat_loop() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_str_loop", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_str_loop",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -444,8 +477,11 @@ fn test_stress_array_comprehensive() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_arr_comp", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_arr_comp",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -478,8 +514,11 @@ fn test_stress_multi_dim_array_compute() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_mdarray", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_mdarray",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -521,8 +560,11 @@ fn test_stress_typed_arrays() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_typed_arr", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_typed_arr",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -570,8 +612,11 @@ fn test_stress_try_catch_complex() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_trycatch", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_trycatch",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -612,8 +657,11 @@ fn test_stress_multi_catch_variants() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_multi_catch", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_multi_catch",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -649,8 +697,11 @@ fn test_stress_nested_try_catch() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_nested_try", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_nested_try",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -677,7 +728,10 @@ fn test_stress_nested_try_catch() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "outer-try\ninner-try\ninner-catch\nafter-inner\nouter-finally");
+    assert_eq!(
+        output,
+        "outer-try\ninner-try\ninner-catch\nafter-inner\nouter-finally"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -691,8 +745,11 @@ fn test_stress_nested_ternary() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_ternary", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_ternary",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -719,8 +776,11 @@ fn test_stress_short_circuit() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_shortcircuit", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_shortcircuit",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -778,8 +838,11 @@ fn test_stress_stringbuilder_chain() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_sb_chain", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_sb_chain",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -811,8 +874,11 @@ fn test_stress_arraylist() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_arraylist", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_arraylist",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -843,8 +909,11 @@ fn test_stress_sb_length() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_sb_length", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_sb_length",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -872,8 +941,11 @@ fn test_stress_instanceof_cast() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_instanceof", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_instanceof",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -914,8 +986,11 @@ fn test_stress_var_inference() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_var_infer", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_var_infer",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -953,8 +1028,11 @@ fn test_stress_var_new_object() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_var_newobj", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_var_newobj",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -985,8 +1063,11 @@ fn test_stress_switch_expr_as_arg() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_switch_arg", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_switch_arg",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1018,8 +1099,11 @@ fn test_stress_switch_expr_multi_value() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_switch_multi", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_switch_multi",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1055,8 +1139,11 @@ fn test_stress_bubble_sort() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_bubblesort", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_bubblesort",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1101,8 +1188,11 @@ fn test_stress_fibonacci() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_fibonacci", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_fibonacci",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1134,8 +1224,11 @@ fn test_stress_gcd() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_gcd", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_gcd",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1166,8 +1259,11 @@ fn test_stress_power_of_two() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_pow2", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_pow2",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1196,8 +1292,11 @@ fn test_stress_feature_combo() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_combo", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_combo",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1237,8 +1336,11 @@ fn test_stress_null_handling() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_null", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_null",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1273,8 +1375,11 @@ fn test_stress_large_constants() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_large_const", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_large_const",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1304,8 +1409,11 @@ fn test_stress_empty_constructs() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_empty", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_empty",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1350,8 +1458,11 @@ fn test_stress_char_arithmetic() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_char_arith", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_char_arith",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1387,8 +1498,11 @@ fn test_stress_verified_complex_flow() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_verified_flow", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_verified_flow",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1421,8 +1535,11 @@ fn test_stress_verified_switch() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_verified_switch", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_verified_switch",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1462,8 +1579,11 @@ fn test_stress_verified_foreach() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_verified_foreach", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_verified_foreach",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1500,8 +1620,11 @@ fn test_stress_multiple_synchronized() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_multi_sync", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_multi_sync",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1541,8 +1664,11 @@ fn test_stress_sieve_of_eratosthenes() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("stress_sieve", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "stress_sieve",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{

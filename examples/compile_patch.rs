@@ -13,7 +13,7 @@
 use std::fs;
 use std::process::Command;
 
-use classfile_parser::{patch_method, patch_methods, ClassFile};
+use classfile_parser::{ClassFile, patch_method, patch_methods};
 
 fn main() {
     // ── Step 1: Create and compile a Java class with two methods ─────────
@@ -63,9 +63,13 @@ public class HelloWorld {
     // patch_method! compiles a Java method body and replaces the named method.
     // By default it generates a StackMapTable so the class passes full JVM
     // bytecode verification. Use `no_verify` as a 4th argument to skip that.
-    patch_method!(class_file, "greet", r#"{
+    patch_method!(
+        class_file,
+        "greet",
+        r#"{
         System.out.println("patched greet!");
-    }"#)
+    }"#
+    )
     .unwrap();
     println!("Patched greet()");
 

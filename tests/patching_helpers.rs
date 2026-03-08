@@ -3,11 +3,11 @@ use std::io::{Cursor, Read};
 use std::path::Path;
 use std::process::Command;
 
-use binrw::prelude::*;
 use binrw::BinWrite;
+use binrw::prelude::*;
+use classfile_parser::ClassFile;
 use classfile_parser::code_attribute::Instruction;
 use classfile_parser::constant_info::ConstantInfo;
-use classfile_parser::ClassFile;
 
 // --- Helpers ---
 
@@ -245,7 +245,10 @@ fn test_with_code() {
 
     let result = method.with_code(|code| {
         // Find and count Aload0 instructions
-        code.code.iter().filter(|i| **i == Instruction::Aload0).count()
+        code.code
+            .iter()
+            .filter(|i| **i == Instruction::Aload0)
+            .count()
     });
 
     match result {
@@ -259,8 +262,8 @@ fn test_with_code() {
 fn test_with_code_none() {
     let mut cf = load_basic_class();
     // Add a dummy method with no Code attribute (simulating abstract)
-    use classfile_parser::method_info::MethodInfo;
     use classfile_parser::method_info::MethodAccessFlags;
+    use classfile_parser::method_info::MethodInfo;
     let name_idx = cf.add_utf8("abstractMethod");
     let desc_idx = cf.get_or_add_utf8("()V");
     cf.methods.push(MethodInfo {
@@ -343,7 +346,10 @@ fn test_nop_out() {
 
     // Verify the nop'd region is all Nop
     // The first N entries (where N = byte size of original 2 instructions) should be Nop
-    assert!(code.code.len() >= original_count, "instruction count should grow or stay same");
+    assert!(
+        code.code.len() >= original_count,
+        "instruction count should grow or stay same"
+    );
     for i in &code.code[..code.code.len() - (original_count - 2)] {
         assert_eq!(*i, Instruction::Nop, "nop'd region should be all Nop");
     }
@@ -360,8 +366,11 @@ fn test_e2e_helpers_redirect_ldc() {
         return;
     }
 
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("helpers_ldc", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "helpers_ldc",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     // Add "Injected!" string to pool using helper
     let string_idx = class_file.add_string("Injected!");
@@ -377,12 +386,18 @@ fn test_e2e_helpers_redirect_ldc() {
             .expect("should find Ldc");
         code.replace_instruction(idx, Instruction::Ldc(string_idx as u8));
     });
-    result.expect("should have code").expect("sync should succeed");
+    result
+        .expect("should have code")
+        .expect("sync should succeed");
 
     class_file.sync_all().expect("sync_all");
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "Injected!", "expected 'Injected!' but got: {}", output);
+    assert_eq!(
+        output, "Injected!",
+        "expected 'Injected!' but got: {}",
+        output
+    );
 }
 
 /// Rewrite of test_e2e_remove_method using nop_out + with_code
@@ -393,8 +408,11 @@ fn test_e2e_helpers_nop_out() {
         return;
     }
 
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("helpers_nop", "java-assets/src/SimpleMath.java", "SimpleMath");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "helpers_nop",
+        "java-assets/src/SimpleMath.java",
+        "SimpleMath",
+    );
 
     // Nop out the first 4 instructions of main (the "Integer math:" println + intMath call)
     let method = class_file
@@ -408,7 +426,9 @@ fn test_e2e_helpers_nop_out() {
         assert!(matches!(&code.code[3], Instruction::Invokestatic(_)));
         code.nop_out(0..4).expect("nop_out should succeed");
     });
-    result.expect("should have code").expect("sync should succeed");
+    result
+        .expect("should have code")
+        .expect("sync should succeed");
 
     // Remove intMath method
     let int_math_idx = class_file

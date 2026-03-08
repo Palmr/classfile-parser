@@ -4,6 +4,7 @@ use std::io::Cursor;
 
 use assert_matches::assert_matches;
 use binrw::BinRead;
+use classfile_parser::ClassFile;
 use classfile_parser::attribute_info::{
     AttributeInfoVariant, ElementValue, InnerClassAccessFlags, LineNumberTableAttribute, TargetInfo,
 };
@@ -12,7 +13,6 @@ use classfile_parser::code_attribute::{
 };
 use classfile_parser::constant_info::ConstantInfo;
 use classfile_parser::method_info::MethodAccessFlags;
-use classfile_parser::ClassFile;
 
 fn lookup_string(c: &ClassFile, index: u16) -> Option<String> {
     match &c.const_pool[(index - 1) as usize] {

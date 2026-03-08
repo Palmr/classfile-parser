@@ -47,7 +47,12 @@ fn desugar_stmt(stmt: &mut StructuredStmt, options: &DesugarOptions) {
                 desugar_assert_in_block(stmts);
             }
         }
-        StructuredStmt::If { then_body, else_body, condition, .. } => {
+        StructuredStmt::If {
+            then_body,
+            else_body,
+            condition,
+            ..
+        } => {
             desugar_stmt(then_body, options);
             if let Some(eb) = else_body {
                 desugar_stmt(eb, options);
@@ -56,19 +61,29 @@ fn desugar_stmt(stmt: &mut StructuredStmt, options: &DesugarOptions) {
                 desugar_autobox_expr(condition);
             }
         }
-        StructuredStmt::While { body, condition, .. } => {
+        StructuredStmt::While {
+            body, condition, ..
+        } => {
             desugar_stmt(body, options);
             if options.autobox {
                 desugar_autobox_expr(condition);
             }
         }
-        StructuredStmt::DoWhile { body, condition, .. } => {
+        StructuredStmt::DoWhile {
+            body, condition, ..
+        } => {
             desugar_stmt(body, options);
             if options.autobox {
                 desugar_autobox_expr(condition);
             }
         }
-        StructuredStmt::For { init, body, update, condition, .. } => {
+        StructuredStmt::For {
+            init,
+            body,
+            update,
+            condition,
+            ..
+        } => {
             if let Some(i) = init {
                 desugar_stmt(i, options);
             }
@@ -83,7 +98,12 @@ fn desugar_stmt(stmt: &mut StructuredStmt, options: &DesugarOptions) {
         StructuredStmt::ForEach { body, .. } => {
             desugar_stmt(body, options);
         }
-        StructuredStmt::Switch { cases, default, expr, .. } => {
+        StructuredStmt::Switch {
+            cases,
+            default,
+            expr,
+            ..
+        } => {
             for case in cases.iter_mut() {
                 desugar_stmt(&mut case.body, options);
             }
@@ -94,7 +114,12 @@ fn desugar_stmt(stmt: &mut StructuredStmt, options: &DesugarOptions) {
                 desugar_autobox_expr(expr);
             }
         }
-        StructuredStmt::TryCatch { try_body, catches, finally_body, .. } => {
+        StructuredStmt::TryCatch {
+            try_body,
+            catches,
+            finally_body,
+            ..
+        } => {
             desugar_stmt(try_body, options);
             for c in catches.iter_mut() {
                 desugar_stmt(&mut c.body, options);
@@ -135,7 +160,10 @@ fn desugar_foreach_in_block(stmts: &mut Vec<StructuredStmt>) {
     while i + 1 < stmts.len() {
         let is_foreach = {
             if let (
-                StructuredStmt::Simple(Stmt::LocalStore { var: iter_var, value: iter_init }),
+                StructuredStmt::Simple(Stmt::LocalStore {
+                    var: iter_var,
+                    value: iter_init,
+                }),
                 StructuredStmt::While { condition, body },
             ) = (&stmts[i], &stmts[i + 1])
             {
@@ -147,25 +175,31 @@ fn desugar_foreach_in_block(stmts: &mut Vec<StructuredStmt>) {
             }
         };
 
-        if is_foreach {
-            if let StructuredStmt::Simple(Stmt::LocalStore { value: iter_init, .. }) = &stmts[i] {
-                let iterable = extract_iterator_receiver(iter_init).unwrap_or_else(|| {
-                    Expr::Unresolved("/* iterable */".into())
-                });
+        if is_foreach
+            && let StructuredStmt::Simple(Stmt::LocalStore {
+                value: iter_init, ..
+            }) = &stmts[i]
+        {
+            let iterable = extract_iterator_receiver(iter_init)
+                .unwrap_or_else(|| Expr::Unresolved("/* iterable */".into()));
 
-                if let StructuredStmt::While { body, .. } = &stmts[i + 1] {
-                    if let Some((loop_var, remaining_body)) = find_next_call_in_body(body, &LocalVar {
-                        index: 0, name: None, ty: super::descriptor::JvmType::Unknown,
-                    }) {
-                        let foreach = StructuredStmt::ForEach {
-                            var: loop_var,
-                            iterable,
-                            body: Box::new(remaining_body),
-                        };
-                        stmts.splice(i..=i + 1, std::iter::once(foreach));
-                        continue;
-                    }
-                }
+            if let StructuredStmt::While { body, .. } = &stmts[i + 1]
+                && let Some((loop_var, remaining_body)) = find_next_call_in_body(
+                    body,
+                    &LocalVar {
+                        index: 0,
+                        name: None,
+                        ty: super::descriptor::JvmType::Unknown,
+                    },
+                )
+            {
+                let foreach = StructuredStmt::ForEach {
+                    var: loop_var,
+                    iterable,
+                    body: Box::new(remaining_body),
+                };
+                stmts.splice(i..=i + 1, std::iter::once(foreach));
+                continue;
             }
         }
         i += 1;
@@ -181,10 +215,14 @@ fn is_has_next_call(expr: &Expr, _iter_var: &LocalVar) -> bool {
 }
 
 fn extract_iterator_receiver(expr: &Expr) -> Option<Expr> {
-    if let Expr::MethodCall { object: Some(obj), method_name, .. } = expr {
-        if method_name == "iterator" {
-            return Some(*obj.clone());
-        }
+    if let Expr::MethodCall {
+        object: Some(obj),
+        method_name,
+        ..
+    } = expr
+        && method_name == "iterator"
+    {
+        return Some(*obj.clone());
     }
     None
 }
@@ -207,7 +245,8 @@ fn desugar_assert_in_block(stmts: &mut Vec<StructuredStmt>) {
                 then_body,
                 else_body: None,
             } => {
-                if let Some((assert_cond, assert_msg)) = match_assert_pattern(condition, then_body) {
+                if let Some((assert_cond, assert_msg)) = match_assert_pattern(condition, then_body)
+                {
                     Some(StructuredStmt::Assert {
                         condition: assert_cond,
                         message: assert_msg,

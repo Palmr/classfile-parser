@@ -19,7 +19,8 @@ pub fn build_java_class(class: &ClassFile) -> JavaClass {
 
     // Super class
     let super_class = if class.super_class != 0 {
-        let super_name = util::get_class_name(const_pool, class.super_class).unwrap_or("java/lang/Object");
+        let super_name =
+            util::get_class_name(const_pool, class.super_class).unwrap_or("java/lang/Object");
         if super_name != "java/lang/Object" {
             Some(internal_name_to_java_type(super_name))
         } else {
@@ -112,9 +113,10 @@ fn determine_class_kind(class: &ClassFile) -> ClassKind {
 }
 
 fn has_record_attribute(class: &ClassFile) -> bool {
-    class.attributes.iter().any(|a| {
-        matches!(&a.info_parsed, Some(AttributeInfoVariant::Record(_)))
-    })
+    class
+        .attributes
+        .iter()
+        .any(|a| matches!(&a.info_parsed, Some(AttributeInfoVariant::Record(_))))
 }
 
 fn class_visibility(flags: ClassAccessFlags) -> Visibility {
@@ -453,7 +455,10 @@ fn extract_class_annotations(class: &ClassFile) -> Vec<JavaAnnotation> {
     annotations
 }
 
-fn extract_field_annotations(field: &FieldInfo, const_pool: &[ConstantInfo]) -> Vec<JavaAnnotation> {
+fn extract_field_annotations(
+    field: &FieldInfo,
+    const_pool: &[ConstantInfo],
+) -> Vec<JavaAnnotation> {
     let mut annotations = Vec::new();
     for attr in &field.attributes {
         if let Some(AttributeInfoVariant::RuntimeVisibleAnnotations(ra)) = &attr.info_parsed {
@@ -467,7 +472,10 @@ fn extract_field_annotations(field: &FieldInfo, const_pool: &[ConstantInfo]) -> 
     annotations
 }
 
-fn extract_method_annotations(method: &MethodInfo, const_pool: &[ConstantInfo]) -> Vec<JavaAnnotation> {
+fn extract_method_annotations(
+    method: &MethodInfo,
+    const_pool: &[ConstantInfo],
+) -> Vec<JavaAnnotation> {
     let mut annotations = Vec::new();
     for attr in &method.attributes {
         match &attr.info_parsed {

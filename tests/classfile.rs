@@ -1,12 +1,12 @@
 extern crate classfile_parser;
 
-use std::io::Cursor;
+use binrw::BinWrite;
+use binrw::prelude::*;
+use classfile_parser::ClassFile;
 use classfile_parser::attribute_info::AttributeInfoVariant;
 use classfile_parser::constant_info::ConstantInfo;
-use binrw::prelude::*;
-use binrw::BinWrite;
-use classfile_parser::ClassFile;
 use std::fs::File;
+use std::io::Cursor;
 use std::io::prelude::*;
 
 #[test]
@@ -154,7 +154,9 @@ fn test_round_trip() {
     let parsed = ClassFile::read(&mut Cursor::new(&original_bytes)).expect("failed to parse class");
 
     let mut written_bytes = Cursor::new(Vec::new());
-    parsed.write(&mut written_bytes).expect("failed to write class");
+    parsed
+        .write(&mut written_bytes)
+        .expect("failed to write class");
     let written_bytes = written_bytes.into_inner();
 
     assert_eq!(
@@ -175,12 +177,7 @@ fn test_round_trip() {
 fn test_sync_from_parsed_idempotent() {
     // Note: UnicodeStrings excluded — it contains invalid UTF-8 (unpaired surrogates)
     // that get normalized to U+FFFD during parsing, so round-trip is not byte-identical.
-    for class_name in &[
-        "BasicClass",
-        "Factorial",
-        "HelloWorld",
-        "Instructions",
-    ] {
+    for class_name in &["BasicClass", "Factorial", "HelloWorld", "Instructions"] {
         let path = format!("java-assets/compiled-classes/{}.class", class_name);
         let mut original_bytes = Vec::new();
         File::open(&path)
@@ -201,7 +198,9 @@ fn test_sync_from_parsed_idempotent() {
         }
 
         let mut written_bytes = Cursor::new(Vec::new());
-        class_file.write(&mut written_bytes).expect("failed to write");
+        class_file
+            .write(&mut written_bytes)
+            .expect("failed to write");
         let written_bytes = written_bytes.into_inner();
 
         assert_eq!(

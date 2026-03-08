@@ -1,19 +1,18 @@
 extern crate classfile_parser;
 
 use std::fs::File;
-use std::io::prelude::*;
 use std::io::Cursor;
+use std::io::prelude::*;
 
 use binrw::prelude::*;
+use classfile_parser::ClassFile;
 use classfile_parser::attribute_info::{AttributeInfoVariant, StackMapFrameInner};
 use classfile_parser::constant_info::ConstantInfo;
-use classfile_parser::ClassFile;
 
 #[test]
 fn test_attribute_stack_map_table() {
     let mut contents: Vec<u8> = Vec::new();
-    let mut stack_map_class =
-        File::open("java-assets/compiled-classes/Factorial.class").unwrap();
+    let mut stack_map_class = File::open("java-assets/compiled-classes/Factorial.class").unwrap();
     stack_map_class.read_to_end(&mut contents).unwrap();
     let res = ClassFile::read(&mut Cursor::new(&mut contents));
     match res {
@@ -71,10 +70,7 @@ fn test_attribute_stack_map_table() {
             };
             match smt.entries[1].inner {
                 StackMapFrameInner::SameLocals1StackItemFrame { .. } => {}
-                _ => panic!(
-                    "unexpected frame type for frame 1: {:?}",
-                    &smt.entries[1]
-                ),
+                _ => panic!("unexpected frame type for frame 1: {:?}", &smt.entries[1]),
             };
         }
         _ => panic!("not a class file"),

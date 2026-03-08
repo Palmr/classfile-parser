@@ -94,7 +94,10 @@ pub struct SwitchCase {
 pub enum SwitchValue {
     Int(i32),
     String(String),
-    Enum { type_name: String, const_name: String },
+    Enum {
+        type_name: String,
+        const_name: String,
+    },
 }
 
 /// A catch clause in a try-catch.

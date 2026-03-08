@@ -4,9 +4,17 @@ use super::descriptor::JvmType;
 /// Binary operators.
 #[derive(Clone, Debug, PartialEq)]
 pub enum BinOp {
-    Add, Sub, Mul, Div, Rem,
-    Shl, Shr, Ushr,
-    And, Or, Xor,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Rem,
+    Shl,
+    Shr,
+    Ushr,
+    And,
+    Or,
+    Xor,
 }
 
 /// Unary operators.
@@ -19,7 +27,12 @@ pub enum UnaryOp {
 /// Comparison operators.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CompareOp {
-    Eq, Ne, Lt, Ge, Gt, Le,
+    Eq,
+    Ne,
+    Lt,
+    Ge,
+    Gt,
+    Le,
 }
 
 impl CompareOp {
@@ -82,10 +95,23 @@ pub enum Expr {
     This,
 
     // --- Operations ---
-    BinaryOp { op: BinOp, left: Box<Expr>, right: Box<Expr> },
-    UnaryOp { op: UnaryOp, operand: Box<Expr> },
-    Cast { target_type: JvmType, operand: Box<Expr> },
-    Instanceof { operand: Box<Expr>, check_type: String },
+    BinaryOp {
+        op: BinOp,
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
+    UnaryOp {
+        op: UnaryOp,
+        operand: Box<Expr>,
+    },
+    Cast {
+        target_type: JvmType,
+        operand: Box<Expr>,
+    },
+    Instanceof {
+        operand: Box<Expr>,
+        check_type: String,
+    },
 
     // --- Field access ---
     FieldGet {
@@ -112,15 +138,35 @@ pub enum Expr {
         constructor_descriptor: String,
         args: Vec<Expr>,
     },
-    NewArray { element_type: JvmType, length: Box<Expr> },
-    NewMultiArray { element_type: JvmType, dimensions: Vec<Expr> },
-    ArrayLength { array: Box<Expr> },
-    ArrayLoad { array: Box<Expr>, index: Box<Expr>, element_type: JvmType },
+    NewArray {
+        element_type: JvmType,
+        length: Box<Expr>,
+    },
+    NewMultiArray {
+        element_type: JvmType,
+        dimensions: Vec<Expr>,
+    },
+    ArrayLength {
+        array: Box<Expr>,
+    },
+    ArrayLoad {
+        array: Box<Expr>,
+        index: Box<Expr>,
+        element_type: JvmType,
+    },
 
     // --- Comparison ---
-    Compare { op: CompareOp, left: Box<Expr>, right: Box<Expr> },
+    Compare {
+        op: CompareOp,
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
     /// Result of lcmp/fcmpl/fcmpg/dcmpl/dcmpg: -1, 0, or 1
-    CmpResult { kind: CmpKind, left: Box<Expr>, right: Box<Expr> },
+    CmpResult {
+        kind: CmpKind,
+        left: Box<Expr>,
+        right: Box<Expr>,
+    },
 
     // --- invokedynamic (lambdas) ---
     InvokeDynamic {
@@ -131,7 +177,11 @@ pub enum Expr {
     },
 
     // --- Ternary (synthesized during structuring) ---
-    Ternary { condition: Box<Expr>, then_expr: Box<Expr>, else_expr: Box<Expr> },
+    Ternary {
+        condition: Box<Expr>,
+        then_expr: Box<Expr>,
+        else_expr: Box<Expr>,
+    },
 
     // --- Fallback ---
     Unresolved(String),
@@ -139,7 +189,9 @@ pub enum Expr {
     // --- Stack bookkeeping (used during simulation, cleaned up after) ---
     Dup(Box<Expr>),
     /// Marker for an uninitialized `new` before <init> is called
-    UninitNew { class_name: String },
+    UninitNew {
+        class_name: String,
+    },
 }
 
 /// Compare instruction kinds (for lcmp, fcmpl, etc.)
@@ -155,7 +207,10 @@ pub enum CmpKind {
 /// Statement -- represents a side-effecting operation.
 #[derive(Clone, Debug)]
 pub enum Stmt {
-    LocalStore { var: LocalVar, value: Expr },
+    LocalStore {
+        var: LocalVar,
+        value: Expr,
+    },
     FieldStore {
         object: Option<Expr>,
         class_name: String,
@@ -163,12 +218,22 @@ pub enum Stmt {
         field_type: JvmType,
         value: Expr,
     },
-    ArrayStore { array: Expr, index: Expr, value: Expr },
+    ArrayStore {
+        array: Expr,
+        index: Expr,
+        value: Expr,
+    },
     ExprStmt(Expr),
-    Iinc { var: LocalVar, amount: i32 },
+    Iinc {
+        var: LocalVar,
+        amount: i32,
+    },
     Return(Option<Expr>),
     Throw(Expr),
-    Monitor { enter: bool, object: Expr },
+    Monitor {
+        enter: bool,
+        object: Expr,
+    },
 }
 
 /// A simulated basic block: the result of stack-simulating one BasicBlock.

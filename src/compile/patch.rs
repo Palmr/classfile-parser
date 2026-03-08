@@ -1,3 +1,4 @@
+use crate::ClassFile;
 use crate::attribute_info::{
     AttributeInfo, AttributeInfoVariant, CodeAttribute, StackMapFrame, StackMapFrameInner,
     StackMapTableAttribute,
@@ -6,9 +7,8 @@ use crate::code_attribute::Instruction;
 use crate::constant_info::ConstantInfo;
 use crate::decompile::descriptor::parse_method_descriptor;
 use crate::method_info::MethodAccessFlags;
-use crate::ClassFile;
 
-use super::codegen::{compute_byte_addresses, CodeGenerator};
+use super::codegen::{CodeGenerator, compute_byte_addresses};
 use super::lexer::Lexer;
 use super::parser::Parser;
 use super::{CompileError, CompileOptions, InsertMode};
@@ -42,11 +42,11 @@ fn extract_param_names(
                 if i >= param_count {
                     break;
                 }
-                if p.name_index != 0 {
-                    if let Some(name) = class_file.get_utf8(p.name_index) {
-                        names.push(Some(name.to_string()));
-                        continue;
-                    }
+                if p.name_index != 0
+                    && let Some(name) = class_file.get_utf8(p.name_index)
+                {
+                    names.push(Some(name.to_string()));
+                    continue;
                 }
                 names.push(None);
             }
@@ -69,10 +69,10 @@ fn extract_param_names(
                     let mut slot_to_name = std::collections::HashMap::new();
                     for item in &lvt.items {
                         // Parameters typically have start_pc == 0
-                        if item.start_pc == 0 {
-                            if let Some(name) = class_file.get_utf8(item.name_index) {
-                                slot_to_name.insert(item.index, name.to_string());
-                            }
+                        if item.start_pc == 0
+                            && let Some(name) = class_file.get_utf8(item.name_index)
+                        {
+                            slot_to_name.insert(item.index, name.to_string());
                         }
                     }
 
@@ -317,9 +317,11 @@ fn replace_method_body(
                 info: vec![],
                 info_parsed: Some(AttributeInfoVariant::StackMapTable(smt)),
             };
-            smt_attr.sync_from_parsed().map_err(|e| CompileError::CodegenError {
-                message: format!("sync_from_parsed for StackMapTable failed: {}", e),
-            })?;
+            smt_attr
+                .sync_from_parsed()
+                .map_err(|e| CompileError::CodegenError {
+                    message: format!("sync_from_parsed for StackMapTable failed: {}", e),
+                })?;
             Some(smt_attr)
         } else {
             None
@@ -357,12 +359,8 @@ fn replace_method_body(
             )
         });
         // Always strip old StackMapTable
-        code.attributes.retain(|a| {
-            !matches!(
-                a.info_parsed,
-                Some(AttributeInfoVariant::StackMapTable(_))
-            )
-        });
+        code.attributes
+            .retain(|a| !matches!(a.info_parsed, Some(AttributeInfoVariant::StackMapTable(_))));
         // Attach new StackMapTable if generated
         if let Some(smt_attr) = smt_sub_attr {
             code.attributes.push(smt_attr);
@@ -402,9 +400,11 @@ fn replace_method_body(
             info: vec![],
             info_parsed: Some(AttributeInfoVariant::Code(code_attr)),
         };
-        attr_info.sync_from_parsed().map_err(|e| CompileError::CodegenError {
-            message: format!("sync_from_parsed failed: {}", e),
-        })?;
+        attr_info
+            .sync_from_parsed()
+            .map_err(|e| CompileError::CodegenError {
+                message: format!("sync_from_parsed failed: {}", e),
+            })?;
 
         class_file.methods[method_idx].attributes.push(attr_info);
         class_file.methods[method_idx].attributes_count =

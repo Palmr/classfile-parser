@@ -8,14 +8,23 @@ fn test_codegen_return_42() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (_, _, mut class_file) =
-        compile_and_load("codegen_ret42", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (_, _, mut class_file) = compile_and_load(
+        "codegen_ret42",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     let stmts = parse_method_body("{ return; }").unwrap();
-    let generated = generate_bytecode(&stmts, &mut class_file, true, "([Ljava/lang/String;)V").unwrap();
+    let generated =
+        generate_bytecode(&stmts, &mut class_file, true, "([Ljava/lang/String;)V").unwrap();
 
     // Should contain Return instruction
-    assert!(generated.instructions.iter().any(|i| matches!(i, Instruction::Return)));
+    assert!(
+        generated
+            .instructions
+            .iter()
+            .any(|i| matches!(i, Instruction::Return))
+    );
     assert!(generated.max_stack >= 1);
     assert!(generated.max_locals >= 1);
 }
@@ -41,7 +50,11 @@ fn test_compile_e2e_hello_compiled() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "Compiled!", "expected 'Compiled!' but got: {}", output);
+    assert_eq!(
+        output, "Compiled!",
+        "expected 'Compiled!' but got: {}",
+        output
+    );
 }
 
 #[test]
@@ -50,8 +63,11 @@ fn test_compile_e2e_return_value() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_retval", "java-assets/src/SimpleMath.java", "SimpleMath");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_retval",
+        "java-assets/src/SimpleMath.java",
+        "SimpleMath",
+    );
 
     // Replace intMath to return a different formula: a constant
     compile_method_body(
@@ -64,11 +80,7 @@ fn test_compile_e2e_return_value() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "SimpleMath");
-    assert!(
-        output.contains("99"),
-        "expected 99 in output: {}",
-        output
-    );
+    assert!(output.contains("99"), "expected 99 in output: {}", output);
 }
 
 #[test]
@@ -77,8 +89,11 @@ fn test_compile_e2e_if_else() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_ifelse", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_ifelse",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -192,8 +207,11 @@ fn test_compile_e2e_nested_if() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_nested_if", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_nested_if",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -227,8 +245,11 @@ fn test_compile_e2e_switch() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_switch", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_switch",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -264,8 +285,11 @@ fn test_compile_e2e_switch_default() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_switch_default", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_switch_default",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -300,8 +324,11 @@ fn test_compile_e2e_try_catch() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_try_catch", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_try_catch",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -328,8 +355,11 @@ fn test_compile_e2e_try_finally() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_try_finally", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_try_finally",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -347,7 +377,11 @@ fn test_compile_e2e_try_finally() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "try\nfinally", "expected 'try\\nfinally' but got: {}", output);
+    assert_eq!(
+        output, "try\nfinally",
+        "expected 'try\\nfinally' but got: {}",
+        output
+    );
 }
 
 // --- StackMapTable generation tests ---
@@ -358,8 +392,11 @@ fn test_compile_e2e_stackmap_if_else() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_smt_ifelse", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_smt_ifelse",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -387,8 +424,11 @@ fn test_compile_e2e_stackmap_while() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_smt_while", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_smt_while",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -417,8 +457,11 @@ fn test_compile_e2e_stackmap_try_catch() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_smt_trycatch", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_smt_trycatch",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -447,8 +490,11 @@ fn test_compile_e2e_long_arithmetic() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_long_arith", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_long_arith",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -474,8 +520,11 @@ fn test_compile_e2e_double_arithmetic() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_double_arith", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_double_arith",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -500,8 +549,11 @@ fn test_compile_e2e_float_arithmetic() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_float_arith", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_float_arith",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -526,8 +578,11 @@ fn test_compile_e2e_widening() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_widening", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_widening",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -553,8 +608,11 @@ fn test_compile_e2e_long_comparison() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_long_cmp", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_long_cmp",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -582,8 +640,11 @@ fn test_compile_e2e_cast_types() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_cast_types", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_cast_types",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -608,8 +669,11 @@ fn test_compile_e2e_unary_neg_long() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_neg_long", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_neg_long",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -635,8 +699,11 @@ fn test_compile_e2e_string_concat() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_str_concat", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_str_concat",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -659,8 +726,11 @@ fn test_compile_e2e_string_concat_int() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_str_concat_int", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_str_concat_int",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -685,8 +755,11 @@ fn test_compile_e2e_string_concat_chain() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_str_concat_chain", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_str_concat_chain",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -712,8 +785,11 @@ fn test_compile_e2e_typed_array_long() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_arr_long", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_arr_long",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -739,8 +815,11 @@ fn test_compile_e2e_typed_array_double() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_arr_double", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_arr_double",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -768,8 +847,11 @@ fn test_compile_e2e_foreach_array() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_foreach", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_foreach",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -802,8 +884,11 @@ fn test_compile_e2e_multi_catch() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_multi_catch", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_multi_catch",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -821,7 +906,11 @@ fn test_compile_e2e_multi_catch() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "caught multi", "expected 'caught multi' but got: {}", output);
+    assert_eq!(
+        output, "caught multi",
+        "expected 'caught multi' but got: {}",
+        output
+    );
 }
 
 #[test]
@@ -830,8 +919,11 @@ fn test_compile_e2e_synchronized() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_synchronized", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_synchronized",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -877,7 +969,11 @@ fn test_compile_e2e_var() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "10\nhello", "expected '10\\nhello' but got: {}", output);
+    assert_eq!(
+        output, "10\nhello",
+        "expected '10\\nhello' but got: {}",
+        output
+    );
 }
 
 #[test]
@@ -886,8 +982,11 @@ fn test_compile_e2e_var_long() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_var_long", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_var_long",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -911,8 +1010,11 @@ fn test_compile_e2e_multi_dim_array() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_multi_dim", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_multi_dim",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -939,8 +1041,11 @@ fn test_compile_e2e_switch_expr() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_switch_expr", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_switch_expr",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -970,8 +1075,11 @@ fn test_compile_e2e_switch_expr_default() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_switch_expr_default", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_switch_expr_default",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1002,8 +1110,11 @@ fn test_compile_e2e_switch_fallthrough() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_switch_fallthrough", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_switch_fallthrough",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1040,8 +1151,11 @@ fn test_compile_e2e_foreach_list() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_foreach_list", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_foreach_list",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1061,7 +1175,11 @@ fn test_compile_e2e_foreach_list() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "alpha\nbeta\ngamma", "expected three lines but got: {}", output);
+    assert_eq!(
+        output, "alpha\nbeta\ngamma",
+        "expected three lines but got: {}",
+        output
+    );
 }
 
 /// Test: Null concatenation — null references stringify to "null" in String concatenation.
@@ -1071,8 +1189,11 @@ fn test_compile_e2e_null_concatenation() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_null_concat", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_null_concat",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1089,7 +1210,11 @@ fn test_compile_e2e_null_concatenation() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "value=null\nliteral=null", "expected null concat output but got: {}", output);
+    assert_eq!(
+        output, "value=null\nliteral=null",
+        "expected null concat output but got: {}",
+        output
+    );
 }
 
 /// Test: Multi-catch second type — verifies both types in a multi-catch are matched.
@@ -1099,8 +1224,11 @@ fn test_compile_e2e_multicatch_second_type() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_multicatch_second", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_multicatch_second",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1118,7 +1246,11 @@ fn test_compile_e2e_multicatch_second_type() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "caught: NullPointerException", "expected multi-catch output but got: {}", output);
+    assert_eq!(
+        output, "caught: NullPointerException",
+        "expected multi-catch output but got: {}",
+        output
+    );
 }
 
 /// Test: Try-catch in loop with continue — catch handler executes continue to the loop.
@@ -1128,8 +1260,11 @@ fn test_compile_e2e_trycatch_in_loop_continue() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_trycatch_loop", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_trycatch_loop",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1162,8 +1297,11 @@ fn test_compile_e2e_synchronized_exception_path() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_sync_exception", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_sync_exception",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1185,7 +1323,11 @@ fn test_compile_e2e_synchronized_exception_path() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "caught after sync: inside sync\ndone", "expected sync exception output but got: {}", output);
+    assert_eq!(
+        output, "caught after sync: inside sync\ndone",
+        "expected sync exception output but got: {}",
+        output
+    );
 }
 
 /// Test: Int overflow wraps — Java int arithmetic wraps at 32-bit boundaries.
@@ -1195,8 +1337,11 @@ fn test_compile_e2e_int_overflow_wraps() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_int_overflow", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_int_overflow",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1215,7 +1360,11 @@ fn test_compile_e2e_int_overflow_wraps() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "-2147483648\n2147483647", "expected overflow values but got: {}", output);
+    assert_eq!(
+        output, "-2147483648\n2147483647",
+        "expected overflow values but got: {}",
+        output
+    );
 }
 
 /// Test: Narrowing casts — long-to-byte, long-to-short, double-to-float.
@@ -1225,8 +1374,11 @@ fn test_compile_e2e_narrowing_casts() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_narrowing", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_narrowing",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1248,7 +1400,11 @@ fn test_compile_e2e_narrowing_casts() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "-1\n-25536\n1.2345679", "expected narrowing cast output but got: {}", output);
+    assert_eq!(
+        output, "-1\n-25536\n1.2345679",
+        "expected narrowing cast output but got: {}",
+        output
+    );
 }
 
 /// Test: Ternary side effect isolation — only the chosen branch's side effect executes.
@@ -1258,8 +1414,11 @@ fn test_compile_e2e_ternary_side_effect() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_ternary_side", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_ternary_side",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1282,7 +1441,11 @@ fn test_compile_e2e_ternary_side_effect() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "10\n10\n9\n9", "expected ternary side effect output but got: {}", output);
+    assert_eq!(
+        output, "10\n10\n9\n9",
+        "expected ternary side effect output but got: {}",
+        output
+    );
 }
 
 /// Test: Boolean local from comparison — stores comparison result in a local variable.
@@ -1292,8 +1455,11 @@ fn test_compile_e2e_bool_from_comparison() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_bool_cmp", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_bool_cmp",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1315,7 +1481,11 @@ fn test_compile_e2e_bool_from_comparison() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "odd and positive\ntrue", "expected boolean comparison output but got: {}", output);
+    assert_eq!(
+        output, "odd and positive\ntrue",
+        "expected boolean comparison output but got: {}",
+        output
+    );
 }
 
 /// Test: Var inferred from expression — `var` types resolved across widening chains.
@@ -1325,8 +1495,11 @@ fn test_compile_e2e_var_inferred_type() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_var_infer", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_var_infer",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1347,7 +1520,11 @@ fn test_compile_e2e_var_inferred_type() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "60\n45.0", "expected var inferred type output but got: {}", output);
+    assert_eq!(
+        output, "60\n45.0",
+        "expected var inferred type output but got: {}",
+        output
+    );
 }
 
 /// Test: Zero-length array and length field access.
@@ -1357,8 +1534,11 @@ fn test_compile_e2e_array_length() {
         eprintln!("skipping: javac/java not found");
         return;
     }
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("e2e_array_len", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "e2e_array_len",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     compile_method_body(
         r#"{
@@ -1380,5 +1560,9 @@ fn test_compile_e2e_array_length() {
     .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
-    assert_eq!(output, "0\ncorrect length", "expected array length output but got: {}", output);
+    assert_eq!(
+        output, "0\ncorrect length",
+        "expected array length output but got: {}",
+        output
+    );
 }

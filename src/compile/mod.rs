@@ -1,16 +1,16 @@
-pub mod lexer;
 pub mod ast;
-pub mod parser;
 pub mod codegen;
+pub mod lexer;
+pub mod parser;
+pub mod patch;
 pub mod stack_calc;
 pub mod stackmap;
-pub mod patch;
 
 use std::fmt;
 
+use crate::ClassFile;
 use crate::attribute_info::{ExceptionEntry, StackMapTableAttribute};
 use crate::code_attribute::Instruction;
-use crate::ClassFile;
 
 use self::ast::CStmt;
 use self::codegen::CodeGenerator;
@@ -52,9 +52,10 @@ impl fmt::Display for CompileError {
 
 impl std::error::Error for CompileError {}
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum InsertMode {
     /// Replace the entire method body (default).
+    #[default]
     Replace,
     /// Insert compiled code at the beginning, preserving the original body.
     Prepend,
@@ -64,12 +65,6 @@ pub enum InsertMode {
     /// so the original code falls through to the appended code. The appended
     /// code is responsible for returning.
     Append,
-}
-
-impl Default for InsertMode {
-    fn default() -> Self {
-        InsertMode::Replace
-    }
 }
 
 #[derive(Clone)]
@@ -123,8 +118,13 @@ pub fn generate_bytecode_with_options(
     method_descriptor: &str,
     generate_stack_map_table: bool,
 ) -> Result<GeneratedCode, CompileError> {
-    let mut codegen =
-        CodeGenerator::new_with_options(class_file, is_static, method_descriptor, generate_stack_map_table, &[])?;
+    let mut codegen = CodeGenerator::new_with_options(
+        class_file,
+        is_static,
+        method_descriptor,
+        generate_stack_map_table,
+        &[],
+    )?;
     codegen.generate_body(stmts)?;
     codegen.finish()
 }

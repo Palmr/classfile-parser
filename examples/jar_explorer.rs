@@ -10,24 +10,24 @@ use std::io::{self, Cursor};
 use binrw::BinRead;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyModifiers};
 use crossterm::terminal::{self, EnterAlternateScreen, LeaveAlternateScreen};
+use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
-use ratatui::Terminal;
 use tui_textarea::{CursorMove, TextArea};
 
 use classfile_parser::attribute_info::{
     AttributeInfoVariant, CodeAttribute, ExceptionEntry, LineNumberTableAttribute,
 };
 use classfile_parser::code_attribute::Instruction;
+use classfile_parser::compile::{CompileOptions, compile_method_body, prepend_method_body};
 use classfile_parser::constant_info::ConstantInfo;
 use classfile_parser::field_info::FieldAccessFlags;
 use classfile_parser::jar_utils::{JarFile, JarManifest};
 use classfile_parser::method_info::MethodAccessFlags;
-use classfile_parser::spring_utils::{detect_format, SpringBootFormat};
-use classfile_parser::compile::{compile_method_body, prepend_method_body, CompileOptions};
+use classfile_parser::spring_utils::{SpringBootFormat, detect_format};
 use classfile_parser::{ClassAccessFlags, ClassFile};
 
 // ---------------------------------------------------------------------------
@@ -319,28 +319,42 @@ fn format_instruction(instr: &Instruction, const_pool: &[ConstantInfo]) -> Strin
         // Invoke instructions — resolve to symbolic names
         Instruction::Invokevirtual(idx) => {
             if let Some(ConstantInfo::MethodRef(mr)) = const_pool.get((*idx - 1) as usize) {
-                format!("invokevirtual {}", resolve_ref(const_pool, mr.class_index, mr.name_and_type_index))
+                format!(
+                    "invokevirtual {}",
+                    resolve_ref(const_pool, mr.class_index, mr.name_and_type_index)
+                )
             } else {
                 format!("invokevirtual #{idx}")
             }
         }
         Instruction::Invokespecial(idx) => {
             if let Some(ConstantInfo::MethodRef(mr)) = const_pool.get((*idx - 1) as usize) {
-                format!("invokespecial {}", resolve_ref(const_pool, mr.class_index, mr.name_and_type_index))
+                format!(
+                    "invokespecial {}",
+                    resolve_ref(const_pool, mr.class_index, mr.name_and_type_index)
+                )
             } else {
                 format!("invokespecial #{idx}")
             }
         }
         Instruction::Invokestatic(idx) => {
             if let Some(ConstantInfo::MethodRef(mr)) = const_pool.get((*idx - 1) as usize) {
-                format!("invokestatic {}", resolve_ref(const_pool, mr.class_index, mr.name_and_type_index))
+                format!(
+                    "invokestatic {}",
+                    resolve_ref(const_pool, mr.class_index, mr.name_and_type_index)
+                )
             } else {
                 format!("invokestatic #{idx}")
             }
         }
         Instruction::Invokeinterface { index, count, .. } => {
-            if let Some(ConstantInfo::InterfaceMethodRef(mr)) = const_pool.get((*index - 1) as usize) {
-                format!("invokeinterface {} count={count}", resolve_ref(const_pool, mr.class_index, mr.name_and_type_index))
+            if let Some(ConstantInfo::InterfaceMethodRef(mr)) =
+                const_pool.get((*index - 1) as usize)
+            {
+                format!(
+                    "invokeinterface {} count={count}",
+                    resolve_ref(const_pool, mr.class_index, mr.name_and_type_index)
+                )
             } else {
                 format!("invokeinterface #{index} count={count}")
             }
@@ -348,15 +362,20 @@ fn format_instruction(instr: &Instruction, const_pool: &[ConstantInfo]) -> Strin
         Instruction::Invokedynamic { index, .. } => {
             if let Some(ConstantInfo::InvokeDynamic(id)) = const_pool.get((*index - 1) as usize) {
                 let (name, desc) = get_name_and_type(const_pool, id.name_and_type_index);
-                format!("invokedynamic #{} {name}:{desc}", id.bootstrap_method_attr_index)
+                format!(
+                    "invokedynamic #{} {name}:{desc}",
+                    id.bootstrap_method_attr_index
+                )
             } else {
                 format!("invokedynamic #{index}")
             }
         }
 
         // Field access
-        Instruction::Getfield(idx) | Instruction::Getstatic(idx)
-        | Instruction::Putfield(idx) | Instruction::Putstatic(idx) => {
+        Instruction::Getfield(idx)
+        | Instruction::Getstatic(idx)
+        | Instruction::Putfield(idx)
+        | Instruction::Putstatic(idx) => {
             let opname = match instr {
                 Instruction::Getfield(_) => "getfield",
                 Instruction::Getstatic(_) => "getstatic",
@@ -365,7 +384,10 @@ fn format_instruction(instr: &Instruction, const_pool: &[ConstantInfo]) -> Strin
                 _ => unreachable!(),
             };
             if let Some(ConstantInfo::FieldRef(fr)) = const_pool.get((*idx - 1) as usize) {
-                format!("{opname} {}", resolve_ref(const_pool, fr.class_index, fr.name_and_type_index))
+                format!(
+                    "{opname} {}",
+                    resolve_ref(const_pool, fr.class_index, fr.name_and_type_index)
+                )
             } else {
                 format!("{opname} #{idx}")
             }
@@ -469,7 +491,10 @@ fn format_class_bytecode(cf: &ClassFile) -> Vec<String> {
         "Version:  {}.{} (Java {java_version})",
         cf.major_version, cf.minor_version
     ));
-    lines.push(format!("Access:   {}", format_class_access(cf.access_flags)));
+    lines.push(format!(
+        "Access:   {}",
+        format_class_access(cf.access_flags)
+    ));
     lines.push(format!("Super:    {super_class}"));
 
     // Interfaces
@@ -542,7 +567,10 @@ fn format_class_bytecode(cf: &ClassFile) -> Vec<String> {
                 format!("NameAndType #{}.#{}", n.name_index, n.descriptor_index)
             }
             ConstantInfo::MethodHandle(h) => {
-                format!("MethodHandle kind={} #{}", h.reference_kind, h.reference_index)
+                format!(
+                    "MethodHandle kind={} #{}",
+                    h.reference_kind, h.reference_index
+                )
             }
             ConstantInfo::MethodType(t) => format!("MethodType #{}", t.descriptor_index),
             ConstantInfo::InvokeDynamic(d) => format!(
@@ -562,10 +590,7 @@ fn format_class_bytecode(cf: &ClassFile) -> Vec<String> {
         lines.push(format!("--- Attributes ({}) ---", cf.attributes.len()));
         for attr in &cf.attributes {
             let attr_name = get_utf8(cp, attr.attribute_name_index);
-            lines.push(format!(
-                "  {attr_name} ({} bytes)",
-                attr.attribute_length
-            ));
+            lines.push(format!("  {attr_name} ({} bytes)", attr.attribute_length));
         }
     }
 
@@ -857,9 +882,7 @@ fn instruction_byte_size(instr: &Instruction, address: u32) -> u32 {
         Instruction::IincWide { .. } => 6,
 
         // Variable-length: tableswitch
-        Instruction::Tableswitch {
-            low, high, ..
-        } => {
+        Instruction::Tableswitch { low, high, .. } => {
             let padding = (4 - (address + 1) % 4) % 4;
             // 1 (opcode) + padding + 4 (default) + 4 (low) + 4 (high) + 4*(high-low+1)
             1 + padding + 4 + 4 + 4 + 4 * ((*high - *low + 1) as u32)
@@ -943,7 +966,13 @@ fn format_hex(data: &[u8]) -> Vec<String> {
         let hex: Vec<String> = chunk.iter().map(|b| format!("{b:02x}")).collect();
         let ascii: String = chunk
             .iter()
-            .map(|&b| if b.is_ascii_graphic() || b == b' ' { b as char } else { '.' })
+            .map(|&b| {
+                if b.is_ascii_graphic() || b == b' ' {
+                    b as char
+                } else {
+                    '.'
+                }
+            })
             .collect();
 
         // Pad hex to fixed width
@@ -1018,7 +1047,11 @@ fn load_entry_content(jar: &JarFile, path: &str) -> (String, Vec<String>) {
 
     // Heuristic: try UTF-8, fall back to hex
     if let Ok(text) = std::str::from_utf8(data) {
-        if text.chars().take(512).all(|c| !c.is_control() || c == '\n' || c == '\r' || c == '\t') {
+        if text
+            .chars()
+            .take(512)
+            .all(|c| !c.is_control() || c == '\n' || c == '\r' || c == '\t')
+        {
             return (
                 path.to_string(),
                 text.lines().map(|l| l.to_string()).collect(),
@@ -1026,10 +1059,7 @@ fn load_entry_content(jar: &JarFile, path: &str) -> (String, Vec<String>) {
         }
     }
 
-    (
-        format!("{path} (hex)"),
-        format_hex(data),
-    )
+    (format!("{path} (hex)"), format_hex(data))
 }
 
 fn extract_methods(jar: &JarFile, entry_path: &str) -> Vec<(String, String)> {
@@ -1047,12 +1077,7 @@ fn extract_methods(jar: &JarFile, entry_path: &str) -> Vec<(String, String)> {
             let name = get_utf8(&cf.const_pool, m.name_index);
             let desc = get_utf8(&cf.const_pool, m.descriptor_index);
             let access = format_method_access(m.access_flags);
-            let display = format!(
-                "{} {}{}",
-                access,
-                name,
-                descriptor_to_readable(&desc)
-            );
+            let display = format!("{} {}{}", access, name, descriptor_to_readable(&desc));
             (name, display.trim_start().to_string())
         })
         .collect()
@@ -1288,27 +1313,22 @@ impl<'a> App<'a> {
         };
 
         match result {
-            Ok(()) => {
-                match cf.to_bytes() {
-                    Ok(bytes) => {
-                        self.jar.set_entry(&entry_path, bytes);
-                        self.has_unsaved_changes = true;
-                        let action = if prepend { "Prepended to" } else { "Replaced" };
-                        self.status_message =
-                            format!(" {action} '{method_name}' | W:save JAR");
-                        self.edit_state = None;
-                        self.loaded_entry = None;
-                        self.load_selected_entry();
-                    }
-                    Err(e) => {
-                        if let Some(EditState::EditCode { error_message, .. }) =
-                            &mut self.edit_state
-                        {
-                            *error_message = Some(format!("Failed to serialize class: {e}"));
-                        }
+            Ok(()) => match cf.to_bytes() {
+                Ok(bytes) => {
+                    self.jar.set_entry(&entry_path, bytes);
+                    self.has_unsaved_changes = true;
+                    let action = if prepend { "Prepended to" } else { "Replaced" };
+                    self.status_message = format!(" {action} '{method_name}' | W:save JAR");
+                    self.edit_state = None;
+                    self.loaded_entry = None;
+                    self.load_selected_entry();
+                }
+                Err(e) => {
+                    if let Some(EditState::EditCode { error_message, .. }) = &mut self.edit_state {
+                        *error_message = Some(format!("Failed to serialize class: {e}"));
                     }
                 }
-            }
+            },
             Err(e) => {
                 if let Some(EditState::EditCode { error_message, .. }) = &mut self.edit_state {
                     *error_message = Some(format!("{e}"));
@@ -1470,11 +1490,10 @@ fn handle_edit_select(app: &mut App, key: KeyEvent) {
             }) = app.edit_state.take()
             {
                 let (method_name, _) = &methods[selected];
-                let mut editor = TextArea::new(vec!["{ ".to_string(), "  ".to_string(), "}".to_string()]);
+                let mut editor =
+                    TextArea::new(vec!["{ ".to_string(), "  ".to_string(), "}".to_string()]);
                 editor.set_cursor_line_style(Style::default().bg(Color::DarkGray));
-                editor.set_cursor_style(
-                    Style::default().bg(Color::White).fg(Color::Black),
-                );
+                editor.set_cursor_style(Style::default().bg(Color::White).fg(Color::Black));
                 editor.set_line_number_style(Style::default().fg(Color::DarkGray));
                 // Position cursor on the middle line
                 editor.move_cursor(CursorMove::Down);
@@ -1517,7 +1536,12 @@ fn handle_edit_code(app: &mut App, key: KeyEvent) {
     }
 
     // Forward to TextArea editor
-    if let Some(EditState::EditCode { editor, error_message, .. }) = &mut app.edit_state {
+    if let Some(EditState::EditCode {
+        editor,
+        error_message,
+        ..
+    }) = &mut app.edit_state
+    {
         editor.input(key);
         // Clear error on new input
         if error_message.is_some() {
@@ -1667,11 +1691,7 @@ fn render_tree(app: &mut App, frame: &mut ratatui::Frame, area: Rect) {
             let node = &app.tree[idx];
             let indent = "  ".repeat(node.depth);
             let icon = if node.is_dir {
-                if node.expanded {
-                    "[-] "
-                } else {
-                    "[+] "
-                }
+                if node.expanded { "[-] " } else { "[+] " }
             } else if node.label.ends_with(".class") {
                 "> "
             } else {
@@ -1695,9 +1715,7 @@ fn render_tree(app: &mut App, frame: &mut ratatui::Frame, area: Rect) {
                         .bg(Color::White)
                         .add_modifier(Modifier::BOLD)
                 } else {
-                    Style::default()
-                        .fg(color)
-                        .bg(Color::DarkGray)
+                    Style::default().fg(color).bg(Color::DarkGray)
                 }
             } else {
                 Style::default().fg(color)
@@ -1768,8 +1786,10 @@ fn render_viewer(app: &mut App, frame: &mut ratatui::Frame, area: Rect) {
     app.viewer.set_block(block);
 
     if app.focus == Focus::Viewer {
-        app.viewer.set_cursor_line_style(Style::default().bg(Color::DarkGray));
-        app.viewer.set_cursor_style(Style::default().bg(Color::White).fg(Color::Black));
+        app.viewer
+            .set_cursor_line_style(Style::default().bg(Color::DarkGray));
+        app.viewer
+            .set_cursor_style(Style::default().bg(Color::White).fg(Color::Black));
     } else {
         app.viewer.set_cursor_line_style(Style::default());
         app.viewer.set_cursor_style(Style::default());

@@ -4,14 +4,13 @@ use std::fs;
 use std::io::{Cursor, Read};
 use std::process::Command;
 
-use binrw::prelude::*;
 use binrw::BinWrite;
-use classfile_parser::compile::{
-    compile_method_body, generate_bytecode, parse_method_body, prepend_method_body,
-    CompileOptions,
-};
-use classfile_parser::code_attribute::Instruction;
+use binrw::prelude::*;
 use classfile_parser::ClassFile;
+use classfile_parser::code_attribute::Instruction;
+use classfile_parser::compile::{
+    CompileOptions, compile_method_body, generate_bytecode, parse_method_body, prepend_method_body,
+};
 
 mod e2e;
 mod param_access;
@@ -35,7 +34,11 @@ fn java_available() -> bool {
 }
 
 #[allow(unused)]
-fn compile_and_load(test_name: &str, java_src: &str, class_name: &str) -> (std::path::PathBuf, std::path::PathBuf, ClassFile) {
+fn compile_and_load(
+    test_name: &str,
+    java_src: &str,
+    class_name: &str,
+) -> (std::path::PathBuf, std::path::PathBuf, ClassFile) {
     let tmp_dir = std::env::temp_dir().join(format!("classfile_compile_{}", test_name));
     let _ = fs::remove_dir_all(&tmp_dir);
     fs::create_dir_all(&tmp_dir).unwrap();
@@ -58,7 +61,8 @@ fn compile_and_load(test_name: &str, java_src: &str, class_name: &str) -> (std::
         .expect("failed to open compiled class")
         .read_to_end(&mut class_bytes)
         .unwrap();
-    let class_file = ClassFile::read(&mut Cursor::new(&class_bytes)).expect("failed to parse class");
+    let class_file =
+        ClassFile::read(&mut Cursor::new(&class_bytes)).expect("failed to parse class");
 
     (tmp_dir, class_path, class_file)
 }

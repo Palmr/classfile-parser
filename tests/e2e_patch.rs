@@ -3,8 +3,8 @@ use std::io::{Cursor, Read};
 use std::path::Path;
 use std::process::Command;
 
-use binrw::prelude::*;
 use binrw::BinWrite;
+use binrw::prelude::*;
 use classfile_parser::attribute_info::AttributeInfoVariant;
 use classfile_parser::code_attribute::Instruction;
 use classfile_parser::constant_info::{ConstantInfo, StringConstant, Utf8Constant};
@@ -117,8 +117,11 @@ fn test_e2e_patch_float_constant() {
         return;
     }
 
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("float_const", "java-assets/src/SimpleMath.java", "SimpleMath");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "float_const",
+        "java-assets/src/SimpleMath.java",
+        "SimpleMath",
+    );
 
     let mut patched = false;
     for entry in &mut class_file.const_pool {
@@ -149,8 +152,11 @@ fn test_e2e_patch_instruction_operand() {
         return;
     }
 
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("instr_operand", "java-assets/src/SimpleMath.java", "SimpleMath");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "instr_operand",
+        "java-assets/src/SimpleMath.java",
+        "SimpleMath",
+    );
 
     let (mi, ai) = find_code_attr(&class_file, "intMath");
 
@@ -170,14 +176,12 @@ fn test_e2e_patch_instruction_operand() {
         assert!(found, "could not find Bipush(10) in intMath");
     }
 
-    class_file.methods[mi].attributes[ai].sync_from_parsed().unwrap();
+    class_file.methods[mi].attributes[ai]
+        .sync_from_parsed()
+        .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "SimpleMath");
-    assert!(
-        output.contains("25"),
-        "expected 25 in output: {}",
-        output
-    );
+    assert!(output.contains("25"), "expected 25 in output: {}", output);
 }
 
 /// Test 3: Replace an instruction opcode via attribute reserialization.
@@ -190,8 +194,11 @@ fn test_e2e_replace_instruction_opcode() {
         return;
     }
 
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("instr_opcode", "java-assets/src/SimpleMath.java", "SimpleMath");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "instr_opcode",
+        "java-assets/src/SimpleMath.java",
+        "SimpleMath",
+    );
 
     let (mi, ai) = find_code_attr(&class_file, "intMath");
 
@@ -211,14 +218,12 @@ fn test_e2e_replace_instruction_opcode() {
         assert!(found, "could not find Iadd in intMath");
     }
 
-    class_file.methods[mi].attributes[ai].sync_from_parsed().unwrap();
+    class_file.methods[mi].attributes[ai]
+        .sync_from_parsed()
+        .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "SimpleMath");
-    assert!(
-        output.contains("-10"),
-        "expected -10 in output: {}",
-        output
-    );
+    assert!(output.contains("-10"), "expected -10 in output: {}", output);
 }
 
 /// Test 4: Add new constant pool entries and redirect an ldc instruction.
@@ -231,16 +236,17 @@ fn test_e2e_add_constant_and_redirect_ldc() {
         return;
     }
 
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("redirect_ldc", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "redirect_ldc",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     // Add new Utf8 constant
     let utf8_cp_index = (class_file.const_pool.len() + 1) as u16;
-    class_file
-        .const_pool
-        .push(ConstantInfo::Utf8(Utf8Constant {
-            utf8_string: String::from("Injected!"),
-        }));
+    class_file.const_pool.push(ConstantInfo::Utf8(Utf8Constant {
+        utf8_string: String::from("Injected!"),
+    }));
 
     // Add new String constant referencing the Utf8
     let string_cp_index = (class_file.const_pool.len() + 1) as u16;
@@ -276,7 +282,9 @@ fn test_e2e_add_constant_and_redirect_ldc() {
         assert!(found, "could not find Ldc in main");
     }
 
-    class_file.methods[mi].attributes[ai].sync_from_parsed().unwrap();
+    class_file.methods[mi].attributes[ai]
+        .sync_from_parsed()
+        .unwrap();
 
     let output = write_and_run(&tmp_dir, &class_path, &class_file, "HelloWorld");
     assert_eq!(
@@ -296,8 +304,11 @@ fn test_e2e_patch_access_flags() {
         return;
     }
 
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("access_flags", "java-assets/src/HelloWorld.java", "HelloWorld");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "access_flags",
+        "java-assets/src/HelloWorld.java",
+        "HelloWorld",
+    );
 
     assert!(
         !class_file.access_flags.contains(ClassAccessFlags::FINAL),
@@ -337,8 +348,11 @@ fn test_e2e_remove_method() {
         return;
     }
 
-    let (tmp_dir, class_path, mut class_file) =
-        compile_and_load("remove_method", "java-assets/src/SimpleMath.java", "SimpleMath");
+    let (tmp_dir, class_path, mut class_file) = compile_and_load(
+        "remove_method",
+        "java-assets/src/SimpleMath.java",
+        "SimpleMath",
+    );
 
     let (main_mi, main_ai) = find_code_attr(&class_file, "main");
 
@@ -376,7 +390,9 @@ fn test_e2e_remove_method() {
         code.code.splice(0..4, nops);
     }
 
-    class_file.methods[main_mi].attributes[main_ai].sync_from_parsed().unwrap();
+    class_file.methods[main_mi].attributes[main_ai]
+        .sync_from_parsed()
+        .unwrap();
 
     // Remove intMath method
     let int_math_idx = class_file
@@ -464,7 +480,9 @@ fn test_e2e_patch_string_contents() {
     assert!(patched, "could not find 'Hello World!' in constant pool");
 
     let mut out = Cursor::new(Vec::new());
-    class_file.write(&mut out).expect("failed to write patched class");
+    class_file
+        .write(&mut out)
+        .expect("failed to write patched class");
     fs::write(&class_path, out.into_inner()).expect("failed to write patched class file");
 
     let run = Command::new("java")

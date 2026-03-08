@@ -18,8 +18,12 @@ pub struct AddressedInstruction {
 /// How a basic block ends.
 #[derive(Clone, Debug)]
 pub enum Terminator {
-    FallThrough { target: BlockId },
-    Goto { target: BlockId },
+    FallThrough {
+        target: BlockId,
+    },
+    Goto {
+        target: BlockId,
+    },
     ConditionalBranch {
         condition: BranchCondition,
         if_true: BlockId,
@@ -37,7 +41,10 @@ pub enum Terminator {
     },
     Return,
     Throw,
-    Jsr { target: BlockId, return_addr: BlockId },
+    Jsr {
+        target: BlockId,
+        return_addr: BlockId,
+    },
 }
 
 /// The condition for a conditional branch.
@@ -80,8 +87,12 @@ impl ControlFlowGraph {
         match &self.blocks[&block_id].terminator {
             Terminator::FallThrough { target } => vec![*target],
             Terminator::Goto { target } => vec![*target],
-            Terminator::ConditionalBranch { if_true, if_false, .. } => vec![*if_true, *if_false],
-            Terminator::TableSwitch { default, targets, .. } => {
+            Terminator::ConditionalBranch {
+                if_true, if_false, ..
+            } => vec![*if_true, *if_false],
+            Terminator::TableSwitch {
+                default, targets, ..
+            } => {
                 let mut succs: Vec<BlockId> = targets.clone();
                 succs.push(*default);
                 succs.sort();
@@ -96,7 +107,10 @@ impl ControlFlowGraph {
                 succs
             }
             Terminator::Return | Terminator::Throw => vec![],
-            Terminator::Jsr { target, return_addr } => vec![*target, *return_addr],
+            Terminator::Jsr {
+                target,
+                return_addr,
+            } => vec![*target, *return_addr],
         }
     }
 

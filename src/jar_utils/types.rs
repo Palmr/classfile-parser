@@ -3,8 +3,8 @@ use std::io::{Cursor, Read, Seek, Write};
 use std::path::Path;
 
 use binrw::{BinRead, BinWrite};
-use zip::write::SimpleFileOptions;
 use zip::CompressionMethod;
+use zip::write::SimpleFileOptions;
 
 use crate::ClassFile;
 
@@ -126,8 +126,7 @@ impl JarFile {
     /// Write the JAR to any writer using Deflated compression.
     pub fn write<W: Write + Seek>(&self, writer: W) -> JarResult<()> {
         let mut zip_writer = zip::ZipWriter::new(writer);
-        let options =
-            SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+        let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
 
         for (name, data) in &self.entries {
             zip_writer.start_file(name, options)?;
@@ -188,12 +187,12 @@ impl JarFile {
 
     /// Parse a `.class` entry into a `ClassFile`.
     pub fn parse_class(&self, path: &str) -> JarResult<ClassFile> {
-        let data = self
-            .get_entry(path)
-            .ok_or_else(|| JarError::Io(std::io::Error::new(
+        let data = self.get_entry(path).ok_or_else(|| {
+            JarError::Io(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
                 format!("entry not found: {path}"),
-            )))?;
+            ))
+        })?;
         let mut cursor = Cursor::new(data);
         let class_file = ClassFile::read(&mut cursor)?;
         Ok(class_file)

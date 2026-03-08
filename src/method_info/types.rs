@@ -1,9 +1,9 @@
 use crate::{
-    attribute_info::{AttributeInfo, AttributeInfoVariant, CodeAttribute},
     InterpretInner,
+    attribute_info::{AttributeInfo, AttributeInfoVariant, CodeAttribute},
 };
 
-use binrw::{binrw, BinResult};
+use binrw::{BinResult, binrw};
 
 #[derive(Clone, Debug)]
 #[binrw]
