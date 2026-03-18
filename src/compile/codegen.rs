@@ -3021,13 +3021,12 @@ impl<'a> CodeGenerator<'a> {
 
     fn is_print_stream_chain(&self, expr: &CExpr) -> bool {
         // Detect System.out pattern
-        if let CExpr::FieldAccess { object, name } = expr {
-            if (name == "out" || name == "err")
-                && let CExpr::Ident(class_name) = object.as_ref()
-                && class_name == "System"
-            {
-                return true;
-            }
+        if let CExpr::FieldAccess { object, name } = expr
+            && (name == "out" || name == "err")
+            && let CExpr::Ident(class_name) = object.as_ref()
+            && class_name == "System"
+        {
+            return true;
         }
         false
     }

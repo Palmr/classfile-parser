@@ -1334,11 +1334,7 @@ impl Parser {
         }
         // After `)`, check for `->`
         if depth == 0 && i < self.tokens.len() {
-            return self.tokens[i].token == Token::Arrow
-                // Fallback: also check i-1 was `)` and next is Arrow
-                || (i > 0 && self.tokens[i - 1].token == Token::RParen
-                    && i < self.tokens.len()
-                    && self.tokens[i].token == Token::Arrow);
+            return self.tokens[i].token == Token::Arrow;
         }
         false
     }
