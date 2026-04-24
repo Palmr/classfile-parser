@@ -16,6 +16,7 @@ pub enum ConstantInfo {
     NameAndType(NameAndTypeConstant),
     MethodHandle(MethodHandleConstant),
     MethodType(MethodTypeConstant),
+    Dynamic(DynamicConstant),
     InvokeDynamic(InvokeDynamicConstant),
     Module(ModuleConstant),
     Package(PackageConstant),
@@ -104,6 +105,13 @@ pub struct MethodHandleConstant {
 #[binrw]
 pub struct MethodTypeConstant {
     pub descriptor_index: u16,
+}
+
+#[derive(Clone, Debug)]
+#[binrw]
+pub struct DynamicConstant {
+    pub bootstrap_method_attr_index: u16,
+    pub name_and_type_index: u16,
 }
 
 #[derive(Clone, Debug)]

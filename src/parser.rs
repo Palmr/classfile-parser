@@ -34,7 +34,7 @@ pub fn class_parser(input: &[u8]) -> IResult<&[u8], ClassFile> {
     let (input, minor_version) = be_u16(input)?;
     let (input, major_version) = be_u16(input)?;
     let (input, const_pool_size) = be_u16(input)?;
-    let (input, const_pool) = constant_parser(input, (const_pool_size - 1) as usize)?;
+    let (input, const_pool) = constant_parser(input, (const_pool_size.saturating_sub(1)) as usize)?;
     let (input, access_flags) = be_u16(input)?;
     let (input, this_class) = be_u16(input)?;
     let (input, super_class) = be_u16(input)?;
